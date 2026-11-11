@@ -5185,7 +5185,8 @@ window.chibiConsumableIcon = function(key, sizeClass='') { const src=window.CHIB
 }
 #game-container:has(#create-screen:not([style*="display: none"])) .start-btn:hover { background:linear-gradient(105deg,#ad4b40,#d28a4d 48%,#955850); transform:translateY(-1px); }
 #game-container:has(#create-screen:not([style*="display: none"])) .char-action-bar { margin-bottom:10px; }
-
+.login-update-btn{display:block;margin:10px auto 0;padding:8px 16px;border:1px solid #5e9cb0;border-radius:7px;background:linear-gradient(180deg,#243c47,#17232d);color:#c9f4ff;font:inherit;font-size:12px;cursor:pointer}
+.login-update-btn:hover{border-color:#9fe8ff;background:linear-gradient(180deg,#315b69,#203743)}
 
 
 .login-interface-eyebrow{display:flex;align-items:center;gap:11px;margin:0 0 20px 4px;color:#d7a866;font:11px monospace;letter-spacing:2px}.login-interface-eyebrow i{display:block;width:42px;height:1px;background:linear-gradient(90deg,#d7a866,transparent)}.login-interface-eyebrow b{font-weight:400;color:#878695;letter-spacing:1px}
@@ -5230,6 +5231,8 @@ window.chibiConsumableIcon = function(key, sizeClass='') { const src=window.CHIB
 .rpg-title-btn:hover{transform:translateY(-2px);border-color:#ffd18b;background:linear-gradient(180deg,#8a4332,#51201f);box-shadow:0 0 18px rgba(255,142,83,.3)}
 .rpg-title-btn.secondary{background:linear-gradient(180deg,#30213a,#1b1423);border-color:#725c88}
 .rpg-title-btn.exit{background:linear-gradient(180deg,#30252a,#1a1519);border-color:#66545b;color:#d4c2bd}
+.rpg-title-btn.update{background:linear-gradient(180deg,#243c47,#17232d);border-color:#5e9cb0;color:#c9f4ff}
+.rpg-title-btn.update:hover{background:linear-gradient(180deg,#315b69,#203743);border-color:#9fe8ff}
 .rpg-title-footer{margin-top:26px;color:#8e7775;font-size:11px}
 #rpg-title-settings{display:none;margin:20px auto 0;max-width:330px;padding:13px;border:1px solid #604d67;border-radius:8px;background:rgba(15,10,20,.7);color:#d9c9e8;font-size:13px;line-height:1.7}
 #rpg-title-message{min-height:20px;margin-top:13px;color:#a9e6b4;font-size:12px}
@@ -5331,11 +5334,12 @@ window.chibiConsumableIcon = function(key, sizeClass='') { const src=window.CHIB
       <button type="button" class="rpg-title-btn" onclick="rpgTitleStartGame()">▶ 開始遊戲</button>
       <button type="button" class="rpg-title-btn" onclick="rpgTitleLoadGame()">📜 讀取角色</button>
       <button type="button" class="rpg-title-btn secondary" onclick="rpgTitleToggleSettings()">⚙ 遊戲設定</button>
+      <button type="button" class="rpg-title-btn update" onclick="checkGameUpdate(true)">↻ 檢查更新</button>
       <button type="button" class="rpg-title-btn exit" onclick="rpgTitleExitGame()">⏻ 離開遊戲</button>
     </div>
     <div id="rpg-title-settings"><strong>遊戲設定</strong><br>音樂與音效進入遊戲後可在上方控制面板調整。<br>角色進度會保存於目前這台電腦的遊戲存檔。</div>
     <div id="rpg-title-message" role="status"></div>
-    <div class="rpg-title-footer">HELL IDLE RPG</div>
+    <div class="rpg-title-footer">HELL IDLE RPG｜目前版本 v1.0.3</div>
   </div>
 </section>
 
@@ -5478,6 +5482,7 @@ window.chibiConsumableIcon = function(key, sizeClass='') { const src=window.CHIB
                 </div>
 
                 <button class="start-btn" onclick="startGame()">進入遊戲 / 讀取存擋</button>
+                <button type="button" class="login-update-btn" onclick="checkGameUpdate(true)">↻ 檢查遊戲更新</button>
                 <section id="outdoor-login-return-options" style="display:none;margin:12px auto 0;padding:12px;max-width:520px;border:1px solid rgba(255,190,105,.55);border-radius:10px;background:rgba(25,13,10,.88);text-align:center;box-sizing:border-box;">
                     <div style="font-weight:700;color:#ffd28a;margin-bottom:6px;">📍 角色上次離開時仍在野外</div>
                     <div id="outdoor-login-return-zone" style="font-size:13px;color:#f1dfca;margin-bottom:10px;"></div>
@@ -25758,5 +25763,62 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 })();
 </script>
 
-\n<script id="game-auto-update-v1">\n(function(){\n  'use strict';\n  const GAME_VERSION = '1.0.3';\n  const CHECK_INTERVAL = 5 * 60 * 1000;\n  async function checkGameUpdate(showErrors) {\n    try {\n      const response = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });\n      if (!response.ok) return;\n      const data = await response.json();\n      if (!data.version || data.version === GAME_VERSION) return;\n      const message = '發現遊戲新版本 ' + data.version + '，重新載入後套用更新？';\n      if (window.confirm(message)) {\n        const url = new URL(window.location.href);\n        url.searchParams.set('v', data.version);\n        window.location.replace(url.toString());\n      }\n    } catch (error) {\n      if (showErrors) console.warn('無法檢查遊戲更新', error);\n    }\n  }\n  checkGameUpdate(false);\n  window.setInterval(function(){ checkGameUpdate(false); }, CHECK_INTERVAL);\n})();\n</script>\n</body>
+<script id="game-auto-update-v2">
+(function(){
+  'use strict';
+  const GAME_VERSION = '1.0.3';
+  const RELEASES_URL = 'https://github.com/defance16042-lgtm/hell-idle-game/releases/latest';
+  const titleMessage = () => document.getElementById('rpg-title-message');
+  function showUpdateMessage(text, tone = 'normal') {
+    const node = titleMessage();
+    if (!node) return;
+    node.textContent = text;
+    node.style.color = tone === 'error' ? '#ffaaa0' : tone === 'success' ? '#a9e6b4' : '#c9e8f2';
+  }
+  function isElectronApp() { return !!window.electronSave?.isElectron && typeof window.electronSave.updateCheck === 'function'; }
+  function openReleasesPage() { window.open(RELEASES_URL, '_blank', 'noopener,noreferrer'); }
+  async function checkGameUpdate(interactive = false) {
+    if (interactive) showUpdateMessage('正在檢查更新……');
+    if (isElectronApp()) {
+      try {
+        const result = await window.electronSave.updateCheck();
+        if (!result?.ok && result?.code === 'not-packaged') {
+          if (interactive) { showUpdateMessage('目前是開發／網頁模式，請到 GitHub Releases 下載安裝版。'); openReleasesPage(); }
+        } else if (result?.ok && result.updateAvailable === false && interactive) {
+          showUpdateMessage('目前已是最新版本 v' + GAME_VERSION + '。', 'success');
+        } else if (result?.ok && interactive) {
+          showUpdateMessage('已找到更新，正在下載；完成後會提示重新啟動。');
+        } else if (interactive) showUpdateMessage('更新檢查已完成。', 'success');
+      } catch (_) {
+        if (interactive) showUpdateMessage('無法檢查更新，請稍後再試或開啟 GitHub Releases。', 'error');
+      }
+      return;
+    }
+    try {
+      const response = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!response.ok) throw new Error('version request failed');
+      const data = await response.json();
+      if (!data.version || data.version === GAME_VERSION) {
+        if (interactive) showUpdateMessage('目前已是最新版本 v' + GAME_VERSION + '。', 'success');
+        return;
+      }
+      if (interactive) { showUpdateMessage('發現新版本 v' + data.version + '，將開啟下載頁面。', 'success'); openReleasesPage(); }
+    } catch (_) {
+      if (interactive) { showUpdateMessage('無法檢查更新，請直接開啟 GitHub Releases。', 'error'); openReleasesPage(); }
+    }
+  }
+  window.checkGameUpdate = checkGameUpdate;
+  if (window.electronSave?.onUpdateStatus) window.electronSave.onUpdateStatus(status => {
+    if (status?.event === 'checking') showUpdateMessage('正在檢查更新……');
+    if (status?.event === 'available') showUpdateMessage('發現 v' + (status.version || '新') + '，正在下載更新。');
+    if (status?.event === 'not-available') showUpdateMessage('目前已是最新版本 v' + GAME_VERSION + '。', 'success');
+    if (status?.event === 'download-progress') showUpdateMessage('更新下載中 ' + Math.round(status.percent || 0) + '%……');
+    if (status?.event === 'downloaded') showUpdateMessage('更新已下載完成，請依提示重新啟動遊戲。', 'success');
+    if (status?.event === 'error') showUpdateMessage('更新失敗：' + (status.message || '請稍後再試。'), 'error');
+  });
+  checkGameUpdate(false);
+  window.setInterval(function(){ checkGameUpdate(false); }, 5 * 60 * 1000);
+})();
+</script>
+</body>
 </html>

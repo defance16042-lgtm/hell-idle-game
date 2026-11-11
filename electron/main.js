@@ -5,6 +5,11 @@ const path = require('node:path');
 
 const DEFAULT_STORE = { version: 1, characters: {}, sharedWarehouse: null, storage: {} };
 let mainWindow;
+let updateCheckInProgress = false;
+
+function sendUpdateStatus(event, extra = {}) {
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('update-status', { event, ...extra });
+}
 
 function locationFile() {
   return path.join(app.getPath('userData'), 'save-location.json');
@@ -85,6 +90,21 @@ function registerSaveIpc() {
   ipcMain.on('save-write', (event, store) => { event.returnValue = writeStore(store); });
   ipcMain.on('save-path', event => { event.returnValue = saveFilePath(); });
   ipcMain.on('save-choose-directory', event => { event.returnValue = chooseSaveDirectory(); });
+  ipcMain.handle('update-check', async () => {
+    if (!app.isPackaged) return { ok: false, code: 'not-packaged' };
+    if (updateCheckInProgress) return { ok: true, checking: true };
+    updateCheckInProgress = true;
+    try {
+      const result = await autoUpdater.checkForUpdates();
+      const latest = result?.updateInfo;
+      return { ok: true, updateAvailable: !!latest && latest.version !== app.getVersion(), version: latest?.version || null };
+    } catch (error) {
+      sendUpdateStatus('error', { message: error.message });
+      return { ok: false, code: 'check-failed', message: error.message };
+    } finally {
+      updateCheckInProgress = false;
+    }
+  });
 }
 
 function createWindow() {
@@ -107,10 +127,13 @@ function createWindow() {
 
 function checkForUpdates() {
   if (!app.isPackaged) return;
-  autoUpdater.checkForUpdatesAndNotify().catch(error => {
-    console.warn('檢查遊戲更新失敗:', error.message);
-  });
+  autoUpdater.on('checking-for-update', () => sendUpdateStatus('checking'));
+  autoUpdater.on('update-available', info => sendUpdateStatus('available', { version: info.version }));
+  autoUpdater.on('update-not-available', info => sendUpdateStatus('not-available', { version: info.version }));
+  autoUpdater.on('download-progress', progress => sendUpdateStatus('download-progress', { percent: progress.percent }));
+  autoUpdater.on('error', error => sendUpdateStatus('error', { message: error.message }));
   autoUpdater.on('update-downloaded', () => {
+    sendUpdateStatus('downloaded');
     dialog.showMessageBox(mainWindow, {
       type: 'info',
       buttons: ['立即重新啟動', '稍後再說'],
@@ -121,6 +144,10 @@ function checkForUpdates() {
     }).then(result => {
       if (result.response === 0) autoUpdater.quitAndInstall();
     });
+  });
+  autoUpdater.checkForUpdates().catch(error => {
+    sendUpdateStatus('error', { message: error.message });
+    console.warn('檢查遊戲更新失敗:', error.message);
   });
 }
 
