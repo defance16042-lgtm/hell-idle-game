@@ -26382,5 +26382,57 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 })();
 </script>
 
+<script id="bestiary-leader-cave-layer-menu-v2">
+(() => {
+  'use strict';
+  const CAVE = '魔物首領窟';
+  const THIRD = '魔物首領窟・第三層';
+  const layers = [
+    { key:CAVE, title:'第一層', icon:'🏰', tone:'#d6a64c', desc:'魔物首領窟原始第一層：收錄原本的特殊怪與 BOSS。' },
+    { key:'魔物首領窟・第二層', title:'第二層', icon:'🌊', tone:'#37e8ff', desc:'海底深淵與墮落天界特殊怪、BOSS，以及既有九神龍規則。' },
+    { key:THIRD, title:'第三層', icon:'🪐', tone:'#b35cff', desc:'克卜勒異星機械首領層：只收錄 Lv.71–81 特殊怪與 BOSS。' }
+  ];
+  const listFor = key => { const source = typeof zoneMonsters !== 'undefined' ? zoneMonsters : {}; return Array.isArray(source[key]) ? source[key].filter(m => m.type !== 'training') : []; };
+  const showLayerMenu = () => {
+    const body = document.getElementById('modal-body');
+    const modal = document.getElementById('modal-window');
+    if (!body || !modal) return;
+    body.className = 'bestiary-v2';
+    body.dataset.modalType = 'bestiary-v2-leader-cave';
+    body.innerHTML = `<div class="bv2-toolbar"><button class="modal-btn bv2-back" onclick="openBestiaryV2()">← 區域列表</button><h3>🏰 魔物首領窟｜樓層圖鑑</h3><button class="modal-btn bv2-back" onclick="closeModal()">關閉</button></div><p class="bv2-note">請選擇魔物首領窟樓層；第一層、第二層、第三層分開記錄怪物與掉落。</p><div class="bv2-zone-grid">${layers.map(layer => {
+      const list = listFor(layer.key);
+      const specials = list.filter(m => m.type === 'special').length;
+      const bosses = list.filter(m => m.type === 'boss').length;
+      const levels = list.map(m => Number(m.level)).filter(Number.isFinite);
+      const range = levels.length ? `等級 ${Math.min(...levels)}–${Math.max(...levels)}` : '尚未登錄';
+      return `<button class="bv2-zone-card" style="border-color:${layer.tone};" onclick="openBestiaryZoneV2('${layer.key}')"><span class="bv2-zone-icon">${layer.icon}</span><h4>${layer.title}</h4><p>${layer.desc}</p><p>${range}｜${list.length} 種<br>特殊怪 ${specials}｜BOSS ${bosses}</p></button>`;
+    }).join('')}</div>`;
+    modal.style.display = 'flex';
+  };
+  const previousHome = window.openBestiaryV2;
+  if (typeof previousHome === 'function' && !previousHome.__leaderCaveLayers) {
+    const wrappedHome = function(...args) {
+      const result = previousHome.apply(this, args);
+      document.querySelectorAll('.bv2-zone-card').forEach(card => {
+        const title = card.querySelector('h4');
+        if (title?.textContent.trim() === THIRD) card.remove();
+      });
+      return result;
+    };
+    wrappedHome.__leaderCaveLayers = true;
+    window.openBestiaryV2 = wrappedHome;
+  }
+  const previousZone = window.openBestiaryZoneV2;
+  if (typeof previousZone === 'function' && !previousZone.__leaderCaveLayers) {
+    const wrappedZone = function(zoneName, ...args) {
+      if (zoneName === CAVE) { showLayerMenu(); return; }
+      return previousZone.apply(this, [zoneName, ...args]);
+    };
+    wrappedZone.__leaderCaveLayers = true;
+    window.openBestiaryZoneV2 = wrappedZone;
+  }
+})();
+</script>
+
 </body>
 </html>
