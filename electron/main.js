@@ -90,6 +90,7 @@ function registerSaveIpc() {
   ipcMain.on('save-write', (event, store) => { event.returnValue = writeStore(store); });
   ipcMain.on('save-path', event => { event.returnValue = saveFilePath(); });
   ipcMain.on('save-choose-directory', event => { event.returnValue = chooseSaveDirectory(); });
+  ipcMain.on('app-version', event => { event.returnValue = app.getVersion(); });
   ipcMain.handle('update-check', async () => {
     if (!app.isPackaged) return { ok: false, code: 'not-packaged' };
     if (updateCheckInProgress) return { ok: true, checking: true };
