@@ -14399,8 +14399,8 @@ function getCombatVisualCycleDuration(actionPath) {
             let comparisonHtml = '';
             if (!equipped) {
                 const currentItem = isWeapon
-                    ? (currentPlayer.items.weapons || []).find(entry => entry.instanceId === currentPlayer.equipment.weaponId)
-                    : (currentPlayer.items.armors || []).find(entry => isArmorItemEquipped(entry, currentPlayer));
+                    ? (currentPlayer.items.weapons || []).find(entry => String(entry.instanceId) === String(currentPlayer.equipment.weaponId))
+                    : (currentPlayer.items.armors || []).find(entry => String(entry.slot || '') === String(item.slot || '') && isArmorItemEquipped(entry, currentPlayer));
                 if (currentItem) {
                     const statNames = { str: '力量', dex: '敏捷', con: '體質', wis: '精神', int: '智力', cha: '魅力' };
                     const rows = [];
@@ -26318,73 +26318,71 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 </script>
 
 <style id="parallel-three-kingdoms-bestiary-icon-style-v1">
-.bv2-zone-icon.parallel-three-kingdoms-bestiary-icon{display:block;width:54px;height:54px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(190,92,255,.7));}
+.parallel-three-kingdoms-bestiary-icon{display:block;width:54px;height:54px;max-width:100%;object-fit:contain;filter:drop-shadow(0 0 7px rgba(190,92,255,.7));}
+.bestiary-zone-icon .parallel-three-kingdoms-bestiary-icon{width:48px;height:48px;}
 </style>
-<script id="parallel-three-kingdoms-bestiary-icon-v1">
+<script id="parallel-three-kingdoms-bestiary-icon-v2">
 (() => {
   'use strict';
+  if (window.__parallelThreeKingdomsBestiaryIconV2) return;
+  window.__parallelThreeKingdomsBestiaryIconV2 = true;
   const ZONE = '平行三國';
   const ICON = 'assets/regions/parallel-three-kingdoms-bestiary-icon.png';
-  const decorate = () => {
-    document.querySelectorAll('.bv2-zone-card').forEach(card => {
-      const title = card.querySelector('h4');
-      const icon = card.querySelector('.bv2-zone-icon');
+  const decorate = (root = document) => {
+    root.querySelectorAll?.('.bestiary-zone-button,.bv2-zone-card').forEach(card => {
+      const title = card.querySelector('.bestiary-zone-name,h4');
+      const icon = card.querySelector('.bestiary-zone-icon,.bv2-zone-icon');
       if (!title || !icon || title.textContent.trim() !== ZONE) return;
-      if (icon.dataset.parallelBestiaryIcon === 'true') return;
-      icon.textContent = '';
+      if (icon.querySelector('.parallel-three-kingdoms-bestiary-icon')) return;
       const image = document.createElement('img');
-      image.className = 'bv2-zone-icon parallel-three-kingdoms-bestiary-icon';
+      image.className = 'parallel-three-kingdoms-bestiary-icon';
       image.src = ICON;
-      image.alt = '平行三國虎牢關怪物圖鑑徽章';
-      icon.appendChild(image);
+      image.alt = '平行三國怪物圖鑑自創圖示';
+      image.loading = 'eager';
+      icon.replaceChildren(image);
       icon.dataset.parallelBestiaryIcon = 'true';
     });
   };
-  const previous = window.openBestiaryV2;
-  if (typeof previous === 'function') {
-    window.openBestiaryV2 = function(...args) {
+  const observer = new MutationObserver(records => {
+    for (const record of records) {
+      for (const node of record.addedNodes) {
+        if (node.nodeType === 1) {
+          if (node.matches?.('.bestiary-zone-button,.bv2-zone-card')) decorate(node.parentElement || document);
+          else decorate(node);
+        }
+      }
+    }
+  });
+  const start = () => {
+    decorate();
+    if (document.body) observer.observe(document.body, {subtree:true, childList:true});
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, {once:true});
+  else start();
+  const previous = window.openBestiary;
+  if (typeof previous === 'function' && !previous.__parallelThreeKingdomsBestiaryIconV2) {
+    const wrapped = function(...args) {
       const result = previous.apply(this, args);
       decorate();
       return result;
     };
+    wrapped.__parallelThreeKingdomsBestiaryIconV2 = true;
+    window.openBestiary = wrapped;
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', decorate, {once:true});
-  else decorate();
+  const previousV2 = window.openBestiaryV2;
+  if (typeof previousV2 === 'function' && !previousV2.__parallelThreeKingdomsBestiaryIconV2) {
+    const wrappedV2 = function(...args) {
+      const result = previousV2.apply(this, args);
+      decorate();
+      return result;
+    };
+    wrappedV2.__parallelThreeKingdomsBestiaryIconV2 = true;
+    window.openBestiaryV2 = wrappedV2;
+  }
 })();
 </script>
 
-<style id="disable-equipment-compare-ui-style-v1">
-/* 使用者停用裝備比較：保留裝備詳情與裝備／卸下按鈕，不顯示任何比較介面。 */
-.equipment-compare-compact,#unified-equipment-compare,#hover-equipment-compare,#set-gear-compare-card,#ordinary-gear-compare-card,.equipment-compare-tooltip,.ordinary-gear-compare,.ogc-panel,[id*="equipment-compare"],[class*="equipment-compare"]{display:none!important;pointer-events:none!important}
-</style>
-<script id="disable-equipment-compare-ui-v1">
-(() => {
-  'use strict';
-  const hide = () => {
-    document.querySelectorAll('.equipment-compare-compact,#unified-equipment-compare,#hover-equipment-compare,#set-gear-compare-card,#ordinary-gear-compare-card,.equipment-compare-tooltip,.ordinary-gear-compare,.ogc-panel,[id*="equipment-compare"],[class*="equipment-compare"]').forEach(node => {
-      node.style.setProperty('display','none','important');
-      node.style.setProperty('pointer-events','none','important');
-    });
-  };
-  const previousDetails = window.showEquipmentDetails;
-  if (typeof previousDetails === 'function' && !previousDetails.__compareDisabled) {
-    const wrappedDetails = function(...args) {
-      const result = previousDetails.apply(this, args);
-      document.querySelectorAll('.equipment-compare-compact').forEach(node => node.remove());
-      hide();
-      return result;
-    };
-    wrappedDetails.__compareDisabled = true;
-    window.showEquipmentDetails = wrappedDetails;
-  }
-  document.addEventListener('mouseover', hide, true);
-  document.addEventListener('mousemove', hide, true);
-  document.addEventListener('focusin', hide, true);
-  const observer = new MutationObserver(hide);
-  observer.observe(document.body, {subtree:true, childList:true});
-  hide();
-})();
-</script>
+
 
 <script id="bestiary-leader-cave-layer-menu-v2">
 (() => {
@@ -26494,6 +26492,144 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       grid.appendChild(section); return result;
     };
     wrappedPortal.__leaderCaveUnified = true; window.openMonsterLeaderCave = wrappedPortal;
+  }
+})();
+</script>
+
+<style id="parallel-three-kingdoms-dong-zhuo-style-v1">
+#monster-icon.dong-zhuo-attack-active{animation:dongZhuoBossLunge .76s cubic-bezier(.2,.85,.2,1) both!important;}
+#monster-icon.dong-zhuo-attack-active::after{content:"";position:absolute;left:-36%;top:5%;width:94%;height:74%;pointer-events:none;border-right:6px solid #ffe08a;border-bottom:7px solid #ff4a5b;border-radius:50%;filter:drop-shadow(0 0 5px #fff0a2) drop-shadow(0 0 14px #ff274e);transform:rotate(-28deg);animation:dongZhuoCrescentSlash .68s ease-out both;z-index:8;}
+#monster-icon.dong-zhuo-attack-active::before{content:"";position:absolute;left:-46%;bottom:-5%;width:145%;height:32%;pointer-events:none;border-bottom:4px solid #ff564f;border-radius:50%;filter:drop-shadow(0 0 9px #ffb84f) drop-shadow(0 0 16px #a425ff);animation:dongZhuoGroundShock .76s ease-out both;z-index:7;}
+@keyframes dongZhuoBossLunge{0%,100%{transform:translateX(0) translateY(0) scale(1)}22%{transform:translateX(5px) translateY(3px) scale(.94)}58%{transform:translateX(-21px) translateY(-3px) scale(1.1)}78%{transform:translateX(-8px) translateY(2px) scale(1.04)}}
+@keyframes dongZhuoCrescentSlash{0%{opacity:0;transform:rotate(-54deg) scale(.22)}30%{opacity:1}100%{opacity:0;transform:rotate(13deg) scale(1.12)}}
+@keyframes dongZhuoGroundShock{0%,18%{opacity:0;transform:scaleX(.18)}48%{opacity:1}100%{opacity:0;transform:scaleX(1.16)}}
+@media(prefers-reduced-motion:reduce){#monster-icon.dong-zhuo-attack-active,#monster-icon.dong-zhuo-attack-active::before,#monster-icon.dong-zhuo-attack-active::after{animation-duration:.01ms!important}}
+</style>
+<script id="parallel-three-kingdoms-dong-zhuo-v1">
+(() => {
+  'use strict';
+  if (window.__parallelThreeKingdomsDongZhuoV1) return;
+  window.__parallelThreeKingdomsDongZhuoV1 = true;
+  const ZONE = '平行三國';
+  if (typeof zoneMonsters === 'undefined' || !zoneMonsters) return;
+  const monster = {
+    name: '董卓', icon: '👑',
+    image: 'assets/monsters/parallel_three_kingdoms/dong_zhuo-boss.png',
+    battleImage: 'assets/monsters/parallel_three_kingdoms/dong_zhuo-boss.png',
+    level: 90, levelRange: '90', attackSpeed: 1.06,
+    hp: 1080000, maxHp: 1080000, atk: 8850, def: 3180, magicDefense: 2860,
+    attackType: '赤燼崩岳斬', basicAttackName: '赤燼崩岳斬',
+    attackRange: 'melee', damageType: 'physical',
+    exp: 148000, gold: 48000, type: 'boss', encounterChance: 1,
+    facing: 'left-full-body', orientation: 'strict-left-profile',
+    visualNote: '全身完整入鏡，頭部、胸口、骨盆、膝蓋、腳尖、披風與偃月長柄武器全部朝左；禁止正面、右朝與鏡像。',
+    baseStats: { str: 1880, dex: 660, con: 1720, wis: 780, int: 720, cha: 220 },
+    bonusStats: { attack: 212, defense: 186, magicDefense: 138, critical: 0.30, evasion: 0.10 },
+    skills: [
+      { name: '赤燼崩岳斬', phase: 'normal', chance: 0.40, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.82, effect: 'heavy' },
+      { name: '玉璽焚宮・裂地', phase: 'lowHp', chance: 0.36, damageType: 'magic', attackRange: 'melee', powerMultiplier: 2.04, effect: 'blast' }
+    ],
+    description: '平行三國的終局暴君，身披玄鐵重鎧與赤焰披風，揮動偃月長柄武器鎮守虎牢關。蓄勢後以「赤燼崩岳斬」橫向重劈，低生命時再引爆玉璽之力，讓裂地紅紫震波席捲戰場。',
+    dropTable: [
+      '魂幣 48,000', '經驗 148,000', '補血藥水（8%）',
+      '董卓專屬：天命玉璽戒｜戒指｜全職業可用｜需求等級 85｜獨立掉落率 5%｜攻擊 +190、物理防禦 +155、魔法防禦 +160、生命上限 +16,000｜不可強化'
+    ],
+    uniqueDrops: ['天命玉璽戒｜BOSS專屬戒指｜全職業可用｜需求等級 85｜獨立掉落 5%；攻擊 +190、物理防禦 +155、魔法防禦 +160、生命上限 +16,000；固定 +0、不可強化。'],
+    bossPhases: [
+      { name: '虎牢關暴君', trigger: '生命值高於 50%', description: '壓低身形蓄力，施展赤燼崩岳斬；偃月刀的紅紫弧光斬向左側。' },
+      { name: '玉璽焚宮', trigger: '生命值低於或等於 50%', description: '玉璽發出翠金光芒，接續玉璽焚宮・裂地；重擊地面並釋放紅紫裂地震波。' }
+    ],
+    zone: ZONE, threatTier: 'parallel-three-kingdoms-boss'
+  };
+  const roster = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
+  const previous = roster.find(entry => entry && entry.name === monster.name);
+  if (previous) Object.assign(previous, monster); else roster.push(monster);
+  window.parallelThreeKingdomsDongZhuo = previous || monster;
+
+  const itemLabel = '天命玉璽戒';
+  const ringStats = { str: 40, dex: 35, con: 55, wis: 40, int: 40 };
+  function awardJadeSealRing(target) {
+    if (!target || target.name !== monster.name || target._dongZhuoJadeSealChecked) return false;
+    target._dongZhuoJadeSealChecked = true;
+    if (Math.random() >= 0.05 || typeof currentPlayer === 'undefined' || !currentPlayer) return false;
+    currentPlayer.items ||= {};
+    currentPlayer.items.armors = Array.isArray(currentPlayer.items.armors) ? currentPlayer.items.armors : [];
+    const properties = [
+      '戒指部位｜全職業可用｜需求等級 85', '攻擊力 +190', '物理防禦 +155',
+      '魔法防禦 +160', '生命上限 +16,000',
+      ...Object.entries(ringStats).map(([key, value]) => `${({str:'力量',dex:'敏捷',con:'體質',wis:'精神',int:'智力'})[key]} +${value}`),
+      '董卓專屬掉落｜獨立掉落率 5%', '不可強化｜強化等級固定 +0'
+    ];
+    const ring = {
+      instanceId: `dong_zhuo_jade_seal_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+      id: 'dong_zhuo_jade_seal_ring_v1', templateId: 'dong_zhuo_jade_seal_ring_v1', ringId: 'dong_zhuo_jade_seal_ring_v1',
+      name: itemLabel, kind: 'armor', armorType: 'accessory', slot: 'ringLeft', slotLabel: '戒指', ring: true,
+      level: 85, requiredLevel: 85, classKey: 'shared', classKeys: ['knight','warrior','elf','mage','monk'],
+      rarity: '神話', quality: '神話', qualityColor: '#80f1bd',
+      icon: '💍', iconAsset: 'assets/items/dong_zhuo-jade_seal_ring.png', image: 'assets/items/dong_zhuo-jade_seal_ring.png',
+      attackBonus: 190, physicalDefenseBonus: 155, magicDefenseBonus: 160, maxHpBonus: 16000,
+      statBonuses: { ...ringStats }, stats: { ...ringStats }, properties,
+      enhancementLevel: 0, cannotEnhance: true, sourceMonster: monster.name, sourceDropChance: 0.05, obtainedAt: Date.now()
+    };
+    currentPlayer.items.armors.push(ring);
+    if (typeof addBattleLog === 'function') addBattleLog(`👑 <strong style="color:${ring.qualityColor}">董卓掉落【${ring.rarity} ${itemLabel}】</strong>（戒指｜全職業可用｜攻擊 +190、物防 +155、魔防 +160、生命上限 +16,000｜獨立掉落率 5%｜不可強化）！`);
+    try {
+      if (typeof saveGame === 'function') saveGame();
+      if (typeof renderInventory === 'function' && document.getElementById('inventory-float')?.style.display === 'flex') renderInventory();
+    } catch (_) {}
+    return true;
+  }
+  window.awardDongZhuoJadeSealRing = awardJadeSealRing;
+  if (typeof window.resolveMonsterDefeat === 'function' && !window.resolveMonsterDefeat.__dongZhuoJadeSealWrapped) {
+    const originalResolve = window.resolveMonsterDefeat;
+    const wrappedResolve = function(...args) {
+      const defeated = typeof currentMonster !== 'undefined' ? currentMonster : null;
+      const shouldRoll = defeated?.name === monster.name && !defeated._dongZhuoJadeSealChecked && !monsterDefeatInProgress && Number(defeated.hp) <= 0;
+      const result = originalResolve.apply(this, args);
+      if (shouldRoll) awardJadeSealRing(defeated);
+      return result;
+    };
+    wrappedResolve.__dongZhuoJadeSealWrapped = true;
+    window.resolveMonsterDefeat = wrappedResolve;
+  }
+
+  function animateDongZhuoAttack() {
+    const icon = document.getElementById('monster-icon');
+    if (!icon || !icon.querySelector('.monster-sprite[alt="董卓"]')) return;
+    icon.classList.remove('dong-zhuo-attack-active');
+    void icon.offsetWidth;
+    icon.classList.add('dong-zhuo-attack-active');
+    clearTimeout(icon._dongZhuoMotionTimer);
+    icon._dongZhuoMotionTimer = setTimeout(() => icon.classList.remove('dong-zhuo-attack-active'), 820);
+  }
+  if (typeof window.performMonsterAttack === 'function' && !window.performMonsterAttack.__dongZhuoMotionWrapped) {
+    const originalAttack = window.performMonsterAttack;
+    const wrappedAttack = function(...args) {
+      if (typeof currentMonster !== 'undefined' && currentMonster?.name === monster.name) animateDongZhuoAttack();
+      return originalAttack.apply(this, args);
+    };
+    wrappedAttack.__dongZhuoMotionWrapped = true;
+    window.performMonsterAttack = wrappedAttack;
+  }
+
+  const originalBestiaryDetail = window.openBestiaryDetailV2;
+  if (typeof originalBestiaryDetail === 'function' && !originalBestiaryDetail.__dongZhuoDropPanelWrapped) {
+    const wrappedBestiaryDetail = function(zoneName, monsterName, ...args) {
+      const result = originalBestiaryDetail.call(this, zoneName, monsterName, ...args);
+      if (zoneName === ZONE && monsterName === monster.name) {
+        const detail = document.querySelector('#modal-body .bv2-detail');
+        if (detail && !detail.querySelector('#dong-zhuo-unique-drop')) {
+          const section = document.createElement('section');
+          section.id = 'dong-zhuo-unique-drop';
+          section.className = 'bv2-section';
+          section.innerHTML = `<h4>👑 董卓專屬掉落｜玉璽戒（5%）</h4><div class="bv2-drop-grid"><div class="bv2-drop wing"><strong><img src="assets/items/dong_zhuo-jade_seal_ring.png" alt="" style="width:30px;height:30px;object-fit:contain;vertical-align:middle"> ${itemLabel}</strong>戒指｜神話｜需求等級 85｜全職業可用<br>攻擊 +190｜物理防禦 +155｜魔法防禦 +160｜生命上限 +16,000<br>力量 +40｜敏捷 +35｜體質 +55｜精神 +40｜智力 +40<br>董卓獨立掉落率 5%｜不可強化（固定 +0）</div></div>`;
+          detail.appendChild(section);
+        }
+      }
+      return result;
+    };
+    wrappedBestiaryDetail.__dongZhuoDropPanelWrapped = true;
+    window.openBestiaryDetailV2 = wrappedBestiaryDetail;
   }
 })();
 </script>
