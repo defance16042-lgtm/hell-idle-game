@@ -50,15 +50,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload installer to GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ env.RELEASE_TAG }}
-          files: |
-            release/*.exe
-            release/*.blockmap
-            release/latest.yml
-          fail_on_unmatched_files: true
-          generate_release_notes: false
+      - name: Ensure GitHub Release exists
+        shell: pwsh
+        run: |
+          gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --title $env:RELEASE_TAG --notes "Windows installer $env:RELEASE_TAG" --target $env:RELEASE_TAG
+          }
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload installer to GitHub Release
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem -Path release -File | Where-Object { $_.Extension -in '.exe', '.blockmap', '.yml' } | ForEach-Object { $_.FullName }
+          if (-not $files) { throw '找不到 Windows 安裝包輸出檔' }
+          gh release upload $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --clobber $files
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
