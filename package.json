@@ -1,0 +1,58 @@
+{
+  "name": "hell-idle-game",
+  "version": "1.0.1",
+  "description": "地獄養成放置版",
+  "main": "electron/main.js",
+  "author": "defance16042-lgtm",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis",
+    "release:win": "electron-builder --win nsis --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.6.2"
+  },
+  "devDependencies": {
+    "electron": "^36.9.5",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.defance16042.hellidlegame",
+    "productName": "地獄養成放置版",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "index.html",
+      "version.json",
+      "assets/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "Hell-Idle-Game-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "地獄養成放置版",
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "defance16042-lgtm",
+      "repo": "hell-idle-game",
+      "releaseType": "release"
+    }
+  }
+}
