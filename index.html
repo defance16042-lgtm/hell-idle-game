@@ -25974,7 +25974,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 <style id="parallel-three-kingdoms-portal-preview-style-v1">
 #modal-body:has(.portal-directory-sections) .portal-directory-parallel-preview .portal-zone-grid{grid-template-columns:minmax(0,1fr)!important}
 .portal-directory-parallel-preview .parallel-three-kingdoms-preview-card{border-color:#a58bff!important;background:radial-gradient(ellipse at 10% 50%,rgba(78,93,255,.2),transparent 46%),linear-gradient(135deg,#21182d,#111522)!important;box-shadow:inset 0 0 18px rgba(113,89,210,.12)}
-.portal-directory-parallel-preview .parallel-three-kingdoms-preview-icon{border-color:#9e8dff!important;border-radius:16px!important;background:radial-gradient(circle,rgba(61,70,219,.25),rgba(6,8,18,.88))!important;box-shadow:0 0 12px rgba(98,115,255,.35)!important;cursor:not-allowed!important;opacity:.95}
+.portal-directory-parallel-preview .parallel-three-kingdoms-preview-icon{border-color:#9e8dff!important;border-radius:16px!important;background:radial-gradient(circle,rgba(61,70,219,.25),rgba(6,8,18,.88))!important;box-shadow:0 0 12px rgba(98,115,255,.35)!important;cursor:pointer!important;opacity:1}
 .portal-directory-parallel-preview .parallel-three-kingdoms-preview-icon img{width:58px;height:58px;object-fit:contain;display:block}
 </style>
 <script id="parallel-three-kingdoms-portal-preview-v1">
@@ -25992,7 +25992,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   group.className='portal-directory-group portal-directory-parallel-preview';
   const heading=document.createElement('h4');
   heading.className='portal-directory-heading';
-  heading.textContent='新區域籌備中';
+  heading.textContent='一般歷練區域｜平行三國';
   const grid=document.createElement('div');
   grid.className='portal-zone-grid portal-ordinary-grid';
   const card=document.createElement('section');
@@ -26001,15 +26001,15 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   const button=document.createElement('button');
   button.type='button';
   button.className='portal-zone-enter parallel-three-kingdoms-preview-icon';
-  button.disabled=true;
-  button.setAttribute('aria-label','平行三國區域籌備中，尚未開放');
-  button.title='籌備中｜尚未開放';
+  button.setAttribute('aria-label','傳送至平行三國並開始自動戰鬥');
+  button.title='傳送至平行三國｜一般戰鬥區';
+  button.addEventListener('click',()=>{ closeModal(); startAutoBattle('平行三國'); });
   const image=document.createElement('img');
   image.src='assets/regions/parallel-three-kingdoms-icon.webp';
   image.alt='平行三國：三位 Q 版守護者與暗黑傳送門';
   button.appendChild(image);
   const buttonLabel=document.createElement('small');
-  buttonLabel.textContent='籌備中';
+  buttonLabel.textContent='點擊傳送';
   button.appendChild(buttonLabel);
   const content=document.createElement('div');
   content.style.cssText='flex:1;min-width:0;text-align:left;';
@@ -26018,20 +26018,212 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   title.textContent='平行三國';
   const status=document.createElement('div');
   status.style.cssText='display:inline-block;margin:2px 0 6px;padding:4px 9px;border:1px solid rgba(177,156,255,.45);border-radius:999px;background:rgba(24,18,44,.8);color:#c6b6ff;font-size:12px;font-weight:800;';
-  status.textContent='區域狀態：籌備中';
+  status.textContent='區域狀態：已開放戰鬥';
   const description=document.createElement('div');
   description.style.cssText='color:#bdb8ce;font-size:12px;line-height:1.6;';
-  description.textContent='魏、蜀、吳交錯的平行時空暗黑 Q 版世界。地圖、怪物與玩法尚未開放。';
+  description.textContent='魏、蜀、吳交錯的平行時空暗黑 Q 版世界。一般怪與特殊怪會在此區域實際遭遇。';
   content.append(title,status,description);
   card.append(button,content);
   grid.appendChild(card);
   group.append(heading,grid);
   directory.appendChild(group);
   const summary=directory.querySelector('.portal-directory-summary');
-  if(summary)summary.append(document.createTextNode('｜新區域預告：平行三國'));
+  if(summary)summary.append(document.createTextNode('｜已開放戰鬥區：平行三國'));
   return result;
  };
 })();
 </script>
+
+<script id="parallel-three-kingdoms-bestiary-v1">
+(() => {
+  'use strict';
+  const ZONE = '平行三國';
+  if (typeof zoneMonsters === 'undefined' || !zoneMonsters) return;
+  const roster = [
+    {
+      name: '玄鐵小盾衛',
+      icon: '🛡️',
+      image: 'assets/monsters/parallel_three_kingdoms/parallel-shield-soldier.png',
+      battleImage: 'assets/monsters/parallel_three_kingdoms/parallel-shield-soldier.png',
+      level: 70, levelRange: '70', attackSpeed: 1.18,
+      hp: 185000, maxHp: 185000, atk: 2860, def: 1320, magicDefense: 980,
+      attackType: '玄鐵盾撞', attackRange: 'melee', damageType: 'physical',
+      exp: 34200, gold: 11800, type: 'normal', encounterChance: 34,
+      baseStats: { str: 620, dex: 210, con: 760, wis: 180, int: 150, cha: 88 },
+      bonusStats: { attack: 38, defense: 72, magicDefense: 28, critical: 0.08, evasion: 0.035 },
+      skills: [
+        { name: '玄鐵盾撞', phase: 'normal', chance: 0.34, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.18 },
+        { name: '小鬼縮頭', phase: 'lowHp', chance: 0.24, damageType: 'physical', effect: 'guard', powerMultiplier: 1.05 }
+      ],
+      description: '平行三國的玄鐵小盾衛，縮在裂紋大盾後面，只露出一隻發光的眼睛。雖然看起來圓滾滾，盾撞起來卻很痛。',
+      dropTable: ['玄鐵碎片', '暗紅兵符', '盾衛殘頁'],
+      zone: ZONE, threatTier: 'parallel-three-kingdoms-normal'
+    },
+    {
+      name: '幽燼月槍卒',
+      icon: '🔱',
+      image: 'assets/monsters/parallel_three_kingdoms/parallel-spear-soldier.png',
+      battleImage: 'assets/monsters/parallel_three_kingdoms/parallel-spear-soldier.png',
+      level: 70, levelRange: '70', attackSpeed: 0.94,
+      hp: 148000, maxHp: 148000, atk: 3180, def: 920, magicDefense: 1120,
+      attackType: '月槍穿影', attackRange: 'melee', damageType: 'physical',
+      exp: 34200, gold: 11800, type: 'normal', encounterChance: 33,
+      baseStats: { str: 690, dex: 510, con: 580, wis: 260, int: 210, cha: 96 },
+      bonusStats: { attack: 66, defense: 28, magicDefense: 42, critical: 0.14, evasion: 0.09 },
+      skills: [
+        { name: '月槍穿影', phase: 'normal', chance: 0.38, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.26 },
+        { name: '幽燼回馬槍', phase: 'lowHp', chance: 0.28, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.42 }
+      ],
+      description: '幽燼月槍卒總把過長的月槍拖在地上，槍尖燃著不會熄滅的紫黑火。牠的步伐很短，突刺卻快得像影子。',
+      dropTable: ['幽燼槍尖', '暗紅兵符', '月槍殘頁'],
+      zone: ZONE, threatTier: 'parallel-three-kingdoms-normal'
+    },
+    {
+      name: '魘火踏騎',
+      icon: '🐴',
+      image: 'assets/monsters/parallel_three_kingdoms/parallel-cavalry.png',
+      battleImage: 'assets/monsters/parallel_three_kingdoms/parallel-cavalry.png',
+      level: 70, levelRange: '70', attackSpeed: 1.05,
+      hp: 172000, maxHp: 172000, atk: 3520, def: 1080, magicDefense: 1040,
+      attackType: '魘火衝鋒', attackRange: 'melee', damageType: 'physical',
+      exp: 34200, gold: 11800, type: 'normal', encounterChance: 33,
+      baseStats: { str: 735, dex: 440, con: 650, wis: 220, int: 180, cha: 104 },
+      bonusStats: { attack: 82, defense: 38, magicDefense: 35, critical: 0.16, evasion: 0.12 },
+      skills: [
+        { name: '魘火衝鋒', phase: 'normal', chance: 0.36, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.32 },
+        { name: '回首噴燼', phase: 'lowHp', chance: 0.25, damageType: 'magic', attackRange: 'melee', powerMultiplier: 1.38 }
+      ],
+      description: '魘火踏騎騎著圓滾滾的暗影戰馬，馬蹄每落地一次就冒出小小火花。牠們最擅長用可愛的外表讓敵人放下戒心。',
+      dropTable: ['魘火馬蹄', '暗紅兵符', '踏騎殘頁'],
+      zone: ZONE, threatTier: 'parallel-three-kingdoms-normal'
+    }
+  ];
+  const existing = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
+  roster.forEach(monster => {
+    const found = existing.find(entry => entry && entry.name === monster.name);
+    if (found) Object.assign(found, monster);
+    else existing.push(monster);
+  });
+  window.parallelThreeKingdomsMonsters = existing;
+
+  const previousGetBestiaryZoneIcon = window.getBestiaryZoneIcon;
+  if (typeof previousGetBestiaryZoneIcon === 'function' && !previousGetBestiaryZoneIcon.__parallelThreeKingdoms) {
+    const wrapped = function(zoneName) {
+      if (zoneName === ZONE) return '<span aria-hidden="true">⚔️</span>';
+      return previousGetBestiaryZoneIcon.call(this, zoneName);
+    };
+    wrapped.__parallelThreeKingdoms = true;
+    window.getBestiaryZoneIcon = wrapped;
+  }
+})();
+</script>
+
+
+<script id="parallel-three-kingdoms-fan-chou-v1">
+(() => {
+  'use strict';
+  const ZONE = '平行三國';
+  if (typeof zoneMonsters === 'undefined' || !zoneMonsters) return;
+  const monster = {
+    name: '樊稠將軍',
+    icon: '🗡️',
+    image: 'assets/monsters/parallel_three_kingdoms/fan_chou-general.png',
+    battleImage: 'assets/monsters/parallel_three_kingdoms/fan_chou-general.png',
+    level: 80, levelRange: '80', attackSpeed: 1.22,
+    hp: 395000, maxHp: 395000, atk: 6840, def: 2460, magicDefense: 1880,
+    attackType: '斷陣偃月斬', attackRange: 'melee', damageType: 'physical',
+    exp: 86500, gold: 28600, type: 'special', specialMonster: true,
+    specialTier: '平行三國特殊怪', encounterChance: 8,
+    facing: 'left-full-body', orientation: 'strict-left-profile',
+    visualNote: '全身完整入鏡，頭部、胸口、骨盆、膝蓋、腳尖、披風與長柄武器一致朝左；禁止正面、右朝與鏡像。',
+    baseStats: { str: 1420, dex: 620, con: 1260, wis: 460, int: 360, cha: 180 },
+    bonusStats: { attack: 154, defense: 118, magicDefense: 76, critical: 0.22, evasion: 0.08 },
+    skills: [
+      { name: '斷陣偃月斬', phase: 'normal', chance: 0.42, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.56 },
+      { name: '赤燼回斬', phase: 'lowHp', chance: 0.34, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.88 }
+    ],
+    description: '平行三國的樊稠將軍，披著厚重暗鎧、拖著巨大的彎刃長柄武器。牠看似威風凜凜，卻有一張圓滾滾的 Q 版臉與不太嚇人的小小獠牙。',
+    dropTable: ['樊稠暗鎧', '斷陣偃月刃', '平行兵符・赤', '特殊怪殘頁'],
+    zone: ZONE, threatTier: 'parallel-three-kingdoms-special'
+  };
+  const monsters = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
+  const existing = monsters.find(entry => entry && entry.name === monster.name);
+  if (existing) Object.assign(existing, monster);
+  else monsters.push(monster);
+  window.parallelThreeKingdomsFanChou = monster;
+})();
+</script>
+
+
+<script id="parallel-three-kingdoms-zhang-ji-v1">
+(() => {
+  'use strict';
+  const ZONE = '平行三國';
+  if (typeof zoneMonsters === 'undefined' || !zoneMonsters) return;
+  const monster = {
+    name: '張濟將軍',
+    icon: '🗡️',
+    image: 'assets/monsters/parallel_three_kingdoms/zhang-ji-general.png',
+    battleImage: 'assets/monsters/parallel_three_kingdoms/zhang-ji-general.png',
+    level: 80, levelRange: '80', attackSpeed: 1.08,
+    hp: 368000, maxHp: 368000, atk: 7210, def: 2280, magicDefense: 2140,
+    attackType: '寒玉鉤槍', attackRange: 'melee', damageType: 'physical',
+    exp: 86500, gold: 28600, type: 'special', specialMonster: true,
+    specialTier: '平行三國特殊怪', encounterChance: 8,
+    facing: 'left-full-body', orientation: 'strict-left-profile',
+    visualNote: '全身完整入鏡，頭部、胸口、骨盆、膝蓋、腳尖、披風與長柄武器一致朝左；禁止正面、右朝與鏡像。',
+    baseStats: { str: 1360, dex: 760, con: 1190, wis: 560, int: 470, cha: 190 },
+    bonusStats: { attack: 176, defense: 96, magicDefense: 104, critical: 0.24, evasion: 0.12 },
+    skills: [
+      { name: '寒玉鉤槍', phase: 'normal', chance: 0.44, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.62 },
+      { name: '幽玉封喉', phase: 'lowHp', chance: 0.32, damageType: 'magic', attackRange: 'melee', powerMultiplier: 1.92 }
+    ],
+    description: '平行三國的張濟將軍，身披暗黑玉甲、手持帶符鉤槍，冷冷的青玉鬼火在身邊飄動。牠的表情很嚴肅，但圓臉與短腿讓威嚴打了折扣。',
+    dropTable: ['張濟玉甲', '寒玉鉤槍刃', '平行兵符・青', '特殊怪殘頁'],
+    zone: ZONE, threatTier: 'parallel-three-kingdoms-special'
+  };
+  const monsters = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
+  const existing = monsters.find(entry => entry && entry.name === monster.name);
+  if (existing) Object.assign(existing, monster);
+  else monsters.push(monster);
+  window.parallelThreeKingdomsZhangJi = monster;
+})();
+</script>
+
+
+<script id="parallel-three-kingdoms-archer-v1">
+(() => {
+  'use strict';
+  const ZONE = '平行三國';
+  if (typeof zoneMonsters === 'undefined' || !zoneMonsters) return;
+  const monster = {
+    name: '幽弦弓手',
+    icon: '🏹',
+    image: 'assets/monsters/parallel_three_kingdoms/parallel-archer.png',
+    battleImage: 'assets/monsters/parallel_three_kingdoms/parallel-archer.png',
+    level: 70, levelRange: '70', attackSpeed: 0.86,
+    hp: 126000, maxHp: 126000, atk: 3340, def: 760, magicDefense: 1260,
+    attackType: '幽弦穿心箭', attackRange: 'ranged', damageType: 'physical',
+    exp: 34200, gold: 11800, type: 'normal', encounterChance: 26,
+    facing: 'left-full-body', orientation: 'strict-left-profile',
+    visualNote: '全身完整入鏡，頭部、胸口、骨盆、膝蓋、腳尖、弓、箭矢與箭袋一致朝左；箭矢尖端朝左，禁止正面、右朝與鏡像。',
+    baseStats: { str: 520, dex: 780, con: 490, wis: 360, int: 290, cha: 112 },
+    bonusStats: { attack: 92, defense: 18, magicDefense: 58, critical: 0.18, evasion: 0.16, rangedDefense: 34 },
+    skills: [
+      { name: '幽弦穿心箭', phase: 'normal', chance: 0.42, damageType: 'physical', attackRange: 'ranged', powerMultiplier: 1.28 },
+      { name: '紫燼散射', phase: 'lowHp', chance: 0.26, damageType: 'magic', attackRange: 'ranged', powerMultiplier: 1.46 }
+    ],
+    description: '平行三國的幽弦弓手，總把黑木長弓拉得滿滿的，紫光箭矢會在半空留下可愛的小火星。牠躲在兜帽裡，只露出一隻調皮的眼睛。',
+    dropTable: ['幽弦弓臂', '紫燼箭簇', '暗紅兵符', '弓手殘頁'],
+    zone: ZONE, threatTier: 'parallel-three-kingdoms-normal'
+  };
+  const monsters = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
+  const existing = monsters.find(entry => entry && entry.name === monster.name);
+  if (existing) Object.assign(existing, monster);
+  else monsters.push(monster);
+  window.parallelThreeKingdomsArcher = monster;
+})();
+</script>
+
 </body>
 </html>
