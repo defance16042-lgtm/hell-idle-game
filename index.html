@@ -18401,6 +18401,41 @@ body { scrollbar-color: #76434d #180d17; }
 #unified-equipment-compare .qdc-note { margin-top: 7px; color: #c9b9c1; font-size: 11px; line-height: 1.45; }
 #unified-equipment-compare .qdc-set-status { padding: 7px 8px; border-radius: 8px; background: rgba(96, 48, 43, .24); line-height: 1.5; }
 
+/* Integrated, readable side-by-side equipment comparison. */
+#unified-equipment-compare {
+  width: min(660px, calc(100vw - 18px)) !important; max-height: min(78vh, 740px) !important;
+  overflow: auto !important; overscroll-behavior: contain; pointer-events: auto !important;
+  padding: 14px !important; scrollbar-gutter: stable; box-sizing: border-box !important;
+}
+#unified-equipment-compare .qdc-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:10px; }
+#unified-equipment-compare .qdc-heading h4 { margin:0 !important; font-size:18px !important; }
+#unified-equipment-compare .qdc-heading small { color:#cbb9aa; }
+#unified-equipment-compare .qdc-close { flex:0 0 auto; width:30px; height:30px; padding:0; border:1px solid #9d7652; border-radius:8px; background:#241a20; color:#ffe4bb; font-size:21px; line-height:1; cursor:pointer; }
+#unified-equipment-compare .qdc-equip-grid, #unified-equipment-compare .qdc-property-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+#unified-equipment-compare .qdc-item-card, #unified-equipment-compare .qdc-property-card { min-width:0; padding:10px; border:1px solid rgba(225,181,103,.34); border-radius:9px; background:rgba(20,13,18,.72); }
+#unified-equipment-compare .qdc-item-card { display:flex; flex-direction:column; gap:4px; }
+#unified-equipment-compare .qdc-item-label, #unified-equipment-compare .qdc-property-card b { color:#e8c890; font-size:11px; }
+#unified-equipment-compare .qdc-item-card strong { color:#fff0d4; overflow-wrap:anywhere; font-size:14px; }
+#unified-equipment-compare .qdc-item-card small, #unified-equipment-compare .qdc-property-card small { color:#b9a9a5; }
+#unified-equipment-compare .qdc-item-empty { border-style:dashed; }
+#unified-equipment-compare .qdc-compare-instruction { margin:10px 0; padding:8px 10px; border-left:3px solid #ddb25e; border-radius:5px; background:rgba(189,119,81,.12); color:#dfd2c5; font-size:12px; }
+#unified-equipment-compare .qdc-table-wrap { width:100%; overflow-x:auto; }
+#unified-equipment-compare .qdc-stat-table { width:100%; min-width:500px; border-collapse:collapse; font-size:13px; }
+#unified-equipment-compare .qdc-stat-table th, #unified-equipment-compare .qdc-stat-table td { padding:7px 8px; border-bottom:1px solid rgba(189,119,81,.2); }
+#unified-equipment-compare .qdc-stat-table thead th { position:sticky; top:0; z-index:2; background:#211721; color:#ffe2a8; text-align:right; }
+#unified-equipment-compare .qdc-stat-table thead th:first-child { text-align:left; }
+#unified-equipment-compare .qdc-stat-table tbody th { text-align:left; font-weight:600; white-space:nowrap; }
+#unified-equipment-compare .qdc-stat-table tbody td { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+#unified-equipment-compare .qdc-stat-table .qdc-group-row th { padding:8px 7px 4px; color:#efc77f; background:rgba(94,56,54,.18); text-align:left; }
+#unified-equipment-compare .qdc-property-card ul { margin:6px 0 0; padding-left:18px; }
+#unified-equipment-compare .qdc-property-card li { margin:3px 0; color:#f0dfcb; }
+@media (max-width: 560px) {
+  #unified-equipment-compare { width:calc(100vw - 12px) !important; max-height:78vh !important; padding:10px !important; }
+  #unified-equipment-compare .qdc-equip-grid, #unified-equipment-compare .qdc-property-grid { gap:6px; }
+  #unified-equipment-compare .qdc-item-card, #unified-equipment-compare .qdc-property-card { padding:7px; }
+  #unified-equipment-compare .qdc-item-card strong { font-size:12px; }
+}
+
 /* Original, reusable light-weight effect layer. Only transform/opacity keyframes are used. */
 .qdark-fx-layer { position: absolute; inset: 0; z-index: 25; pointer-events: none; overflow: visible; }
 .qdark-fx { position: absolute; width: 72px; height: 72px; margin: -36px 0 0 -36px; opacity: 0; pointer-events: none; }
@@ -18921,7 +18956,7 @@ body.qdark-effects-off .qdark-fx { display: none !important; }
     return formatEquipmentStatValue(key, value, false);
   }
   function deltaText(key, before, after) {
-    if (typeof before === 'string' || typeof after === 'string') return before === after ? '—' : `${before || '—'} → ${after || '—'}`;
+    if (typeof before === 'string' || typeof after === 'string') return before === after ? '—' : `${escapeHtml(before || '—')} → ${escapeHtml(after || '—')}`;
     const diff = Number(after || 0) - Number(before || 0);
     const mode = pctMode(key, Number(after || before || 0));
     const shown = mode === 'fraction' ? diff * 100 : diff;
@@ -19053,6 +19088,26 @@ body.qdark-effects-off .qdark-fx { display: none !important; }
     panel.style.left = `${Math.max(8, Math.min(x, innerWidth - rect.width - 8))}px`;
     panel.style.top = `${Math.max(8, Math.min(y, innerHeight - rect.height - 8))}px`;
   }
+  function compareStatGroup(key, label) {
+    const text = `${key} ${label}`.toLowerCase();
+    if (/力量|敏捷|體質|精神|智力|魅力|str|dex|con|wis|int|cha|strength|agility|constitution|wisdom|intelligence|charisma/.test(text)) return '六項能力';
+    if (/攻擊|攻速|防禦|attack|defense|defence/.test(text)) return '攻擊與防禦';
+    if (/命中|暴擊|吸血|閃避|格擋|hit|critical|crit|steal|evasion|dodge|block/.test(text)) return '命中與特殊戰鬥';
+    if (/生命|魔力|hp|mp|恢復|regen/.test(text)) return '生命與魔力';
+    if (/傷害|冷卻|首領|穿透|damage|cooldown|boss|penetration/.test(text)) return '增傷與減傷';
+    return '其他數值';
+  }
+  function compareItemCard(item, label, emptyText) {
+    if (!item) return `<div class="qdc-item-card qdc-item-empty"><span class="qdc-item-label">${escapeHtml(label)}</span><strong>${escapeHtml(emptyText)}</strong><small>本部位沒有已裝備物品</small></div>`;
+    const level = Number(item.enhancementLevel) || 0;
+    const name = `${item.name || '未命名裝備'}${level > 0 ? ` +${level}` : ''}`;
+    const meta = [item.slotLabel || item.slot || item.pieceSlot, item.rarity || item.quality].filter(Boolean).join(' · ');
+    return `<div class="qdc-item-card"><span class="qdc-item-label">${escapeHtml(label)}</span><strong>${escapeHtml(name)}</strong><small>${escapeHtml(meta || '裝備')}</small></div>`;
+  }
+  function comparePropertiesCard(item, title) {
+    const values = propertiesList(item);
+    return `<div class="qdc-property-card"><b>${escapeHtml(title)}</b>${values.length ? `<ul>${values.map(value => `<li>${escapeHtml(value)}</li>`).join('')}</ul>` : '<small>無額外詞綴／效果</small>'}</div>`;
+  }
   function renderComparison(slot, event) {
     if (typeof currentPlayer === 'undefined' || !currentPlayer) return;
     const info = getCandidateInfo(slot);
@@ -19068,20 +19123,29 @@ body.qdark-effects-off .qdark-fx { display: none !important; }
     const a = itemRows(info.kind, old);
     const b = itemRows(info.kind, info.item);
     const keys = [...new Set([...a.keys(), ...b.keys()])];
-    const rows = keys.map(label => {
+    const groups = new Map();
+    keys.forEach(label => {
       const before = a.get(label), after = b.get(label);
       const key = after?.key || before?.key || label;
       const av = before?.value ?? 0, bv = after?.value ?? 0;
-      return `<tr><td>${escapeHtml(label)}</td><td>${escapeHtml(formatted(key, av))}</td><td>${escapeHtml(formatted(key, bv))}</td><td>${deltaText(key, av, bv)}</td></tr>`;
-    }).join('');
-    const beforeProperties = propertiesList(old);
-    const afterProperties = propertiesList(info.item);
-    const propertiesHtml = afterProperties.length ? `<div class="qdc-section">候選隨機詞綴／效果</div><div class="qdc-note">${afterProperties.map(escapeHtml).join('<br>')}</div>` : '';
+      const group = compareStatGroup(key, label);
+      if (!groups.has(group)) groups.set(group, []);
+      groups.get(group).push(`<tr><th scope="row">${escapeHtml(label)}</th><td>${old ? escapeHtml(formatted(key, av)) : '—'}</td><td>${escapeHtml(formatted(key, bv))}</td><td>${deltaText(key, av, bv)}</td></tr>`);
+    });
+    const rows = [...groups.entries()].map(([group, groupRows]) => `<tr class="qdc-group-row"><th colspan="4">${escapeHtml(group)}</th></tr>${groupRows.join('')}`).join('');
     const setHtml = setEffectHtml(info);
-    const oldTitle = old ? `${old.name || '目前裝備'}${Number(old.enhancementLevel) > 0 ? ` +${Number(old.enhancementLevel)}` : ''}` : '此部位未裝備同類裝備';
-    const newTitle = `${info.item.name || '候選裝備'}${Number(info.item.enhancementLevel) > 0 ? ` +${Number(info.item.enhancementLevel)}` : ''}`;
-    panel.innerHTML = `<h4>⚖️ 完整裝備比較</h4><div class="qdc-scroll-hint">滑鼠停在面板上直接滾輪上下查看，也可拖曳捲軸。</div><div class="qdc-note">目前：<b>${escapeHtml(oldTitle)}</b><br>候選：<b style="color:#f2c878">${escapeHtml(newTitle)}</b></div><div class="qdc-section">單件能力（含隨機數值）</div><table><thead><tr><th>能力</th><th>目前</th><th>候選</th><th>差異</th></tr></thead><tbody>${rows || '<tr><td colspan="4">沒有可比較的數值欄位</td></tr>'}</tbody></table>${propertiesHtml}${setHtml}${beforeProperties.length ? `<div class="qdc-section">目前裝備詞綴</div><div class="qdc-note">${beforeProperties.map(escapeHtml).join('<br>')}</div>` : ''}<div class="qdc-note">強化階級只作為名稱標示；數值比較以實際能力值為準。比較不會裝備物品，也不會生成或修改隨機套裝詞綴。</div>`;
+    const oldHeading = compareItemCard(old, '目前已裝備', '尚未裝備');
+    const candidateHeading = compareItemCard(info.item, '候選裝備', '');
+    panel.innerHTML = `<div class="qdc-heading"><div><h4>⚖️ 裝備數值比較</h4><small>單件裝備實際數值｜尚未更換</small></div><button type="button" class="qdc-close" aria-label="關閉比較面板" title="關閉" onclick="this.closest('#unified-equipment-compare').style.display='none'">×</button></div>
+      <div class="qdc-equip-grid">${oldHeading}${candidateHeading}</div>
+      <div class="qdc-compare-instruction"><b>比較讀法：</b>目前與候選欄逐項列值；差異＝候選 − 目前。未裝備欄以「—」表示，裝備沒有提供的數值按 0 比較。綠色為數值增加、紅色為減少、灰色為相同。</div>
+      <div class="qdc-section">裝備數值明細（共 ${keys.length} 項）</div>
+      <div class="qdc-table-wrap"><table class="qdc-stat-table"><thead><tr><th>屬性</th><th>目前裝備</th><th>候選裝備</th><th>差異</th></tr></thead><tbody>${rows || '<tr><td colspan="4">兩件裝備都沒有可比較的數值屬性</td></tr>'}</tbody></table></div>
+      <div class="qdc-section">特殊詞綴與效果</div><div class="qdc-property-grid">${comparePropertiesCard(old, '目前裝備')}${comparePropertiesCard(info.item, '候選裝備')}</div>
+      ${setHtml}<div class="qdc-note">強化階級僅作為名稱標示；表格比較裝備本身實際保存的能力數值。套裝件數與共鳴效果列於下方；預覽比較不會更換裝備或修改存檔。</div>`;
     panel.style.display = 'block';
+    panel.setAttribute('role', 'dialog');
+    panel.setAttribute('aria-label', '裝備數值比較');
     panel.setAttribute('aria-live', 'polite');
     const oldTip = document.getElementById('game-equipment-tooltip');
     if (oldTip) oldTip.style.display = 'none';
@@ -25782,7 +25846,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 <script id="game-auto-update-v2">
 (function(){
   'use strict';
-  const GAME_VERSION = '1.0.7';
+  const GAME_VERSION = '1.0.8';
   const RELEASES_URL = 'https://github.com/defance16042-lgtm/hell-idle-game/releases/latest';
   const versionFooter = () => document.getElementById('rpg-version-footer');
   if (versionFooter()) versionFooter().textContent = 'HELL IDLE RPG｜目前版本 v' + GAME_VERSION;
