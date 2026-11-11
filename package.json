@@ -1,6 +1,6 @@
 {
   "name": "hell-idle-game",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "地獄養成放置版",
   "main": "electron/main.js",
   "author": "defance16042-lgtm",
@@ -35,7 +35,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "artifactName": "Hell-Idle-Game-Setup-${version}.${ext}"
