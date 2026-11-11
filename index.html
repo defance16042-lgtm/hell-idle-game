@@ -25970,5 +25970,68 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   window.setInterval(function(){ checkGameUpdate(false); }, 5 * 60 * 1000);
 })();
 </script>
+
+<style id="parallel-three-kingdoms-portal-preview-style-v1">
+#modal-body:has(.portal-directory-sections) .portal-directory-parallel-preview .portal-zone-grid{grid-template-columns:minmax(0,1fr)!important}
+.portal-directory-parallel-preview .parallel-three-kingdoms-preview-card{border-color:#a58bff!important;background:radial-gradient(ellipse at 10% 50%,rgba(78,93,255,.2),transparent 46%),linear-gradient(135deg,#21182d,#111522)!important;box-shadow:inset 0 0 18px rgba(113,89,210,.12)}
+.portal-directory-parallel-preview .parallel-three-kingdoms-preview-icon{border-color:#9e8dff!important;border-radius:16px!important;background:radial-gradient(circle,rgba(61,70,219,.25),rgba(6,8,18,.88))!important;box-shadow:0 0 12px rgba(98,115,255,.35)!important;cursor:not-allowed!important;opacity:.95}
+.portal-directory-parallel-preview .parallel-three-kingdoms-preview-icon img{width:58px;height:58px;object-fit:contain;display:block}
+</style>
+<script id="parallel-three-kingdoms-portal-preview-v1">
+(()=>{
+ if(window.__parallelThreeKingdomsPortalPreviewV1)return;
+ window.__parallelThreeKingdomsPortalPreviewV1=true;
+ const original=window.openPortal;
+ if(typeof original!=='function')return;
+ window.openPortal=function(...args){
+  const result=original.apply(this,args);
+  const body=document.getElementById('modal-body');
+  const directory=body?.querySelector('.portal-directory-sections');
+  if(!directory||directory.querySelector('.portal-directory-parallel-preview'))return result;
+  const group=document.createElement('section');
+  group.className='portal-directory-group portal-directory-parallel-preview';
+  const heading=document.createElement('h4');
+  heading.className='portal-directory-heading';
+  heading.textContent='新區域籌備中';
+  const grid=document.createElement('div');
+  grid.className='portal-zone-grid portal-ordinary-grid';
+  const card=document.createElement('section');
+  card.className='portal-zone-card parallel-three-kingdoms-preview-card';
+  card.style.cssText='display:flex;gap:12px;align-items:center;padding:12px;border:1px solid #a58bff;border-radius:12px;';
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='portal-zone-enter parallel-three-kingdoms-preview-icon';
+  button.disabled=true;
+  button.setAttribute('aria-label','平行三國區域籌備中，尚未開放');
+  button.title='籌備中｜尚未開放';
+  const image=document.createElement('img');
+  image.src='assets/regions/parallel-three-kingdoms-icon.webp';
+  image.alt='平行三國：三位 Q 版守護者與暗黑傳送門';
+  button.appendChild(image);
+  const buttonLabel=document.createElement('small');
+  buttonLabel.textContent='籌備中';
+  button.appendChild(buttonLabel);
+  const content=document.createElement('div');
+  content.style.cssText='flex:1;min-width:0;text-align:left;';
+  const title=document.createElement('div');
+  title.style.cssText='font-size:17px;font-weight:850;color:#e2d7ff;margin-bottom:5px;';
+  title.textContent='平行三國';
+  const status=document.createElement('div');
+  status.style.cssText='display:inline-block;margin:2px 0 6px;padding:4px 9px;border:1px solid rgba(177,156,255,.45);border-radius:999px;background:rgba(24,18,44,.8);color:#c6b6ff;font-size:12px;font-weight:800;';
+  status.textContent='區域狀態：籌備中';
+  const description=document.createElement('div');
+  description.style.cssText='color:#bdb8ce;font-size:12px;line-height:1.6;';
+  description.textContent='魏、蜀、吳交錯的平行時空暗黑 Q 版世界。地圖、怪物與玩法尚未開放。';
+  content.append(title,status,description);
+  card.append(button,content);
+  grid.appendChild(card);
+  group.append(heading,grid);
+  directory.appendChild(group);
+  const summary=directory.querySelector('.portal-directory-summary');
+  if(summary)summary.append(document.createTextNode('｜新區域預告：平行三國'));
+  return result;
+ };
+})();
+</script>
 </body>
 </html>
