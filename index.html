@@ -6508,6 +6508,20 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             return template?.classKeys || ['knight', 'warrior'];
         }
 
+        // 防具欄位的單一判斷入口：戒指可能使用 ring、ringLeft 或 ringRight，
+        // 實際裝備位置則永遠由左右戒指欄位保存，避免存入倉庫時被誤判成未裝備。
+        function getArmorEquipmentKeys(armor) {
+            if (!armor) return [];
+            const isRing = armor.ring === true || !!armor.ringId || ['ring', 'ringLeft', 'ringRight'].includes(String(armor.slot || ''));
+            if (isRing) return ['leftRingId', 'rightRingId'];
+            const slot = (Array.isArray(armorSlots) ? armorSlots : []).find(entry => entry?.key === armor.slot);
+            return slot?.equipmentKey ? [slot.equipmentKey] : [];
+        }
+        function isArmorItemEquipped(armor, player = currentPlayer) {
+            const id = String(armor?.instanceId ?? '');
+            return !!id && getArmorEquipmentKeys(armor).some(key => String(player?.equipment?.[key] ?? '') === id);
+        }
+
         function warehouseSkillBookKey(book) {
             return `${book?.classKey || ''}:${Number(book?.level) || 0}:${book?.name || ''}`;
         }
@@ -14190,7 +14204,7 @@ function getCombatVisualCycleDuration(actionPath) {
                 slots.push(`<button class="inventory-slot ${equipped ? 'is-equipped' : ''} ${getEquipmentQualityClass(item)}" style="--equipment-quality:${getEquipmentQualityColor(item)};border-color:${getEquipmentQualityColor(item)};box-shadow:inset 0 0 10px ${getEquipmentQualityColor(item)}22,0 0 7px ${getEquipmentQualityColor(item)}44;" data-ordinary-compare-kind="weapon" data-ordinary-compare-id="${item.instanceId}" data-game-tooltip="${getEquipmentDisplayName(item)}" aria-label="${item.rarity} ${getEquipmentDisplayName(item)}${equipped ? '，已裝備' : ''}，查看能力與操作" onclick="showEquipmentDetails('weapon','${item.instanceId}')">${getEquipmentIconMarkup(item, 'weapon')}${equipped ? '<span class="equipped-badge">已裝備</span>' : ''}<span class="item-count">⚔</span></button>`);
             });
             (items.armors || []).forEach(item => {
-                const equipped = currentPlayer.equipment[armorSlots.find(slot => slot.key === item.slot)?.equipmentKey] === item.instanceId;
+                const equipped = isArmorItemEquipped(item, currentPlayer);
                 slots.push(`<button class="inventory-slot ${equipped ? 'is-equipped' : ''} ${getEquipmentQualityClass(item)}" style="--equipment-quality:${getEquipmentQualityColor(item)};border-color:${getEquipmentQualityColor(item)};box-shadow:inset 0 0 10px ${getEquipmentQualityColor(item)}22,0 0 7px ${getEquipmentQualityColor(item)}44;" data-ordinary-compare-kind="armor" data-ordinary-compare-id="${item.instanceId}" data-game-tooltip="${getEquipmentDisplayName(item)}" aria-label="${item.rarity} ${getEquipmentDisplayName(item)}${equipped ? '，已裝備' : ''}，查看能力與操作" onclick="showEquipmentDetails('armor','${item.instanceId}')">${getEquipmentIconMarkup(item, 'armor')}${equipped ? '<span class="equipped-badge">已裝備</span>' : ''}<span class="item-count">${item.enhancementLevel ? `+${item.enhancementLevel}` : item.slotLabel}</span></button>`);
             });
             (items.skillBooks || []).forEach((book, index) => slots.push(`<button class="inventory-slot" title="${book.name}技能書｜等級 ${book.level}｜點擊查看說明" aria-label="${book.name}技能書，點擊查看說明" onclick="showInventorySkillBookDetails(${index})"><span class="item-icon">📖</span><span class="item-count">1</span></button>`));
@@ -14228,8 +14242,7 @@ function getCombatVisualCycleDuration(actionPath) {
             const equippedWeaponId = currentPlayer.equipment?.weaponId;
             const armorSlotsLocal = Array.isArray(armorSlots) ? armorSlots : [];
             const isArmorEquipped = item => {
-                const slot = armorSlotsLocal.find(entry => entry.key === item?.slot);
-                return !!slot && currentPlayer.equipment?.[slot.equipmentKey] === item.instanceId;
+                return isArmorItemEquipped(item, currentPlayer);
             };
             if (Array.isArray(items.weapons)) {
                 items.weapons.sort((a, b) => Number(b.instanceId === equippedWeaponId) - Number(a.instanceId === equippedWeaponId)
@@ -14263,7 +14276,7 @@ function getCombatVisualCycleDuration(actionPath) {
         function isEquipmentEquippedForDeletion(kind, instanceId) {
             const id = String(instanceId ?? '');
             if (kind === 'weapon') return String(currentPlayer?.equipment?.weaponId ?? '') === id;
-            if (kind === 'armor') return (Array.isArray(armorSlots) ? armorSlots : []).some(slot => slot?.equipmentKey && String(currentPlayer?.equipment?.[slot.equipmentKey] ?? '') === id);
+            if (kind === 'armor') return getArmorEquipmentKeys((currentPlayer?.items?.armors || []).find(item => String(item?.instanceId ?? '') === id), currentPlayer).some(key => String(currentPlayer?.equipment?.[key] ?? '') === id);
             return false;
         }
         function hasOnlyOneOwnedWeapon() {
@@ -14318,7 +14331,7 @@ function getCombatVisualCycleDuration(actionPath) {
             if (!item) return;
             const equipped = isWeapon
                 ? currentPlayer.equipment.weaponId === item.instanceId
-                : currentPlayer.equipment[armorSlots.find(slot => slot.key === item.slot)?.equipmentKey] === item.instanceId;
+                : isArmorItemEquipped(item, currentPlayer);
             const level = Number(item.enhancementLevel) || 0;
             const enhancedForDelete = isEnhancedEquipmentForDeletion(item);
             const maxEnhancementLevel = getEquipmentEnhancementCap();
@@ -14342,7 +14355,7 @@ function getCombatVisualCycleDuration(actionPath) {
             if (!equipped) {
                 const currentItem = isWeapon
                     ? (currentPlayer.items.weapons || []).find(entry => entry.instanceId === currentPlayer.equipment.weaponId)
-                    : (currentPlayer.items.armors || []).find(entry => entry.instanceId === currentPlayer.equipment[armorSlots.find(slot => slot.key === item.slot)?.equipmentKey]);
+                    : (currentPlayer.items.armors || []).find(entry => isArmorItemEquipped(entry, currentPlayer));
                 if (currentItem) {
                     const statNames = { str: '力量', dex: '敏捷', con: '體質', wis: '精神', int: '智力', cha: '魅力' };
                     const rows = [];
@@ -14403,7 +14416,7 @@ function getCombatVisualCycleDuration(actionPath) {
             const isWeapon = kind === 'weapon';
             const item = isWeapon
                 ? (currentPlayer.items.weapons || []).find(entry => entry.instanceId === instanceId && currentPlayer.equipment.weaponId === instanceId)
-                : (currentPlayer.items.armors || []).find(entry => entry.instanceId === instanceId && armorSlots.some(slot => slot.equipmentKey && currentPlayer.equipment[slot.equipmentKey] === instanceId));
+                : (currentPlayer.items.armors || []).find(entry => entry.instanceId === instanceId && isArmorItemEquipped(entry, currentPlayer));
             if (!item) return;
             const isInverseRing = !isWeapon && item.templateId === 'inverse_ring_v1';
             const isNecklace = !isWeapon && item.slot === 'necklace';
@@ -14443,7 +14456,8 @@ function getCombatVisualCycleDuration(actionPath) {
             ensurePlayerArmor(currentPlayer);
             const armor = currentPlayer.items.armors.find(item => item.instanceId === instanceId);
             const slot = armorSlots.find(item => item.key === armor?.slot);
-            if (!armor || !slot) return;
+            const isRing = !!armor && (armor.ring === true || !!armor.ringId || ['ring', 'ringLeft', 'ringRight'].includes(String(armor.slot || '')));
+            if (!armor || (!slot && !isRing)) return;
             if (!getArmorAllowedClasses(armor).includes(currentPlayer.key)) { alert('這件防具不適合目前職業。'); return; }
             const requiredLevel = getEquipmentRequiredLevel(armor, 'armor');
             if ((Number(currentPlayer.level) || 1) < requiredLevel) { alert(`需要角色等級 ${requiredLevel} 才能裝備。`); return; }
@@ -14473,7 +14487,7 @@ function getCombatVisualCycleDuration(actionPath) {
             ensureSetEquipmentStorage(currentPlayer);
             const gear = [
                 ...(currentPlayer.items.weapons || []).filter(item => item.instanceId !== currentPlayer.equipment.weaponId).map(item => ({ kind: 'weapon', item, label: `${item.rarity} ${item.name}` })),
-                ...(currentPlayer.items.armors || []).filter(item => !armorSlots.some(slot => currentPlayer.equipment[slot.equipmentKey] === item.instanceId)).map(item => ({ kind: 'armor', item, label: `${item.rarity} ${item.name}` })),
+                ...(currentPlayer.items.armors || []).filter(item => !isArmorItemEquipped(item, currentPlayer)).map(item => ({ kind: 'armor', item, label: `${item.rarity} ${item.name}` })),
                 ...(currentPlayer.items.setEquipment || []).filter(item => !isSetEquipmentEquipped(item.instanceId)).map(item => ({ kind: 'setEquipment', item, label: `${item.setName || '空城套裝'} ${item.name}` }))
             ];
             const stackItems = [['potion', '🧪', '補血藥水'], ['mpPotion', '🧿', '補魔藥水'], ['returnScroll', '📜', '回村捲軸'], ['weaponScroll', '⚔️', '普通武器強化卷軸'], ['armorScroll', '🛡️', '普通防具強化卷軸'], ['weaponScrollAdvanced', '⚔️', '進階武器強化卷軸'], ['armorScrollAdvanced', '🛡️', '進階防具強化卷軸'], ['weaponScrollHigh', '⚔️', '高階武器強化卷軸'], ['armorScrollHigh', '🛡️', '高階防具強化卷軸']]
@@ -15184,7 +15198,8 @@ function getCombatVisualCycleDuration(actionPath) {
             if (!instanceId || !player) return false;
             // 一般防具與套裝可同部位並存；檢查一般裝備自己的欄位，不可被套裝顯示優先順序遮住。
             if (typeof getAllEquippedArmorEntries === 'function' && getAllEquippedArmorEntries(player, 'ordinary').some(entry => entry.item?.instanceId === instanceId)) return true;
-            return armorSlots.some(slot => player.equipment?.[slot.equipmentKey] === instanceId);
+            const item = (player.items?.armors || []).find(entry => String(entry?.instanceId ?? '') === String(instanceId));
+            return isArmorItemEquipped(item, player);
         }
 
         function getEquipmentSalePlanByRarity(rarity) {
@@ -17291,9 +17306,10 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
       const p=getPlayer();
       const armor=p?.items?.armors?.find(x=>x.instanceId===id);
       const slot=armorSlots.find(x=>x.key===armor?.slot);
+      const isRing=!!armor && (armor.ring===true || !!armor.ringId || ['ring','ringLeft','ringRight'].includes(String(armor.slot||'')));
       const allowed=typeof getArmorAllowedClasses==='function' ? getArmorAllowedClasses(armor).includes(p?.key) : true;
       const levelOk=!!p && Number(p.level)>=Number(armor?.requiredLevel||0);
-      if (!p || !armor || !slot || !allowed || !levelOk) return old(id);
+      if (!p || !armor || (!slot && !isRing) || !allowed || !levelOk) return old(id);
       // 一般防具與普通套裝可並存，不清除套裝欄位。
       return old(id);
     };
