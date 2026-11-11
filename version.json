@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "updatedAt": "2026-11-11",
-  "notes": "GitHub Pages 初始版本"
+  "notes": "assets 圖片最佳化為 WebP，保留透明度與原始尺寸"
 }

@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">影之深遂黑洞傳送門</title>
+  <desc id="desc">黑暗可愛 Q 版宇宙黑洞，帶有紫色星環、星星與小惡魔表情</desc>
+  <defs>
+    <radialGradient id="halo" cx="50%" cy="48%" r="52%">
+      <stop offset="0" stop-color="#080411"/>
+      <stop offset=".48" stop-color="#160b2c"/>
+      <stop offset=".78" stop-color="#6f37b5"/>
+      <stop offset=".9" stop-color="#d18aff"/>
+      <stop offset="1" stop-color="#3c1d70"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f0b8ff"/>
+      <stop offset=".38" stop-color="#914cff"/>
+      <stop offset=".75" stop-color="#4d20a0"/>
+      <stop offset="1" stop-color="#e581ff"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3.2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <g filter="url(#glow)">
+    <ellipse cx="64" cy="67" rx="47" ry="18" fill="none" stroke="url(#ring)" stroke-width="8" transform="rotate(-18 64 67)" opacity=".95"/>
+    <circle cx="64" cy="64" r="39" fill="url(#halo)" stroke="#d996ff" stroke-width="3"/>
+    <circle cx="64" cy="64" r="22" fill="#030207" stroke="#2f155e" stroke-width="3"/>
+    <path d="M44 48c-9-7-14-4-17 2 7 0 10 4 12 8M84 48c9-7 14-4 17 2-7 0-10 4-12 8" fill="none" stroke="#d58cff" stroke-width="4" stroke-linecap="round"/>
+    <path d="M52 67c3 3 7 4 12 1 5 3 9 2 12-1" fill="none" stroke="#eaa8ff" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="53" cy="59" r="4" fill="#b875ff"/><circle cx="75" cy="59" r="4" fill="#b875ff"/>
+    <circle cx="54" cy="58" r="1.5" fill="#fff"/><circle cx="76" cy="58" r="1.5" fill="#fff"/>
+  </g>
+  <g fill="#f2b2ff">
+    <path d="M17 28l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>
+    <path d="M105 25l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>
+    <path d="M110 87l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/>
+  </g>
+  <circle cx="26" cy="91" r="3" fill="#9c6cff"/><circle cx="101" cy="105" r="2.5" fill="#d781ff"/>
+</svg>
