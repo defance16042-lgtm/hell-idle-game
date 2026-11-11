@@ -26498,5 +26498,40 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 })();
 </script>
 
+<script id="parallel-three-kingdoms-li-ru-v1">
+(() => {
+  'use strict';
+  const ZONE = '平行三國';
+  if (typeof zoneMonsters === 'undefined' || !zoneMonsters) return;
+  const monster = {
+    name: '李儒',
+    icon: '🧪',
+    image: 'assets/monsters/parallel_three_kingdoms/li-ru-scholar.png',
+    battleImage: 'assets/monsters/parallel_three_kingdoms/li-ru-scholar.png',
+    level: 80, levelRange: '80', attackSpeed: 1.16,
+    hp: 382000, maxHp: 382000, atk: 7480, def: 2140, magicDefense: 2860,
+    attackType: '紫燼毒煉', attackRange: 'ranged', damageType: 'magic',
+    exp: 86500, gold: 28600, type: 'special', specialMonster: true,
+    specialTier: '平行三國特殊怪', encounterChance: 8,
+    facing: 'left-full-body', orientation: 'strict-left-profile',
+    visualNote: '全身完整入鏡，頭部、胸口、骨盆、膝蓋、腳尖、衣襬、毒瓶與紫霧一致朝左；禁止正面、右朝與鏡像。',
+    baseStats: { str: 820, dex: 980, con: 1060, wis: 1520, int: 1680, cha: 240 },
+    bonusStats: { attack: 128, defense: 72, magicDefense: 188, critical: 0.26, evasion: 0.14 },
+    skills: [
+      { name: '紫燼毒煉', phase: 'normal', chance: 0.44, damageType: 'magic', attackRange: 'ranged', powerMultiplier: 1.68 },
+      { name: '魘霧蝕心', phase: 'lowHp', chance: 0.34, damageType: 'magic', attackRange: 'ranged', powerMultiplier: 1.96 }
+    ],
+    description: '平行三國的李儒，身披暗紅策士長袍，手持毒瓶煉製紫燼魘霧。看似冷酷陰沉，卻以圓滾滾的 Q 版臉和小小獠牙散發詭異反差感。',
+    dropTable: ['李儒毒袍', '紫燼毒瓶', '平行兵符・紫', '特殊怪殘頁'],
+    zone: ZONE, threatTier: 'parallel-three-kingdoms-special'
+  };
+  const monsters = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
+  const existing = monsters.find(entry => entry && entry.name === monster.name);
+  if (existing) Object.assign(existing, monster);
+  else monsters.push(monster);
+  window.parallelThreeKingdomsLiRu = monster;
+})();
+</script>
+
 </body>
 </html>
