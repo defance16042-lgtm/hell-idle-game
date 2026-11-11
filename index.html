@@ -9293,6 +9293,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
         enablePanelDrag('draggable-log-box', 'log-drag-handle', () => false, true);
         enablePanelDrag('inventory-float', 'inventory-drag-handle', target => target.closest('button'), true);
 
+        let battleLogSequence = 0;
         function battleLogIsAtBottom(box, threshold = 12) {
             if (!box) return true;
             return box.scrollTop + box.clientHeight >= box.scrollHeight - threshold;
@@ -9332,6 +9333,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             const expanded = document.getElementById('battle-log-expanded-list');
             if (expanded) {
                 trackBattleLogScroll(expanded);
+                expanded.dataset.battleLogSyncedSequence = String(battleLogSequence);
                 expanded.scrollTop = expanded.scrollHeight;
                 expanded.dataset.battleLogFollowLatest = 'true';
             }
@@ -9343,12 +9345,24 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             trackBattleLogScroll(expanded);
             const shouldFollow = battleLogShouldFollow(expanded);
             const previousScrollTop = expanded.scrollTop;
-            expanded.innerHTML = current.innerHTML;
+            const syncedSequence = Number(expanded.dataset.battleLogSyncedSequence) || 0;
+            const newItems = Array.from(current.children).filter(item => Number(item.dataset.battleLogSequence) > syncedSequence);
+            newItems.forEach(item => expanded.appendChild(item.cloneNode(true)));
+            // 主日誌最多保留 1,000 筆；展開視窗同步裁掉同數量最舊項目，不重建剩餘 DOM。
+            let removedHeight = 0;
+            while (expanded.children.length > current.children.length) {
+                const oldest = expanded.firstElementChild;
+                if (!oldest) break;
+                removedHeight += oldest.getBoundingClientRect().height;
+                expanded.removeChild(oldest);
+            }
+            expanded.dataset.battleLogSyncedSequence = String(battleLogSequence);
             if (shouldFollow) {
                 expanded.scrollTop = expanded.scrollHeight;
                 expanded.dataset.battleLogFollowLatest = 'true';
             } else {
-                expanded.scrollTop = previousScrollTop;
+                // 手動閱讀時不碰 scrollTop；只有裁掉最舊訊息時才補償其高度以固定閱讀位置。
+                if (removedHeight > 0) expanded.scrollTop = Math.max(0, previousScrollTop - removedHeight);
                 expanded.dataset.battleLogFollowLatest = 'false';
             }
         }
@@ -9383,6 +9397,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             let list = document.getElementById("battle-log-list");
             if (!list) return;
             let li = document.createElement("li");
+            li.dataset.battleLogSequence = String(++battleLogSequence);
             let formatted = String(msg);
             if (/發動職業戰技|使用技能書，學會/.test(formatted)) li.classList.add('battle-log-skill');
             if (/格擋|雙斧防禦|抗魔法防禦/.test(formatted)) li.classList.add('battle-log-defense');
@@ -18306,7 +18321,13 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
  function getInfo(el){if(!el||typeof currentPlayer==='undefined'||!currentPlayer)return null;let kind=el.dataset.ordinaryCompareKind,id=el.dataset.ordinaryCompareId,item;if(kind)item=(kind==='weapon'?currentPlayer.items.weapons:currentPlayer.items.armors||[]).find(x=>String(x.instanceId)===String(id));else if(el.dataset.setCompareId){kind='set';item=(currentPlayer.items.setEquipment||[]).find(x=>String(x.instanceId)===String(el.dataset.setCompareId));if(item&&item.classKey!==currentPlayer.key)return null;}return item?{kind,item}:null}
  function dragon(x){return String(x?.setId||'').includes('shenlong')||String(x?.setName||'').includes('神龍')}
  function equip(info){if(info.kind==='weapon')return (currentPlayer.items.weapons||[]).find(x=>x.instanceId===currentPlayer.equipment?.weaponId);if(info.kind==='armor'){const slot=(typeof armorSlots!=='undefined'?armorSlots:[]).find(x=>x.key===info.item.slot);return slot?(currentPlayer.items.armors||[]).find(x=>x.instanceId===currentPlayer.equipment?.[slot.equipmentKey]):null}return (currentPlayer.items.setEquipment||[]).find(x=>x.pieceSlot===info.item.pieceSlot&&Object.values(currentPlayer.equipment?.setGearSlots||{}).includes(x.instanceId))}
- function vals(kind,x){if(kind==='weapon')return [['攻擊',x.attackBonus],['攻速',x.attackSpeedBonus],['強化',x.enhancementLevel]];if(kind==='armor')return [['物防',x.physicalDefenseBonus],['魔防',x.magicDefenseBonus],['強化',x.enhancementLevel]];return [['攻擊',x.stats?.attack],['物防',x.stats?.physicalDefense],['魔防',x.stats?.magicDefense],['強化',x.enhancementLevel]]}
+ function vals(kind,x){
+  const rows=kind==='weapon'?[['攻擊',x.attackBonus],['攻速',x.attackSpeedBonus]]:kind==='armor'?[['物防',x.physicalDefenseBonus],['魔防',x.magicDefenseBonus]]:[['攻擊',x.stats?.attack],['物防',x.stats?.physicalDefense],['魔防',x.stats?.magicDefense]];
+  const attributes=x.statBonuses||x.stats||{};
+  [['str','力量'],['dex','敏捷'],['con','體質'],['wis','精神'],['int','智力'],['cha','魅力']].forEach(([key,label])=>rows.push([label,attributes[key]??x[key]??0]));
+  rows.push(['強化',x.enhancementLevel]);
+  return rows;
+ }
  function show(el,e){if(panel.dataset.pinned==='1')return;const info=getInfo(el);if(!info||dragon(info.item)){panel.style.display='none';return}const old=equip(info);if(!old||old.instanceId===info.item.instanceId){panel.style.display='none';return}const a=vals(info.kind,old),b=vals(info.kind,info.item),am=new Map(a);panel.innerHTML='<h4>⚖️ 同部位裝備比較</h4><div style="margin-bottom:7px">目前：<b>'+esc(old.name)+'</b><br>候選：<b style="color:#ffd27c">'+esc(info.item.name)+'</b></div><table><tr><th>屬性</th><th>目前</th><th>候選</th><th>差異</th></tr>'+b.map(r=>{const o=am.get(r[0])||[r[0],0],d=(Number(r[1])||0)-(Number(o[1])||0),cl=d>0?'uc-up':d<0?'uc-down':'uc-even';return '<tr><td>'+esc(r[0])+'</td><td>'+Number(o[1]||0)+'</td><td>'+Number(r[1]||0)+'</td><td class="'+cl+'">'+(d>0?'+':'')+d+'</td></tr>'}).join('')+'</table><small class="uc-pin-hint">右鍵固定比較介面；固定後點擊介面外即可關閉。</small>';active=el;panel.style.display='block';panel.style.pointerEvents='auto';const oldTip=document.getElementById('game-equipment-tooltip');if(oldTip)oldTip.style.display='none';position(e)}
  document.addEventListener('mouseover',e=>{if(panel.dataset.pinned==='1')return;const el=e.target.closest?.('.inventory-grid .inventory-slot[data-ordinary-compare-kind],.inventory-grid .inventory-slot[data-set-compare-id]');if(el)show(el,e)},true);
  document.addEventListener('mousemove',e=>{if(panel.dataset.pinned!=='1'&&active&&panel.style.display==='block'&&!panel.contains(e.target))position(e)},true);
