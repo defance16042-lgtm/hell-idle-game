@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: '要發布的 Git tag，例如 v1.0.3'
+        description: '要發布的 Git tag，例如 v1.0.5'
         required: true
-        default: 'v1.0.3'
+        default: 'v1.0.5'
 
 permissions:
   contents: write

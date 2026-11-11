@@ -5339,7 +5339,7 @@ window.chibiConsumableIcon = function(key, sizeClass='') { const src=window.CHIB
     </div>
     <div id="rpg-title-settings"><strong>遊戲設定</strong><br>音樂與音效進入遊戲後可在上方控制面板調整。<br>角色進度會保存於目前這台電腦的遊戲存檔。</div>
     <div id="rpg-title-message" role="status"></div>
-    <div class="rpg-title-footer">HELL IDLE RPG｜目前版本 v1.0.3</div>
+    <div class="rpg-title-footer" id="rpg-version-footer">HELL IDLE RPG｜目前版本</div>
   </div>
 </section>
 
@@ -25782,8 +25782,10 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 <script id="game-auto-update-v2">
 (function(){
   'use strict';
-  const GAME_VERSION = '1.0.4';
+  const GAME_VERSION = '1.0.5';
   const RELEASES_URL = 'https://github.com/defance16042-lgtm/hell-idle-game/releases/latest';
+  const versionFooter = () => document.getElementById('rpg-version-footer');
+  if (versionFooter()) versionFooter().textContent = 'HELL IDLE RPG｜目前版本 v' + GAME_VERSION;
   const titleMessage = () => document.getElementById('rpg-title-message');
   function showUpdateMessage(text, tone = 'normal') {
     const node = titleMessage();
