@@ -10682,7 +10682,7 @@ function getCombatVisualCycleDuration(actionPath) {
             const available = [...new Set(candidates.map(entry => entry?.type).filter(Boolean))];
             if (!available.length) return {};
             if (zoneName === '新手村修練場') return { training: 1 };
-            const caveShares = zoneName === '魔物首領窟' || zoneName === '魔物首領窟・第二層';
+            const caveShares = zoneName === '魔物首領窟' || zoneName === '魔物首領窟・第二層' || zoneName === '魔物首領窟・第三層';
             const configured = caveShares ? LEADER_CAVE_ENCOUNTER_SHARES : ENCOUNTER_TYPE_SHARES;
             const configuredTypes = available.filter(type => Number(configured[type]) > 0);
             if (!configuredTypes.length) {
@@ -16219,7 +16219,7 @@ function getCombatVisualCycleDuration(actionPath) {
                  '海底深淵': { icon:'🌊', level:'等級 38–57', desc:'黑暗海底怪物的放置戰鬥區，共 20 種怪物，包含特殊怪與深淵首領。' },
                 '墮落天界逆神斷層': { icon:'🌌', level:'等級 57–70', desc:'墮落天界遺跡中的逆神魔物區，包含三種階段首領戰與高階素材。' },
                 '魔物首領窟': { icon:'🏰', level:'第一層｜特殊怪／BOSS', desc:'魔物首領窟第一層：集中原有來源區域的特殊怪與 BOSS，不包含海底深淵。' },
-                '魔物首領窟・第二層': { icon:'🌊', level:'第二層｜等級 38–57', desc:'魔物首領窟第二層：收錄海底深淵特殊怪與 BOSS，並額外複製墮落天界特殊怪與 BOSS；原區域資料保留。' },
+                '魔物首領窟・第二層': { icon:'🌊', level:'第二層｜等級 38–57', desc:'魔物首領窟第二層：收錄海底深淵特殊怪與 BOSS，並額外複製墮落天界特殊怪與 BOSS；原區域資料保留。' }, '魔物首領窟・第三層': { icon:'🪐', level:'第三層｜等級 71–81', desc:'克卜勒異星機械首領層：只收錄 Lv.71–81 的特殊怪與 BOSS，不包含一般怪。' },
                 '新手村修練場': { icon:'🪨', level:'修練區', desc:'提供修練目標，適合測試角色攻擊與戰鬥能力。' },
                 '影之深遂': { icon:'🌀', level:'等級 40–50（每隻獨立隨機）', desc:'四種職業影獸的黑暗 Q 版區域；每次遭遇會為每隻怪物獨立抽出 40–50 級。' }
             };
@@ -26222,6 +26222,163 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   if (existing) Object.assign(existing, monster);
   else monsters.push(monster);
   window.parallelThreeKingdomsArcher = monster;
+})();
+</script>
+
+<script id="leader-cave-layer3-kepler-v1">
+(() => {
+  'use strict';
+  const SOURCE = '克卜勒-452b';
+  const TARGET = '魔物首領窟・第三層';
+  const BACKGROUND = 'assets/zone_backgrounds/leader_cave_layer3_kepler.png';
+  if (typeof zoneMonsters !== 'undefined' && zoneMonsters) {
+    const source = Array.isArray(zoneMonsters[SOURCE]) ? zoneMonsters[SOURCE] : [];
+    const roster = source
+      .filter(monster => ['special', 'boss'].includes(monster?.type) && Number(monster?.level) >= 71 && Number(monster?.level) <= 81)
+      .map(monster => ({ ...JSON.parse(JSON.stringify(monster)), originZone: SOURCE, zone: TARGET, leaderCaveLayer: 3 }));
+    zoneMonsters[TARGET] = roster;
+    window.leaderCaveLayer3Roster = roster;
+  }
+
+  const previousOpen = window.openMonsterLeaderCave;
+  if (typeof previousOpen === 'function' && !previousOpen.__layer3Wrapped) {
+    const wrappedOpen = function(...args) {
+      const result = previousOpen.apply(this, args);
+      const body = document.getElementById('modal-body');
+      if (!body || body.querySelector('[data-leader-cave-layer="3"]')) return result;
+      const grid = Array.from(body.querySelectorAll('div')).find(node =>
+        node.children.length === 2 && Array.from(node.children).every(child => child.tagName === 'SECTION')
+      );
+      if (!grid) return result;
+      const section = document.createElement('section');
+      section.dataset.leaderCaveLayer = '3';
+      section.style.cssText = 'padding:14px;border:1px solid #b35cff;border-radius:12px;background:linear-gradient(135deg,#26143e,#121827);color:#f5e8ff;';
+      const count = Array.isArray(zoneMonsters?.[TARGET]) ? zoneMonsters[TARGET] : [];
+      const specials = count.filter(monster => monster.type === 'special').length;
+      const bosses = count.filter(monster => monster.type === 'boss').length;
+      section.innerHTML = `<div style="font-size:18px;font-weight:bold;color:#e2b6ff;">🪐 第三層</div><p style="font-size:12px;line-height:1.6;color:#d5c7e5;min-height:42px;">克卜勒異星機械首領層｜只收錄 Lv.71–81 特殊怪與 BOSS，不放入一般怪。</p><div style="font-size:13px;margin-bottom:8px;">共 ${count.length} 種｜特殊怪 ${specials}｜BOSS ${bosses}</div><button class="modal-btn" style="width:100%;" onclick="openPortalZoneInfo('${TARGET}')">📜 查看本層怪物與掉落</button><button class="modal-btn" style="width:100%;margin-top:6px;border-color:#b35cff;" onclick="closeModal();startAutoBattle('${TARGET}')">⚔️ 進入第三層自動戰鬥</button>`;
+      grid.appendChild(section);
+      return result;
+    };
+    wrappedOpen.__layer3Wrapped = true;
+    window.openMonsterLeaderCave = wrappedOpen;
+  }
+
+  const applyBackground = () => {
+    const screen = document.querySelector('.village-screen');
+    if (!screen) return;
+    const image = (typeof embeddedAssets !== 'undefined' && embeddedAssets[BACKGROUND]) || BACKGROUND;
+    const value = `linear-gradient(rgba(7, 5, 15, .10), rgba(5, 8, 15, .24)), url("${image}")`;
+    screen.dataset.zoneBackground = TARGET;
+    screen.style.setProperty('background-image', value, 'important');
+    screen.style.setProperty('background-size', 'cover', 'important');
+    screen.style.setProperty('background-position', 'center center', 'important');
+    screen.style.setProperty('background-repeat', 'no-repeat', 'important');
+    screen.style.setProperty('background-attachment', 'fixed', 'important');
+  };
+  const previousBackground = window.setZonePureBackground;
+  window.setZonePureBackground = function(zoneName, ...args) {
+    const result = typeof previousBackground === 'function' ? previousBackground.call(this, zoneName, ...args) : undefined;
+    if (zoneName === TARGET) applyBackground();
+    return result;
+  };
+  window.applyRegionBackground = window.setZonePureBackground;
+})();
+</script>
+
+<script id="parallel-three-kingdoms-hulao-gate-background-v1">
+(() => {
+  'use strict';
+  const ZONE = '平行三國';
+  const BACKGROUND = 'assets/zone_backgrounds/parallel_three_kingdoms_hulao_gate.png';
+  const applyHulaoGateBackground = () => {
+    const screen = document.querySelector('.village-screen');
+    if (!screen) return;
+    const image = (typeof embeddedAssets !== 'undefined' && embeddedAssets[BACKGROUND]) || BACKGROUND;
+    screen.dataset.zoneBackground = ZONE;
+    screen.style.setProperty('background-image', `linear-gradient(rgba(10, 6, 12, .12), rgba(10, 5, 10, .22)), url("${image}")`, 'important');
+    screen.style.setProperty('background-size', 'cover', 'important');
+    screen.style.setProperty('background-position', 'center center', 'important');
+    screen.style.setProperty('background-repeat', 'no-repeat', 'important');
+    screen.style.setProperty('background-attachment', 'fixed', 'important');
+  };
+  const previous = window.setZonePureBackground;
+  window.setZonePureBackground = function(zoneName, ...args) {
+    const result = typeof previous === 'function' ? previous.call(this, zoneName, ...args) : undefined;
+    if (zoneName === ZONE) applyHulaoGateBackground();
+    return result;
+  };
+  window.applyRegionBackground = window.setZonePureBackground;
+  if (document.querySelector('.village-screen')?.dataset.zoneBackground === ZONE) applyHulaoGateBackground();
+})();
+</script>
+
+<style id="parallel-three-kingdoms-bestiary-icon-style-v1">
+.bv2-zone-icon.parallel-three-kingdoms-bestiary-icon{display:block;width:54px;height:54px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(190,92,255,.7));}
+</style>
+<script id="parallel-three-kingdoms-bestiary-icon-v1">
+(() => {
+  'use strict';
+  const ZONE = '平行三國';
+  const ICON = 'assets/regions/parallel-three-kingdoms-bestiary-icon.png';
+  const decorate = () => {
+    document.querySelectorAll('.bv2-zone-card').forEach(card => {
+      const title = card.querySelector('h4');
+      const icon = card.querySelector('.bv2-zone-icon');
+      if (!title || !icon || title.textContent.trim() !== ZONE) return;
+      if (icon.dataset.parallelBestiaryIcon === 'true') return;
+      icon.textContent = '';
+      const image = document.createElement('img');
+      image.className = 'bv2-zone-icon parallel-three-kingdoms-bestiary-icon';
+      image.src = ICON;
+      image.alt = '平行三國虎牢關怪物圖鑑徽章';
+      icon.appendChild(image);
+      icon.dataset.parallelBestiaryIcon = 'true';
+    });
+  };
+  const previous = window.openBestiaryV2;
+  if (typeof previous === 'function') {
+    window.openBestiaryV2 = function(...args) {
+      const result = previous.apply(this, args);
+      decorate();
+      return result;
+    };
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', decorate, {once:true});
+  else decorate();
+})();
+</script>
+
+<style id="disable-equipment-compare-ui-style-v1">
+/* 使用者停用裝備比較：保留裝備詳情與裝備／卸下按鈕，不顯示任何比較介面。 */
+.equipment-compare-compact,#unified-equipment-compare,#hover-equipment-compare,#set-gear-compare-card,#ordinary-gear-compare-card,.equipment-compare-tooltip,.ordinary-gear-compare,.ogc-panel,[id*="equipment-compare"],[class*="equipment-compare"]{display:none!important;pointer-events:none!important}
+</style>
+<script id="disable-equipment-compare-ui-v1">
+(() => {
+  'use strict';
+  const hide = () => {
+    document.querySelectorAll('.equipment-compare-compact,#unified-equipment-compare,#hover-equipment-compare,#set-gear-compare-card,#ordinary-gear-compare-card,.equipment-compare-tooltip,.ordinary-gear-compare,.ogc-panel,[id*="equipment-compare"],[class*="equipment-compare"]').forEach(node => {
+      node.style.setProperty('display','none','important');
+      node.style.setProperty('pointer-events','none','important');
+    });
+  };
+  const previousDetails = window.showEquipmentDetails;
+  if (typeof previousDetails === 'function' && !previousDetails.__compareDisabled) {
+    const wrappedDetails = function(...args) {
+      const result = previousDetails.apply(this, args);
+      document.querySelectorAll('.equipment-compare-compact').forEach(node => node.remove());
+      hide();
+      return result;
+    };
+    wrappedDetails.__compareDisabled = true;
+    window.showEquipmentDetails = wrappedDetails;
+  }
+  document.addEventListener('mouseover', hide, true);
+  document.addEventListener('mousemove', hide, true);
+  document.addEventListener('focusin', hide, true);
+  const observer = new MutationObserver(hide);
+  observer.observe(document.body, {subtree:true, childList:true});
+  hide();
 })();
 </script>
 
