@@ -26800,5 +26800,59 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   }
 })();
 </script>
+<script id="dong-zhuo-special-tab-fix-v1">
+(() => {
+  'use strict';
+  if (window.__dongZhuoSpecialTabFixV1) return;
+  window.__dongZhuoSpecialTabFixV1 = true;
+  const ring = {
+    name: '天命玉璽戒', chance: 5,
+    icon: 'assets/items/dong_zhuo-jade_seal_ring.png',
+    text: '戒指｜神話｜需求等級 85｜全職業可用｜攻擊 +190｜物理防禦 +155｜魔法防禦 +160｜生命上限 +16,000｜力量 +40｜敏捷 +35｜體質 +55｜精神 +40｜智力 +40｜不可強化（固定 +0）'
+  };
+  function inject() {
+    const body = document.getElementById('modal-body');
+    const root = body?.querySelector('#bestiary-detail-tab-pages');
+    if (!body || !root || !/董卓/.test(body.textContent || '')) return;
+    const page = root.querySelector('[data-bestiary-page="specialDrops"]');
+    if (!page || page.querySelector('#dong-zhuo-special-tab-ring')) return;
+    const grid = page.querySelector('.bestiary-drop-grid') || (() => {
+      const g=document.createElement('div'); g.className='bestiary-drop-grid'; page.appendChild(g); return g;
+    })();
+    const card=document.createElement('div');
+    card.id='dong-zhuo-special-tab-ring';
+    card.className='bestiary-drop-item';
+    card.innerHTML=`<span class="bestiary-drop-icon"><img src="${ring.icon}" alt="${ring.name}" style="width:28px;height:28px;object-fit:contain;vertical-align:middle"></span><div class="bestiary-drop-text"><strong>${ring.name}</strong>約 ${ring.chance}%｜${ring.text}<br><span style="color:#80f1bd;font-weight:700">董卓 BOSS 專屬戒指｜實際擊殺時獨立判定並放入防具背包</span></div>`;
+    grid.appendChild(card);
+  }
+  const original=window.openBestiaryDetail;
+  if(typeof original==='function'&&!original.__dongZhuoSpecialTabFixWrapped){
+    const wrapped=function(...args){const result=original.apply(this,args);setTimeout(inject,0);return result;};
+    wrapped.__dongZhuoSpecialTabFixWrapped=true;
+    window.openBestiaryDetail=wrapped;
+  }
+  window.injectDongZhuoSpecialTab=inject;
+})();
+</script>
+<script id="leader-cave-layer-route-fix-v1">
+(() => {
+  'use strict';
+  if (window.__leaderCaveLayerRouteFixV1) return;
+  window.__leaderCaveLayerRouteFixV1 = true;
+  const zoneMap = {
+    first: '魔物首領窟',
+    second: '魔物首領窟・第二層',
+    third: '魔物首領窟・第三層'
+  };
+  const original = window.openLeaderCaveBestiaryLayer;
+  window.openLeaderCaveBestiaryLayer = function(layer, ...args) {
+    const zoneName = zoneMap[layer] || layer;
+    if (!zoneName || typeof window.openBestiaryZone !== 'function') return original?.call(this, layer, ...args);
+    window.__activeBestiaryZone = zoneName;
+    window.__activeBestiaryPage = 1;
+    return window.openBestiaryZone(zoneName, 1);
+  };
+})();
+</script>
 </body>
 </html>
