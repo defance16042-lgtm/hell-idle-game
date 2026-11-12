@@ -5601,7 +5601,7 @@ window.chibiConsumableIcon = function(key, sizeClass='') { const src=window.CHIB
                 <!-- ⚔️ 畫面中央動態打怪圖示舞台 -->
                 <div class="battle-stage village-mode" id="battle-stage">
                     <div class="battle-pet-formation" id="battle-pet-formation" aria-label="出戰寵物陣型"></div>
-                    <div class="fighter-icon" id="player-icon" title="冒險者">🛡️</div>
+                    <div class="fighter-icon" id="player-icon" title="冒險者"></div>
                     <div class="vs-text" id="battle-vs-text">VS</div>
                     <div class="monster-battle-wrap" id="monster-battle-wrap">
                         <div class="fighter-icon" id="monster-icon" aria-label="戰鬥中的怪物">👹</div>
@@ -10219,7 +10219,7 @@ function getCombatVisualCycleDuration(actionPath) {
             if (!icon) return;
             const persistentClasses = new Set(['abyss-wing-vfx','shenlong-cosmic-filter-defs','shenlong-cosmos-halo','shenlong-galaxy-band','shenlong-cosmic-dust','shenlong-starfield','shenlong-blackhole-ring','shenlong-awakening-label']);
             const persistentVfx = [...icon.children].filter(child => [...persistentClasses].some(className => child.classList.contains(className)));
-            [...icon.children].forEach(child => { if (!persistentVfx.includes(child)) child.remove(); });
+            [...icon.childNodes].forEach(child => { if (!persistentVfx.includes(child)) icon.removeChild(child); });
             nodes.filter(Boolean).forEach(node => icon.appendChild(node));
             persistentVfx.forEach(node => icon.appendChild(node));
         }
@@ -10256,7 +10256,7 @@ function getCombatVisualCycleDuration(actionPath) {
                         img.dataset.renderMode = 'image';
                         replacePlayerIconChildrenPreservingWing(icon, img);
                     }
-                } else icon.textContent = '🛡️';
+                } else replacePlayerIconChildrenPreservingWing(icon);
                 return;
             }
 
@@ -10308,7 +10308,7 @@ function getCombatVisualCycleDuration(actionPath) {
                 } else if (sprite?.tagName === 'IMG') {
                     sprite.alt = `${currentPlayer.name}${state}動作`;
                 }
-            } else icon.textContent = '🛡️';
+            } else replacePlayerIconChildrenPreservingWing(icon);
 
             icon.classList.remove('elf-shoot-anim', 'elf-rapid-anim', 'elf-dodge-anim', 'monk-attack-motion', 'monk-spell-motion');
             if (currentPlayer.key === 'monk' && currentMonster && (state === 'attack' || state === 'staff')) {
@@ -25021,12 +25021,14 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     set(stage,'grid-template-areas','none'); set(stage,'gap','0');
     set(stage,'justify-content','initial'); set(stage,'align-items','initial'); set(stage,'grid-auto-flow','initial');
   };
-  const fitPlayerSprites = (player,d) => {
+  const fitPlayerSprites = (player,d,centerInSunlightAura=false) => {
     if (!player) return;
     for (const image of player.querySelectorAll('img.fighter-sprite,img.combat-frame-sprite,img.qdark-player-sprite')) {
       set(image,'width',px(d.heroWidth)); set(image,'height',px(d.heroHeight));
       set(image,'max-width',px(d.heroWidth)); set(image,'max-height',px(d.heroHeight));
-      set(image,'object-fit','contain'); set(image,'object-position','center bottom'); set(image,'margin','0 auto');
+      set(image,'object-fit','contain');
+      const centerSprite = centerInSunlightAura && image.classList.contains('qdark-player-sprite');
+      set(image,'object-position',centerSprite?'center center':'center bottom'); set(image,'margin','0 auto');
     }
   };
   const fitMonsterSprites = (monster,width) => {
@@ -25078,7 +25080,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     set(player,'translate','none'); player.style.setProperty('transform','none'); set(player,'width',px(d.heroWidth)); set(player,'height',px(d.heroHeight));
     set(player,'min-width','0'); set(player,'min-height','0'); set(player,'max-width','none'); set(player,'max-height','none'); set(player,'margin','0');
     set(player,'align-self','auto'); set(player,'justify-self','auto'); set(player,'overflow','visible'); set(player,'font-size',px(Math.max(32,d.heroWidth*.82))); set(player,'line-height','1'); set(player,'z-index','30');
-    fitPlayerSprites(player,d);
+    fitPlayerSprites(player,d,village && player.classList.contains('sunlight-active'));
 
     set(vs,'display',battle?'block':'none'); set(vs,'position','absolute'); set(vs,'left','50%');
     set(vs,'top',px(d.stageHeight - (d.heroHeight + monsterWidth)/4)); set(vs,'width',px(d.vsWidth)); set(vs,'height',px(Math.max(28,d.vsWidth*.72)));
