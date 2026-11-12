@@ -7128,11 +7128,24 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                 delete player.equipment.weapon;
             }
 
-            player.items.weapons = player.items.weapons.filter(weapon => weapon && weapon.classKey === player.key && weapon.instanceId);
+            player.items.weapons = player.items.weapons.filter(weapon => weapon && weapon.instanceId && (weapon.classKey === player.key || weapon.templateId === 'li_ru_poison_wine_staff_v1'));
             const family = weaponFamilies[player.key] || weaponFamilies.knight;
             player.items.weapons.forEach(weapon => {
                 const enhancementLevel = Number(weapon.enhancementLevel) || 0;
                 const qualityAttackBonus = Math.max(0, Number(weapon.qualityAttackBonus) || 0);
+                if (weapon.templateId === 'li_ru_poison_wine_staff_v1') {
+                    weapon.name = '鴆酒策士杖';
+                    weapon.requiredMonsterLevel = 80;
+                    weapon.attackBonus = Math.max(0, Number(weapon.baseAttackBonus) || 250) + enhancementLevel * 2 + qualityAttackBonus;
+                    weapon.attackSpeedBonus = Math.max(-0.24, Math.min(4.5, Number(weapon.baseAttackSpeedBonus) || 0));
+                    weapon.enhancementLevel = enhancementLevel;
+                    weapon.image = weapon.image || '';
+                    delete weapon.strengthRequirement;
+                    if (!weapon.statBonuses || typeof weapon.statBonuses !== 'object' || Array.isArray(weapon.statBonuses) || !['普通', '稀有', '黃金', '特殊', '傳說', '史詩', '神話'].includes(weapon.rarity)) {
+                        rollWeaponProperties(weapon);
+                    }
+                    return;
+                }
                 const oldBaseAttack = (Number(weapon.attackBonus) || 0) - enhancementLevel * 2 - qualityAttackBonus;
                 let index = Number.isFinite(Number(weapon.requiredMonsterLevel))
                     ? family.weapons.findIndex(entry => entry.level === Number(weapon.requiredMonsterLevel))
@@ -7151,19 +7164,21 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                     rollWeaponProperties(weapon);
                 }
             });
+            const usableWeapons = player.items.weapons.filter(weapon => weapon.classKey === player.key);
             if (player.equipment.weaponId === undefined) {
-                if (!player.items.weapons.length) {
+                if (!usableWeapons.length) {
                     const starter = rollWeaponProperties(createWeaponItem(player.key, 0, { attackSpeedBonus: (weaponFamilies[player.key] || weaponFamilies.knight).speed + player.equipment.weaponAttackSpeedBonus }));
                     player.items.weapons.push(starter);
+                    usableWeapons.push(starter);
                     player.equipment.weaponAttackSpeedBonus = 0;
                 }
-                player.equipment.weaponId = player.items.weapons[0]?.instanceId || null;
+                player.equipment.weaponId = usableWeapons[0]?.instanceId || null;
             }
-            if (player.equipment.weaponId && !player.items.weapons.some(weapon => weapon.instanceId === player.equipment.weaponId)) {
-                player.equipment.weaponId = player.items.weapons[0]?.instanceId || null;
+            if (player.equipment.weaponId && !usableWeapons.some(weapon => weapon.instanceId === player.equipment.weaponId)) {
+                player.equipment.weaponId = usableWeapons[0]?.instanceId || null;
             }
             ensurePlayerCriticalAffixes(player);
-            return player.items.weapons.find(weapon => weapon.instanceId === player.equipment.weaponId) || null;
+            return usableWeapons.find(weapon => weapon.instanceId === player.equipment.weaponId) || null;
         }
 
         const classPortraitAssets = {
@@ -11647,6 +11662,7 @@ function getCombatVisualCycleDuration(actionPath) {
             if (!isTrainingDummy) {
                 window.awardShenlongDrop?.(currentMonster, zoneName);
                 window.awardDivineDragonUniqueDrops?.(currentMonster, zoneName);
+                window.awardLiRuStaffDrop?.(currentMonster, zoneName);
             }
             if (!isTrainingDummy && currentMonster?.type === 'boss' && /逆神.*熾天墮龍|熾天墮龍.*逆神/.test(String(currentMonster.name || '')) && Math.random() < 0.01) {
                 const skill = Math.random() < 0.5 ? 'light' : 'dark';
@@ -11989,6 +12005,9 @@ function getCombatVisualCycleDuration(actionPath) {
                 }
                 if (skillTriggered && currentPlayer.key === 'monk' && Number(activeSkill.dotTicks) > 0) {
                     applyMonkSkillDamageOverTime(attackTarget, activeSkill, baseRawDamage, playerLevelWeakeningMultiplier, zoneName);
+                }
+                if (isMagicAttack && attackTarget?.hp > 0) {
+                    window.tryApplyLiRuStaffPoison?.(attackTarget, baseRawDamage, playerLevelWeakeningMultiplier, zoneName);
                 }
                 const hitText = skillTriggered && (activeSkill.hits || 1) > 1 ? `（${activeSkill.hits} 連擊）` : '';
                 const armorBreakText = skillTriggered && activeSkill.defenseIgnore > 0
@@ -17508,6 +17527,7 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
 (() => {
   const CAVE = '魔物首領窟';
   const SE體質D = '魔物首領窟・第二層';
+  const THIRD = '魔物首領窟・第三層';
   const UNDERSEA = '海底深淵';
   const FALLEN_HEAVEN = '墮落天界逆神斷層';
   const bgFiles = {}
@@ -17518,6 +17538,7 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
     const source = Array.isArray(zoneMonsters[UNDERSEA]) ? zoneMonsters[UNDERSEA] : [];
     const fallenSource = Array.isArray(zoneMonsters[FALLEN_HEAVEN]) ? zoneMonsters[FALLEN_HEAVEN] : [];
     const existingSecond = Array.isArray(zoneMonsters[SE體質D]) ? zoneMonsters[SE體質D] : [];
+    const existingThird = Array.isArray(zoneMonsters[THIRD]) ? zoneMonsters[THIRD] : [];
     const rotatingDragons = [...cave.filter(m => m && m.isRotatingHiddenBoss), ...existingSecond.filter(m => m && m.isRotatingHiddenBoss)];
     const firstSources = [
       {key:'幽暗森林', label:'幽音森林'},
@@ -17571,7 +17592,9 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
     zoneMonsters[CAVE] = first;
     zoneMonsters[FALLEN_HEAVEN] = fallenSource;
     zoneMonsters[SE體質D] = second;
-    window.monsterLeaderCaveLayers = { first: CAVE, second: SE體質D };
+    zoneMonsters[THIRD] = existingThird.filter(m => m && (m.type === 'special' || m.type === 'boss') && Number(m.level) >= 71 && Number(m.level) <= 81)
+      .map(m => ({ ...m, zone: THIRD, leaderCaveLayer: 3 }));
+    window.monsterLeaderCaveLayers = { first: CAVE, second: SE體質D, third: THIRD };
   }
   syncLeaderCaveLayers();
 
@@ -17601,12 +17624,13 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
     if (!modal || !body) return;
     const firstList = zoneMonsters[CAVE] || [];
     const secondList = zoneMonsters[SE體質D] || [];
+    const thirdList = Array.isArray(zoneMonsters[THIRD]) ? zoneMonsters[THIRD] : [];
     const levelText = list => {
       const values = list.filter(m => m.type !== 'training').map(m => Number(m.level) || 1);
       return values.length ? `等級 ${Math.min(...values)}–${Math.max(...values)}` : '目前沒有怪物';
     };
     const layerCard = (zone, title, list, level, description, border, tint, extra = '') => {
-      const icon = typeof getBestiaryZoneIcon === 'function' ? getBestiaryZoneIcon(zone) : BESTIARY_ZONE_ICON_SVGS.__default__;
+      const icon = zone === THIRD ? '🪐' : (typeof getBestiaryZoneIcon === 'function' ? getBestiaryZoneIcon(zone) : BESTIARY_ZONE_ICON_SVGS.__default__);
       const enterLabel = `傳送至${title}`;
       return `<section style="display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid ${border};border-radius:12px;background:${tint};">
         <button type="button" aria-label="${enterLabel}" title="${enterLabel}" onclick="closeModal(); startAutoBattle('${zone}')" style="flex:0 0 76px;width:76px;min-height:76px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1px solid ${border};border-radius:12px;background:rgba(0,0,0,.28);color:#fff;cursor:pointer;">
@@ -17621,12 +17645,14 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
     };
     const firstLevel = levelText(firstList);
     const secondLevel = levelText(secondList);
+    const thirdLevel = levelText(thirdList);
     body.innerHTML = `<div class="bestiary-nav"><button class="modal-btn" onclick="openPortal()">← 返回傳送門</button><button class="modal-btn" onclick="closeModal()">關閉</button></div>
       <h3 style="color:#ffe0a0;text-shadow:0 0 12px #a86aef;">🏰 魔物首領窟｜分層傳送門</h3>
-      <p style="color:#d9c9e8;">每層使用怪物圖鑑的區域小圖示作為傳送入口；第一、二層的等級與怪物資料分開顯示。</p>
+      <p style="color:#d9c9e8;">第一、二、三層各自使用獨立怪物清單與戰鬥區域；第三層只收錄克卜勒異星的特殊怪與 BOSS。</p>
       <div class="portal-zone-grid">
         ${layerCard(CAVE, '第一層', firstList, firstLevel, '幽暗森林、痛苦深淵、黑暗洞穴、空城島、暗火墓穴的特殊怪與 BOSS 副本｜背景：首領窟第一層', '#b17cff', 'linear-gradient(135deg,#241a32,#151723)')}
         ${layerCard(SE體質D, '第二層', secondList, secondLevel, '海底深淵與墮落天界特殊怪／BOSS 副本＋九神龍規則與圖鑑｜背景：海底深淵與逆神斷層', '#37e8ff', 'linear-gradient(135deg,#102d42,#151723)', '<br>🐉 有機會遭遇九神龍 BOSS')}
+        ${layerCard(THIRD, '第三層', thirdList, thirdLevel, '克卜勒-452b Lv.71–81 特殊怪／BOSS 副本；不包含一般怪。｜背景：第三層專屬異星區域', '#b35cff', 'linear-gradient(135deg,#26143e,#121827)')}
       </div>`;
     body.classList.add('readable-modal');
     modal.style.display = 'flex';
@@ -17665,18 +17691,19 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
     };
     const cave = zoneMonsters[CAVE] || [];
     const second = zoneMonsters[SE體質D] || [];
+    const third = zoneMonsters[THIRD] || [];
     const caveEntry = iconButton(CAVE, 'openLeaderCaveLayers()', '選擇魔物首領窟樓層', '#b17cff');
     body.classList.add('readable-modal');
     body.innerHTML = `<div class="bestiary-nav"><button class="modal-btn" onclick="closeModal()">關閉</button></div>
       <h3 style="color:#ffd0a6;">🌀 地獄傳送門</h3>
-      <p style="color:#d9c9e8;">選擇要前往的歷練區域；每區標示實際怪物等級範圍（Lv）。怪物資料請至「怪物圖鑑」查看；首領窟可選第一層或第二層。</p>
+      <p style="color:#d9c9e8;">選擇要前往的歷練區域；每區標示實際怪物等級範圍（Lv）。怪物資料請至「怪物圖鑑」查看；首領窟可選第一、二、三層。</p>
       <div class="portal-zone-grid">
         <section class="portal-zone-card" style="display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid #b17cff;border-radius:12px;background:linear-gradient(135deg,#241a32,#151723);">
           ${caveEntry}
           <div style="flex:1;min-width:0;text-align:left;">
             <div style="font-size:18px;color:#e4c8ff;font-weight:800;">魔物首領窟</div>
-            <div style="margin:7px 0;color:#9fe2ff;font-size:12px;font-weight:800;">第一層：${levels(cave)}<br>第二層：${levels(second)}</div>
-            <div style="color:#d7c8e8;font-size:12px;line-height:1.6;">第一層 ${cave.length} 種｜第二層 ${second.length} 種；第一層收錄五個原區域特殊怪／BOSS 副本，第二層收錄海底與墮落天界特殊怪／BOSS 副本及九神龍。</div>
+            <div style="margin:7px 0;color:#9fe2ff;font-size:12px;font-weight:800;">第一層：${levels(cave)}<br>第二層：${levels(second)}<br>第三層：${levels(third)}</div>
+            <div style="color:#d7c8e8;font-size:12px;line-height:1.6;">第一層 ${cave.length} 種｜第二層 ${second.length} 種｜第三層 ${third.length} 種；各層怪物清單與戰鬥區域分開。</div>
           </div>
         </section>
         ${zones.map(card).join('')}
@@ -26711,7 +26738,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       { name: '魘霧蝕心', phase: 'lowHp', chance: 0.34, damageType: 'magic', attackRange: 'ranged', powerMultiplier: 1.96 }
     ],
     description: '平行三國的李儒，身披暗紅策士長袍，手持毒瓶煉製紫燼魘霧。看似冷酷陰沉，卻以圓滾滾的 Q 版臉和小小獠牙散發詭異反差感。',
-    dropTable: [],
+    dropTable: ['李儒專屬法杖：鴆酒策士杖（Lv.80、僅魔導師可裝備、5%掉落）', '武器技能：鴆酒飲杯（命中時5%機率觸發；每秒造成魔法攻擊力20%的魔法傷害，持續5秒，共5次）'],
     zone: ZONE, threatTier: 'parallel-three-kingdoms-special'
   };
   const monsters = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
@@ -26879,6 +26906,97 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   };
   window.openBestiaryCaveLayerExactMenu = function() {
     if (typeof window.openBestiaryLeaderCave === 'function') return window.openBestiaryLeaderCave();
+  };
+})();
+</script>
+<script id="li-ru-exclusive-mage-staff-v1">
+(() => {
+  'use strict';
+  const STAFF_ID = 'li_ru_poison_wine_staff_v1';
+  const SKILL = Object.freeze({ name: '鴆酒飲杯', chance: 0.05, dotTicks: 5, dotInterval: 1000, dotAtkRatio: 0.20, damageType: 'magic' });
+  const statLabels = { int: '智力', wis: '精神', con: '體質' };
+
+  window.awardLiRuStaffDrop = function(monster, zoneName = '') {
+    if (!monster || monster.name !== '李儒' || (zoneName && zoneName !== '平行三國') || monster.__liRuStaffDropResolved) return 0;
+    monster.__liRuStaffDropResolved = true;
+    const player = typeof currentPlayer !== 'undefined' ? currentPlayer : window.currentPlayer;
+    // 專屬法杖保留在戰利品背包；武器校驗仍只允許魔導師裝備與計入攻擊。
+    if (!player || Math.random() >= 0.05) return 0;
+    player.items ||= {};
+    player.items.weapons = Array.isArray(player.items.weapons) ? player.items.weapons : [];
+    const statBonuses = { int: 48, wis: 35, con: 28, magicCritRate: 0.03 };
+    const item = {
+      instanceId: `${STAFF_ID}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      templateId: STAFF_ID, id: STAFF_ID, name: '鴆酒策士杖', classKey: 'mage', classKeys: ['mage'],
+      type: '法杖', weaponType: 'magic', damageType: 'magic', icon: '🪄',
+      level: 80, requiredMonsterLevel: 80, attackBonus: 250, baseAttackBonus: 250,
+      attackSpeedBonus: 0, baseAttackSpeedBonus: 0, magicHitBonus: 0.03,
+      rarity: '神話', quality: '神話', qualityColor: '#bd7aff', statBonuses,
+      weaponSkill: { ...SKILL }, sourceMonster: '李儒', sourceDropChance: 0.05,
+      uniqueDropType: 'li_ru_exclusive', cannotEnhance: true, enhancementLevel: 0,
+      properties: [
+        '李儒專屬掉落｜獨立掉落率 5%', '需求等級 80｜僅魔導師可裝備',
+        '魔法攻擊力 +250', ...Object.entries(statBonuses).filter(([key]) => statLabels[key]).map(([key, value]) => `${statLabels[key]} +${value}`),
+        '魔法命中率 +3%', '魔法暴擊率 +3%',
+        '鴆酒飲杯：魔法命中時 5% 機率發動；每秒造成魔法攻擊力 20% 的魔法傷害，持續 5 秒（共 5 次）。',
+        '不可強化｜固定 +0'
+      ], obtainedAt: Date.now()
+    };
+    player.items.weapons.push(item);
+    if (typeof addBattleLog === 'function') addBattleLog('🪄 <strong style="color:#d9a6ff">李儒掉落【鴆酒策士杖】！</strong>（魔導師專屬法杖｜掉落率 5%）');
+    if (typeof saveGame === 'function') saveGame();
+    if (document.getElementById('inventory-float')?.style.display === 'flex' && typeof renderInventory === 'function') renderInventory();
+    return 1;
+  };
+
+  window.tryApplyLiRuStaffPoison = function(target, baseMagicAttack, levelWeakeningMultiplier = 1, zoneName = '') {
+    const player = typeof currentPlayer !== 'undefined' ? currentPlayer : window.currentPlayer;
+    if (!target || !player || player.key !== 'mage' || target !== currentMonster || target.hp <= 0) return false;
+    const weapon = typeof ensurePlayerWeapon === 'function' ? ensurePlayerWeapon(player) : null;
+    if (weapon?.templateId !== STAFF_ID || Math.random() >= SKILL.chance) return false;
+    const rawTick = Math.max(1, Math.floor((Number(baseMagicAttack) || Number(player.atk) || 1) * SKILL.dotAtkRatio));
+    const magicDefense = Math.max(0, Math.floor(typeof getMonsterDefenseForAttack === 'function' ? getMonsterDefenseForAttack(target, 'magic', true) : Number(target.magicDefense) || 0));
+    const weakening = Math.max(0.05, Number(target.playerLevelWeakeningMultiplier) || Number(levelWeakeningMultiplier) || 1);
+    const damagePerTick = Math.max(1, Math.floor(Math.max(1, rawTick - magicDefense) * weakening));
+    target._liRuStaffDots ||= {};
+    const dotKey = STAFF_ID;
+    const previous = target._liRuStaffDots[dotKey];
+    if (previous?.timer) clearTimeout(previous.timer);
+    const effect = { remaining: SKILL.dotTicks, timer: null };
+    target._liRuStaffDots[dotKey] = effect;
+    if (typeof addBattleLog === 'function') addBattleLog(`🍷 <strong style="color:#b7ed80">鴆酒飲杯發動！</strong>${target.name}將每秒受到約 ${damagePerTick.toLocaleString()} 點魔法傷害，持續 5 秒。`);
+    const tick = () => {
+      if (currentMonster !== target || monsterDefeatInProgress || (target.type !== 'training' && target.hp <= 0)) {
+        delete target._liRuStaffDots?.[dotKey];
+        return;
+      }
+      const trainingSimulation = target.type === 'training';
+      const beforeHp = Math.max(0, Number(target.hp) || 0);
+      let actualDamage = damagePerTick;
+      if (!trainingSimulation) {
+        const shieldedDamage = window.applyAbyssDragonIncomingDamage?.(target, actualDamage, 'magic') ?? actualDamage;
+        actualDamage = Math.min(beforeHp, Math.max(0, shieldedDamage));
+        target.hp = Math.max(0, beforeHp - actualDamage);
+      }
+      showFloatingDmg('monster-icon', `-${actualDamage.toLocaleString()}`, '#a8e77d', 'li-ru-poison-tick', SKILL.name);
+      addBattleLog(trainingSimulation
+        ? `🍷 修練石像模擬受到【${SKILL.name}】持續傷害 ${actualDamage.toLocaleString()}（不扣除石像生命）。`
+        : `🍷 ${target.name}受到【${SKILL.name}】毒酒侵蝕，失去 ${actualDamage.toLocaleString()} 生命。`);
+      if (typeof updateMonsterHealthUI === 'function') updateMonsterHealthUI();
+      effect.remaining -= 1;
+      if (!trainingSimulation && target.hp <= 0) {
+        delete target._liRuStaffDots?.[dotKey];
+        resolveMonsterDefeat(zoneName);
+        return;
+      }
+      if (effect.remaining <= 0) {
+        delete target._liRuStaffDots?.[dotKey];
+        return;
+      }
+      effect.timer = window.setTimeout(tick, SKILL.dotInterval);
+    };
+    effect.timer = window.setTimeout(tick, SKILL.dotInterval);
+    return true;
   };
 })();
 </script>
