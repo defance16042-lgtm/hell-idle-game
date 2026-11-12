@@ -6072,8 +6072,9 @@ function getEquipmentTooltipText(item, kind = 'weapon') {
     const level = Math.max(0, Math.floor(Number(item.enhancementLevel) || 0));
     const requiredLevel = getEquipmentRequiredLevel(item, kind);
     const isRing = kind === 'armor' && item.templateId === 'inverse_ring_v1';
+    const isDivineDragonUnique = item.isDivineDragonUnique === true || item.uniqueDropType === 'divine_dragon_unique';
     const isNecklace = kind === 'armor' && item.slot === 'necklace';
-    const isUnenhanceable = isNecklace || Boolean(item.cannotEnhance);
+    const isUnenhanceable = !isDivineDragonUnique && (isNecklace || Boolean(item.cannotEnhance));
     const equipmentPartLabel = isRing ? '戒指' : isNecklace ? '項鍊' : item?.slot === 'shield' ? '盾牌' : '裝備';
     const rows = [`${getEquipmentQualityIcon(item)} ${rarity}品質｜${getEquipmentDisplayName(item)}`, `${equipmentPartLabel}等級：LV ${requiredLevel}`];
     if (isUnenhanceable) rows.push(isRing ? '強化限制：逆神之戒不可強化｜強化等級固定 +0' : isNecklace ? '強化限制：項鍊不可強化｜強化等級固定 +0' : '強化限制：此裝備不可強化｜強化等級固定 +0');
@@ -6691,8 +6692,11 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                 if (armor && (armor.slot === 'bowArmor' || /^elf_bow_armor_/.test(String(armor.templateId || '')))) { armor.iconAsset = 'hell_elf_bow_vambrace'; armor.slot = 'bowArmor'; armor.slotLabel = '副武・弓之甲'; }
                 if (armor && (armor.slot === 'spellbook' || /^mage_spellbook_/.test(String(armor.templateId || '')))) { armor.iconAsset = 'hell_mage_spellbook'; armor.slot = 'spellbook'; armor.slotLabel = '副武・魔法書'; }
                 const isShadowVoidSixLumen = armor && (armor.templateId === 'shadow_void_six_lumen_pendant' || armor.id === 'shadow_void_six_lumen_pendant' || armor.name === '影虛・六曜冥星墜');
+                const isDivineDragonUnique = armor && (armor.isDivineDragonUnique === true || armor.uniqueDropType === 'divine_dragon_unique');
                 if (armor && (armor.slot === 'necklace' || isShadowVoidSixLumen)) {
-                    armor.slot = 'necklace'; armor.slotLabel = '項鍊'; armor.cannotEnhance = true; armor.enhancementLevel = 0;
+                    armor.slot = 'necklace'; armor.slotLabel = '項鍊';
+                    if (isDivineDragonUnique) { armor.cannotEnhance = false; armor.enhancementLevel = Math.max(0, Math.floor(Number(armor.enhancementLevel) || 0)); }
+                    else { armor.cannotEnhance = true; armor.enhancementLevel = 0; }
                     if (isShadowVoidSixLumen) {
                         armor.classKeys = ['knight','warrior','elf','mage'];
                         armor.level = 50; armor.requiredLevel = 50;
@@ -7136,11 +7140,25 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                 delete player.equipment.weapon;
             }
 
-            player.items.weapons = player.items.weapons.filter(weapon => weapon && weapon.instanceId && (weapon.classKey === player.key || weapon.templateId === 'li_ru_poison_wine_staff_v1'));
+            const isDivineDragonUniqueWeapon = weapon => !!(weapon && (weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique'));
+            player.items.weapons = player.items.weapons.filter(weapon => weapon && weapon.instanceId && (weapon.classKey === player.key || weapon.templateId === 'li_ru_poison_wine_staff_v1' || isDivineDragonUniqueWeapon(weapon)));
             const family = weaponFamilies[player.key] || weaponFamilies.knight;
             player.items.weapons.forEach(weapon => {
                 const enhancementLevel = Number(weapon.enhancementLevel) || 0;
                 const qualityAttackBonus = Math.max(0, Number(weapon.qualityAttackBonus) || 0);
+                if (isDivineDragonUniqueWeapon(weapon)) {
+                    const savedBaseAttack = Number.isFinite(Number(weapon.baseAttackBonus))
+                        ? Number(weapon.baseAttackBonus)
+                        : (Number(weapon.attackBonus) || Number(weapon.meleeAttackBonus) || Number(weapon.magicAttackBonus) || 0);
+                    weapon.baseAttackBonus = savedBaseAttack;
+                    weapon.attackBonus = savedBaseAttack + enhancementLevel * 4;
+                    const savedBaseSpeed = Number.isFinite(Number(weapon.baseAttackSpeedBonus))
+                        ? Number(weapon.baseAttackSpeedBonus) : (Number(weapon.attackSpeedBonus) || 0);
+                    weapon.baseAttackSpeedBonus = savedBaseSpeed;
+                    weapon.attackSpeedBonus = savedBaseSpeed + Math.min(0.60, enhancementLevel * 0.03);
+                    weapon.enhancementLevel = enhancementLevel;
+                    return;
+                }
                 if (weapon.templateId === 'li_ru_poison_wine_staff_v1') {
                     weapon.name = '鴆酒策士杖';
                     weapon.requiredMonsterLevel = 80;
@@ -7172,7 +7190,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                     rollWeaponProperties(weapon);
                 }
             });
-            const usableWeapons = player.items.weapons.filter(weapon => weapon.classKey === player.key);
+            const usableWeapons = player.items.weapons.filter(weapon => weapon.classKey === player.key || isDivineDragonUniqueWeapon(weapon));
             if (player.equipment.weaponId === undefined) {
                 if (!usableWeapons.length) {
                     const starter = rollWeaponProperties(createWeaponItem(player.key, 0, { attackSpeedBonus: (weaponFamilies[player.key] || weaponFamilies.knight).speed + player.equipment.weaponAttackSpeedBonus }));
@@ -8534,6 +8552,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
         let lastBattleSaveAt = 0;
         const PET_EGG_STORAGE_LIMIT = 10;
         const HATCHED_PET_STORAGE_LIMIT = 10;
+        const PET_SUPPORT_HEAL_MULTIPLIER = 2;
         function getPetCapacityLimit(player = currentPlayer) {
             return player ? HATCHED_PET_STORAGE_LIMIT : 0;
         }
@@ -8747,7 +8766,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                     : pet?.type === 'magic'
                         ? `自動魔法攻擊｜出戰被動：角色魔法技能傷害提高 ${(3 * multiplier).toFixed(1)}%／隻。`
                         : pet?.type === 'support'
-                            ? `自動近戰攻擊；角色未滿血時會治療｜出戰被動：治療量提高 ${(5 * multiplier).toFixed(1)}%／隻。`
+                            ? `自動近戰攻擊；角色未滿血時治療（基礎治療量 ×${PET_SUPPORT_HEAL_MULTIPLIER}）；出戰被動：治療量提高 ${(5 * multiplier).toFixed(1)}%／隻。`
                             : '自動攻擊｜出戰時提供對應類型的戰鬥效果。';
             return `${skill}<br>魅力共鳴：寵物攻擊與治療能力 +${charismaBoost}%（有效魅力 ${charisma}；魅力 10 為基準，每高 1 點 +0.5%，最多 +45%）。`;
         }
@@ -8770,7 +8789,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             showFloatingDmg('monster-icon', `-${damage}`, pet.type === 'magic' ? '#c69cff' : pet.type === 'phys' ? '#ff9e68' : pet.type === 'support' ? '#79e6a2' : '#9fc7ff', 'pet-floating-damage', pet.name, PET_TYPE_DEFS[pet.type]?.image || '');
             if (pet.type === 'support' && currentPlayer.hp < getPlayerEffectiveMaxHp(currentPlayer)) {
                 const healBonus = getActivePetAbilitySummary().healingPct;
-                const heal = Math.max(1, Math.floor((4 + profile.level * 1.4) * profile.gradeMultiplier * profile.aptitude * (1 + healBonus) * getPetCharismaMultiplier(currentPlayer)));
+                const heal = Math.max(1, Math.floor((4 + profile.level * 1.4) * PET_SUPPORT_HEAL_MULTIPLIER * profile.gradeMultiplier * profile.aptitude * (1 + healBonus) * getPetCharismaMultiplier(currentPlayer)));
                 const actualHeal = Math.min(heal, getPlayerEffectiveMaxHp(currentPlayer) - currentPlayer.hp);
                 if (actualHeal > 0) { currentPlayer.hp += actualHeal; showFloatingDmg('player-icon', `+${actualHeal}`, '#79e6a2', 'floating-heal', `${pet.name} 輔助回復`, PET_TYPE_DEFS[pet.type]?.image || ''); }
             }
@@ -11261,8 +11280,8 @@ function getCombatVisualCycleDuration(actionPath) {
 
         function getWeaponAttackTypeLabel(item, player = currentPlayer) {
             const classKey = item?.classKey || player?.key;
-            if (classKey === 'mage' || item?.damageType === 'magic' || item?.attackType === 'magic') return '魔法攻擊力';
-            if (classKey === 'elf' || item?.range === 'ranged' || item?.attackType === 'ranged') return '遠距離攻擊力';
+            if (item?.weaponType === 'magic' || classKey === 'mage' || item?.damageType === 'magic' || item?.attackType === 'magic') return '魔法攻擊力';
+            if (item?.weaponType === 'ranged' || classKey === 'elf' || item?.range === 'ranged' || item?.attackType === 'ranged') return '遠距離攻擊力';
             return '近距離攻擊力';
         }
 
@@ -11402,9 +11421,14 @@ function getCombatVisualCycleDuration(actionPath) {
         }
         function applyWeaponUpgrade(weapon = ensurePlayerWeapon(currentPlayer)) {
             if (!weapon) return false;
-            weapon.attackBonus += 4;
+            weapon.attackBonus = (Number(weapon.attackBonus) || 0) + 4;
             weapon.enhancementLevel += 1;
             const previousBonus = Number(weapon.attackSpeedBonus) || 0;
+            if (weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique') {
+                const baseSpeed = Number(weapon.baseAttackSpeedBonus) || 0;
+                weapon.attackSpeedBonus = baseSpeed + Math.min(0.60, weapon.enhancementLevel * 0.03);
+                return weapon.attackSpeedBonus > previousBonus;
+            }
             const family = weaponFamilies[weapon.classKey || currentPlayer?.key] || weaponFamilies.knight;
             weapon.attackSpeedBonus = (Number(family.speed) || 0) + Math.min(0.60, weapon.enhancementLevel * 0.03);
             return weapon.attackSpeedBonus > previousBonus;
@@ -11426,6 +11450,8 @@ function getCombatVisualCycleDuration(actionPath) {
 
         function attemptWeaponEnhancement(weapon = ensurePlayerWeapon(currentPlayer), bonus = 0, scrollName = '普通武器強化卷軸') {
             if (!weapon) return '請先裝備武器。';
+            const isDivineDragonUnique = weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique';
+            if (weapon.cannotEnhance && !isDivineDragonUnique) return `【${weapon.name}】不可強化；不消耗強化卷軸。`;
             const level = Number(weapon.enhancementLevel) || 0;
             const maxLevel = getEquipmentEnhancementCap();
             if (level >= maxLevel) return `已達人物等級 +20 的強化上限（+${maxLevel}），無法繼續強化。`;
@@ -11442,8 +11468,13 @@ function getCombatVisualCycleDuration(actionPath) {
                 const stageFloor = getEnhancementStageFloor(level);
                 weapon.enhancementLevel = Math.max(stageFloor, level - 1);
                 if (weapon.enhancementLevel === level) return `強化失敗（成功率 ${chance}%），已達 +${stageFloor} 階段保護，武器維持 +${level}，不會降級。`;
-                weapon.attackBonus = Math.max(weapon.attackBonus - 4, 1);
-                weapon.attackSpeedBonus = Math.max((weapon.attackSpeedBonus || 0) - 0.03, (weaponFamilies[currentPlayer.key] || weaponFamilies.knight).speed);
+                if (isDivineDragonUnique) {
+                    weapon.attackBonus = Math.max(0, (Number(weapon.baseAttackBonus) || 0) + weapon.enhancementLevel * 4);
+                    weapon.attackSpeedBonus = (Number(weapon.baseAttackSpeedBonus) || 0) + Math.min(0.60, weapon.enhancementLevel * 0.03);
+                } else {
+                    weapon.attackBonus = Math.max((Number(weapon.attackBonus) || 0) - 4, 1);
+                    weapon.attackSpeedBonus = Math.max((weapon.attackSpeedBonus || 0) - 0.03, (weaponFamilies[currentPlayer.key] || weaponFamilies.knight).speed);
+                }
                 return `強化失敗（成功率 ${chance}%），武器退化至 +${weapon.enhancementLevel}；每 +10 級階段保護，不會降破階段。`;
             }
             return `強化失敗（成功率 ${chance}%），武器沒有退化，維持 +${level}。`;
@@ -11464,7 +11495,8 @@ function getCombatVisualCycleDuration(actionPath) {
         function attemptArmorEnhancement(armor, bonus = 0, scrollName = '普通防具強化卷軸') {
             if (!armor) return '請先選擇一件防具。';
             if (armor.templateId === 'inverse_ring_v1') return '逆神之戒不可強化；強化等級固定 +0，不消耗強化卷軸。';
-            if (armor.slot === 'necklace' || armor.cannotEnhance) {
+            const isDivineDragonUnique = armor.isDivineDragonUnique === true || armor.uniqueDropType === 'divine_dragon_unique';
+            if (!isDivineDragonUnique && (armor.slot === 'necklace' || armor.cannotEnhance)) {
                 return armor.slot === 'necklace'
                     ? '項鍊部位不可強化；六項能力固定，不消耗強化卷軸。'
                     : `【${armor.name}】不可強化；能力固定，強化等級維持 +0，不消耗強化卷軸。`;
@@ -14450,12 +14482,19 @@ function getCombatVisualCycleDuration(actionPath) {
             const enhancedForDelete = isEnhancedEquipmentForDeletion(item);
             const maxEnhancementLevel = getEquipmentEnhancementCap();
             const bestScroll = getBestEnhancementScroll(kind);
+            const isDivineDragonUnique = typeof window.isDivineDragonUniqueEquipment === 'function'
+                ? window.isDivineDragonUniqueEquipment(item)
+                : item.isDivineDragonUnique === true || item.uniqueDropType === 'divine_dragon_unique';
             const successChance = Math.min(100, getEnhancementSuccessChance(level, isWeapon ? 6 : 4) + (bestScroll?.bonus || 0));
             const scrollCount = ['weaponScroll','armorScroll','weaponScrollAdvanced','armorScrollAdvanced','weaponScrollHigh','armorScrollHigh'].reduce((sum,key) => sum + ((isWeapon ? key.startsWith('weaponScroll') : key.startsWith('armorScroll')) ? Math.max(0,Number(currentPlayer.items[key])||0) : 0),0);
-            const canEnhance = !item.cannotEnhance && item.slot !== 'necklace' && !!bestScroll && level < maxEnhancementLevel;
+            const canEnhance = (isDivineDragonUnique || (!item.cannotEnhance && item.slot !== 'necklace')) && !!bestScroll && level < maxEnhancementLevel;
             const equipmentLevelText = `LV ${getEquipmentRequiredLevel(item, kind)}`;
             const isShadowVoidSixLumenItem = item.templateId === 'shadow_void_six_lumen_pendant' || item.id === 'shadow_void_six_lumen_pendant' || item.name === '影虛・六曜冥星墜';
-            const enhancementText = isShadowVoidSixLumenItem
+            const enhancementText = isDivineDragonUnique
+                ? isWeapon
+                    ? `${equipmentLevelText}｜九神龍一般武器｜${getWeaponAttackTypeLabel(item)} ${formatEquipmentStatValue('attackBonus', item.attackBonus)}｜攻速 ${formatEquipmentNumber(item.attackSpeedBonus || 0, 2)} 次/秒｜每次成功：攻擊 +4、攻速 +0.03（攻速加成上限 +0.60）｜強化 +${level}／上限 +${maxEnhancementLevel}`
+                    : `${equipmentLevelText}｜九神龍一般防具｜${item.slotLabel || item.slot}｜物理防禦 ${formatEquipmentStatValue('physicalDefenseBonus', item.physicalDefenseBonus)}｜魔法防禦 ${formatEquipmentStatValue('magicDefenseBonus', item.magicDefenseBonus || 0)}｜每次成功：物防 +4、魔防 +2｜強化 +${level}／上限 +${maxEnhancementLevel}`
+                : isShadowVoidSixLumenItem
                 ? `${equipmentLevelText}｜${item.material || '六曜冥星晶'}｜項鍊｜不可強化｜六項能力各 +50（可突破上限）`
                 : item.slot === 'necklace'
                 ? `${equipmentLevelText}｜${item.material || '項鍊材料'}｜項鍊｜不可強化｜${(item.properties || []).filter(property => !String(property).includes('六項能力各 +50')).join('｜') || '依物品能力加成為準'}`
@@ -14533,15 +14572,18 @@ function getCombatVisualCycleDuration(actionPath) {
                 : (currentPlayer.items.armors || []).find(entry => entry.instanceId === instanceId && isArmorItemEquipped(entry, currentPlayer));
             if (!item) return;
             const isInverseRing = !isWeapon && item.templateId === 'inverse_ring_v1';
+            const isDivineDragonUnique = typeof window.isDivineDragonUniqueEquipment === 'function'
+                ? window.isDivineDragonUniqueEquipment(item)
+                : item.isDivineDragonUnique === true || item.uniqueDropType === 'divine_dragon_unique';
             const isNecklace = !isWeapon && item.slot === 'necklace';
-            const isUnenhanceable = !isWeapon && Boolean(item.cannotEnhance);
+            const isUnenhanceable = !isWeapon && !isDivineDragonUnique && (isNecklace || Boolean(item.cannotEnhance));
             const requiredLevel = getEquipmentRequiredLevel(item, isWeapon ? 'weapon' : 'armor');
             const bonuses = isWeapon
                 ? [[getWeaponAttackTypeLabel(item), formatEquipmentStatValue('attackBonus', item.attackBonus)].join(' '), `攻速 ${formatEquipmentNumber(item.attackSpeedBonus || 0, 2)} 次/秒`, `近戰命中 ${formatEquipmentStatValue('meleeHitBonus', item.meleeHitBonus)}`, `遠距命中 ${formatEquipmentStatValue('rangedHitBonus', item.rangedHitBonus)}`, `魔法命中 ${formatEquipmentStatValue('magicHitBonus', item.magicHitBonus)}`]
                 : [
                     `裝備部位：${item.slotLabel || item.slot || '防具'}`,
                     `裝備等級：LV ${requiredLevel}`,
-                    isInverseRing ? '強化限制：逆神之戒不可強化，強化等級固定 +0，不消耗強化卷軸' : isNecklace ? '強化限制：項鍊不可強化，強化等級固定 +0，不消耗強化卷軸' : (isUnenhanceable ? '強化限制：此裝備不可強化，強化等級固定 +0' : null),
+                    isDivineDragonUnique ? null : isInverseRing ? '強化限制：逆神之戒不可強化，強化等級固定 +0，不消耗強化卷軸' : isNecklace ? '強化限制：項鍊不可強化，強化等級固定 +0，不消耗強化卷軸' : (isUnenhanceable ? '強化限制：此裝備不可強化，強化等級固定 +0' : null),
                     `物理防禦 ${formatEquipmentStatValue('physicalDefenseBonus', item.physicalDefenseBonus)}`,
                     `魔法防禦 ${formatEquipmentStatValue('magicDefenseBonus', item.magicDefenseBonus)}`,
                     ...(item.properties || []).map(translateEquipmentPropertyText)
@@ -16214,6 +16256,7 @@ function getCombatVisualCycleDuration(actionPath) {
         function enhanceWeapon(instanceId, from = 'inventory') {
             const weapon = (currentPlayer.items.weapons || []).find(item => item.instanceId === instanceId);
             if (!weapon) { addBattleLog('⚠️ 找不到這件武器，請重新開啟背包。'); return; }
+            if (weapon.cannotEnhance && !(weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique')) { addBattleLog(`⚠️【${weapon.name}】不可強化；未消耗強化卷軸。`); return; }
             if ((Number(weapon.enhancementLevel) || 0) >= getEquipmentEnhancementCap()) { addBattleLog(`⚠️ 這件武器已達人物等級 +20 的強化上限（+${getEquipmentEnhancementCap()}）。`); return; }
             const scroll = consumeBestEnhancementScroll('weapon');
             if (scroll) {
@@ -16228,7 +16271,8 @@ function getCombatVisualCycleDuration(actionPath) {
             const armor = (currentPlayer.items.armors || []).find(item => item.instanceId === instanceId);
             if (!armor) { addBattleLog('⚠️ 找不到這件防具，請重新開啟背包。'); return; }
             if (armor.templateId === 'inverse_ring_v1') { armor.enhancementLevel = 0; addBattleLog('💍 逆神之戒不可強化；強化等級固定 +0，未消耗強化卷軸。'); return; }
-            if (armor.slot === 'necklace' || armor.cannotEnhance) {
+            const isDivineDragonUnique = armor.isDivineDragonUnique === true || armor.uniqueDropType === 'divine_dragon_unique';
+            if (!isDivineDragonUnique && (armor.slot === 'necklace' || armor.cannotEnhance)) {
                 const message = armor.slot === 'necklace'
                     ? '項鍊部位不可強化；影虛・六曜冥星墜的六項能力固定。'
                     : `【${armor.name}】不可強化；能力固定，強化等級維持 +0。`;
@@ -17002,7 +17046,9 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
   const item=list.find(x=>String(x.instanceId)===String(instanceId));
   if(!item){addBattleLog('⚠️ 找不到要強化的裝備，請重新開啟裝備介面。');return;}
   if(kind==='armor'&&item.templateId==='inverse_ring_v1'){item.enhancementLevel=0;addBattleLog('💍 逆神之戒不可批次強化；強化等級固定 +0，未消耗強化卷軸。');return;}
-  if(kind==='armor'&&(item.slot==='necklace'||item.cannotEnhance)){addBattleLog('🌑 項鍊部位不可批次強化；不消耗強化卷軸。');return;}
+  const isDivineDragonUnique=item.isDivineDragonUnique===true||item.uniqueDropType==='divine_dragon_unique';
+  if(kind==='weapon'&&item.cannotEnhance&&!isDivineDragonUnique){addBattleLog(`⚠️【${item.name}】不可強化，不消耗強化卷軸。`);return;}
+  if(kind==='armor'&&!isDivineDragonUnique&&(item.slot==='necklace'||item.cannotEnhance)){addBattleLog('🌑 此項鍊／防具不可強化；不消耗強化卷軸。');return;}
   const selector=buttonElement?.closest('.enhance-batch-control')?.querySelector('.enhance-batch-count')
     || document.querySelector('.enhance-batch-count');
   const rawRequested=Number(selector?.value);
@@ -24740,7 +24786,7 @@ if(typeof oldEnsure==='function'){window.ensurePlayerWeapon=function(player=curr
 function find(id){return currentPlayer?.items?.weapons?.find(x=>String(x.instanceId)===String(id));}
 function isGreat(w){return w&&!w.isOneHandAxe&&w.classKey==='warrior';}
 window.equipWarriorAxeToSlot=(id,slot)=>{if(!currentPlayer||currentPlayer.key!=='warrior')return;const w=find(id);if(!w?.isOneHandAxe)return;const req=Number(w.requiredMonsterLevel)||1;if((Number(currentPlayer.level)||1)<req){alert(`需要角色等級 ${req} 才能裝備。`);return;}currentPlayer.equipment.weaponId=w.instanceId;currentPlayer.equipment[slot==='right'?'rightHandAxeId':'leftHandAxeId']=w.instanceId;if(slot==='left'&&currentPlayer.equipment.rightHandAxeId===w.instanceId)currentPlayer.equipment.rightHandAxeId=null;if(slot==='right'&&currentPlayer.equipment.leftHandAxeId===w.instanceId)currentPlayer.equipment.leftHandAxeId=null;saveGame();updateGameUI();renderInventory?.();renderCharacterStatus?.();};
-window.equipWeapon=(id)=>{if(!currentPlayer)return;const w=find(id);if(!w||w.classKey!==currentPlayer.key)return;const req=Number(w.requiredMonsterLevel??w.level)||1;if((Number(currentPlayer.level)||1)<req){alert(`需要角色等級 ${req} 才能裝備。`);return;}if(w.isOneHandAxe){const left=currentPlayer.equipment.leftHandAxeId,right=currentPlayer.equipment.rightHandAxeId;const slot=!left?'left':!right?'right':(currentPlayer.equipment.weaponId===right?'left':'right');currentPlayer.equipment.weaponId=w.instanceId;currentPlayer.equipment[slot==='left'?'leftHandAxeId':'rightHandAxeId']=w.instanceId;}else if(currentPlayer.key==='warrior'&&isGreat(w)){currentPlayer.equipment.leftHandAxeId=null;currentPlayer.equipment.rightHandAxeId=null;currentPlayer.equipment.weaponId=w.instanceId;}else{currentPlayer.equipment.weaponId=w.instanceId;}saveGame();updateGameUI();renderInventory?.();renderCharacterStatus?.();};
+window.equipWeapon=(id)=>{if(!currentPlayer)return;const w=find(id);const isDivineDragonUnique=w&&(w.isDivineDragonUnique===true||w.uniqueDropType==='divine_dragon_unique');if(!w||(w.classKey!==currentPlayer.key&&!isDivineDragonUnique))return;const req=Number(w.requiredMonsterLevel??w.level)||1;if((Number(currentPlayer.level)||1)<req){alert(`需要角色等級 ${req} 才能裝備。`);return;}if(w.isOneHandAxe){const left=currentPlayer.equipment.leftHandAxeId,right=currentPlayer.equipment.rightHandAxeId;const slot=!left?'left':!right?'right':(currentPlayer.equipment.weaponId===right?'left':'right');currentPlayer.equipment.weaponId=w.instanceId;currentPlayer.equipment[slot==='left'?'leftHandAxeId':'rightHandAxeId']=w.instanceId;}else if(currentPlayer.key==='warrior'&&isGreat(w)){currentPlayer.equipment.leftHandAxeId=null;currentPlayer.equipment.rightHandAxeId=null;currentPlayer.equipment.weaponId=w.instanceId;}else{currentPlayer.equipment.weaponId=w.instanceId;}saveGame();updateGameUI();renderInventory?.();renderCharacterStatus?.();};
 window.unequipWarriorAxe=(slot)=>{if(!currentPlayer)return;const key=slot==='right'?'rightHandAxeId':'leftHandAxeId';const id=currentPlayer.equipment[key];currentPlayer.equipment[key]=null;if(currentPlayer.equipment.weaponId===id)currentPlayer.equipment.weaponId=currentPlayer.equipment[slot==='right'?'leftHandAxeId':'rightHandAxeId']||null;saveGame();updateGameUI();renderInventory?.();renderCharacterStatus?.();};
 window.renderWarriorAxeSlotsHtml=(player)=>{if(!player||player.key!=='warrior')return '';const get=id=>player.items?.weapons?.find(x=>x.instanceId===id);const left=get(player.equipment?.leftHandAxeId),right=get(player.equipment?.rightHandAxeId),big=isGreat(get(player.equipment?.weaponId));const slot=(label,item,side)=>item?`<button class="warrior-axe-slot" title="${item.name}｜點擊查看" onclick="showEquipmentDetails('weapon','${item.instanceId}')"><img src="${window.WARRIOR_AXE_ICONS.one[item.level]}" alt="${item.name}"><strong>${label}</strong><small>${item.name}</small></button>`:`<button class="warrior-axe-slot" onclick="alert('請從背包選擇單手斧裝備到${label}。')"><span style="font-size:29px;opacity:.45">＋</span><strong>${label}</strong><small>空欄位</small></button>`;return `<div class="equipped-gear-group"><strong class="equipped-gear-group-title">🪓 修羅戰士斧類裝備（大斧與雙持單手斧互斥）</strong><div class="warrior-axe-slots">${big?`<button class="warrior-axe-slot" onclick="showEquipmentDetails('weapon','${get(player.equipment.weaponId)?.instanceId}')"><img src="${window.WARRIOR_AXE_ICONS.great}" alt="大斧"><strong>雙手大斧</strong><small>${get(player.equipment.weaponId)?.name||''}</small></button>`:''}${slot('左手單手斧',left,'left')}${slot('右手單手斧',right,'right')}</div></div>`;};
 window.awardWarriorOneHandAxeDrop=(monster)=>{if(!currentPlayer||currentPlayer.key!=='warrior'||monster?.type==='training')return;const d=defFor(monster.level);if(!d||Math.random()*100>=getMonsterWeaponDropChance(monster))return;const w=createAxe(d,monster.type);currentPlayer.items.weapons||=[];currentPlayer.items.weapons.push(w);addBattleLog(`🪓 ${monster.name}掉落【<strong style="color:${w.qualityColor};">${w.rarity} ${w.name}</strong>】（單手斧｜裝備等級 ${d.level}，近距離攻擊力 +${w.attackBonus}，${w.properties.join('、')}）！`);renderInventory?.();};
@@ -25877,8 +25923,8 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 <style id="abyss-back-wings-style">
 /* 深淵龍穴背部翅膀：所有職業共用，包含僧師 */
 .back-wing-equipped{position:relative!important;}
-.abyss-wing-vfx{position:absolute;left:50%;top:43%;width:150px;height:130px;transform:translate(-50%,-50%);z-index:0;pointer-events:none;filter:drop-shadow(0 0 8px var(--wing-glow,#8f6cff));opacity:.9;}
-.abyss-wing-vfx::before,.abyss-wing-vfx::after{content:'🪽';position:absolute;top:12px;font-size:62px;line-height:1;filter:saturate(1.3) drop-shadow(0 0 7px var(--wing-glow,#8f6cff));}
+.abyss-wing-vfx{position:absolute;left:var(--wing-left,50%);top:var(--wing-top,43%);width:var(--wing-width,150px);height:var(--wing-height,130px);transform:translate(-50%,-50%);z-index:0;pointer-events:none;filter:drop-shadow(0 0 8px var(--wing-glow,#8f6cff));opacity:.9;}
+.abyss-wing-vfx::before,.abyss-wing-vfx::after{content:'🪽';position:absolute;top:12px;font-size:var(--wing-glyph-size,62px);line-height:1;filter:saturate(1.3) drop-shadow(0 0 7px var(--wing-glow,#8f6cff));}
 .abyss-wing-vfx::before{left:0;transform:scaleX(-1) rotate(-14deg);}.abyss-wing-vfx::after{right:0;transform:rotate(-14deg);}
 .abyss-wing-vfx .wing-core{position:absolute;left:50%;top:51%;width:24px;height:58px;transform:translate(-50%,-50%);border-radius:50%;background:var(--wing-core,#c6a7ff);box-shadow:0 0 14px 5px var(--wing-glow,#8f6cff);animation:abyssWingPulse 2.3s ease-in-out infinite;}
 .abyss-wing-vfx .wing-spark{position:absolute;color:var(--wing-glow,#8f6cff);font-size:15px;animation:abyssWingSpark 2.2s ease-in-out infinite;}.abyss-wing-vfx .s1{left:14px;top:4px}.abyss-wing-vfx .s2{right:14px;top:21px;animation-delay:.7s}.abyss-wing-vfx .s3{left:34px;bottom:7px;animation-delay:1.2s}.abyss-wing-vfx .s4{right:31px;bottom:2px;animation-delay:1.7s}
@@ -25894,9 +25940,9 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   '暗曜幼翼龍':{id:'abyss_wing_dark',name:'暗曜星蝕翼',icon:'🌑',css:'wing-dark',stats:{con:40},physicalDefenseBonus:80,magicDefenseBonus:40,effect:'星蝕守護：低血量時展開暗曜護盾。'},
   '燼心煤球龍':{id:'abyss_wing_fire',name:'燼心熔火翼',icon:'🔥',css:'wing-fire',attackBonus:120,stats:{str:25},effect:'餘燼爆燃：灼燒目標受到火焰爆燃視覺特效。'},
   '霜鈴月翼龍':{id:'abyss_wing_frost',name:'霜鈴寒月翼',icon:'❄️',css:'wing-frost',stats:{dex:25},effect:'月霜幻影：閃避後留下冰晶殘影。'},
-  '苔毒泡泡龍':{id:'abyss_wing_spore',name:'苔毒孢子翼',icon:'🌿',css:'wing-spore',stats:{con:30,wis:20},physicalDefenseBonus:30,magicDefenseBonus:30,effect:'孢子再生：中毒目標周圍出現螢光孢子。'},
+  '苔毒泡泡龍':{id:'abyss_wing_spore',name:'苔毒孢子翼',icon:'🌿',css:'wing-spore',stats:{con:30,wis:20},physicalDefenseBonus:30,magicDefenseBonus:30,effect:'孢子再生：受到傷害時有 20% 機率回復自身最大生命 8%（冷卻 10 秒），綻放綠金孢子光環。'},
   '琥珀星晶龍':{id:'abyss_wing_amber',name:'琥珀星晶翼',icon:'🔶',css:'wing-amber',stats:{con:25},physicalDefenseBonus:70,magicDefenseBonus:70,effect:'星晶壁壘：護盾形成六角晶體護罩。'},
-  '深潮夜鱗龍':{id:'abyss_wing_tide',name:'深潮夜鱗翼',icon:'🌊',css:'wing-tide',stats:{wis:30,int:20},magicAttackBonus:120,effect:'潮汐回響：施法後浮現深潮漩渦。'}
+  '深潮夜鱗龍':{id:'abyss_wing_tide',name:'深潮夜鱗翼',icon:'🌊',css:'wing-tide',stats:{wis:30,int:20},magicAttackBonus:120,effect:'潮汐回響：受到傷害時有 20% 機率回復自身最大生命 8%（冷卻 10 秒），浮現深潮漩渦。'}
  };
  Object.assign(wingDefs['暗曜幼翼龍'],{iconAsset:'assets/items/divine-dragon-wings/dark-star-eclipse-wing.png',isDivineDragonWing:true,uniqueDropType:'divine_dragon_wing',stats:{con:40,maxHp:2800,damageReductionPct:3},physicalDefenseBonus:80,magicDefenseBonus:75});
  Object.assign(wingDefs['燼心煤球龍'],{iconAsset:'assets/items/divine-dragon-wings/ember-molten-wing.png',isDivineDragonWing:true,uniqueDropType:'divine_dragon_wing',stats:{str:25,meleeAttackBonus:80,attackSpeedBonus:.01,meleeCritDamage:.06},attackBonus:120});
@@ -25908,7 +25954,8 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
  const clone=o=>JSON.parse(JSON.stringify(o));
  function makeWing(monsterName){const d=wingDefs[monsterName];if(!d)return null;return Object.assign({instanceId:'wing_'+Date.now()+'_'+Math.random().toString(36).slice(2),templateId:d.id,slot:'back',slotLabel:'背部',label:'背部',level:80,requiredLevel:80,name:d.name,icon:d.icon,iconAsset:d.iconAsset,image:d.iconAsset,rarity:'傳說',qualityColor:'#ff9b32',classKeys:allClasses,cannotEnhance:true,enhancementLevel:0,isDivineDragonWing:true,uniqueDropType:'divine_dragon_wing',statBonuses:d.stats||{},physicalDefenseBonus:d.physicalDefenseBonus||0,magicDefenseBonus:d.magicDefenseBonus||0,attackBonus:d.attackBonus||0,magicAttackBonus:d.magicAttackBonus||0,wingCss:d.css,wingSource:monsterName,wingEffect:d.effect,properties:[d.effect,'深淵龍穴專屬翅膀｜背部裝備｜六種飛龍各自 1% 獨立掉落']},clone(d));}
  function player(){return window.currentPlayer||(typeof currentPlayer!=='undefined'?currentPlayer:null)}
- function ensureWingStorage(p){if(!p)return;p.items=p.items||{};p.items.armors=Array.isArray(p.items.armors)?p.items.armors:[];p.equipment=p.equipment||{};if(p.equipment.backArmorId===undefined)p.equipment.backArmorId=null;}
+ function normalizeHealingWingDescription(item){const def=wingDefs[item?.wingSource]||Object.values(wingDefs).find(x=>x.id===item?.templateId);if(!def||!['abyss_wing_spore','abyss_wing_tide'].includes(def.id))return;item.wingEffect=def.effect;if(!Array.isArray(item.properties))item.properties=[];if(item.properties[0]!==def.effect)item.properties[0]=def.effect;}
+ function ensureWingStorage(p){if(!p)return;p.items=p.items||{};p.items.armors=Array.isArray(p.items.armors)?p.items.armors:[];p.items.armors.forEach(normalizeHealingWingDescription);p.equipment=p.equipment||{};if(p.equipment.backArmorId===undefined)p.equipment.backArmorId=null;}
  function equippedWing(p=player()){ensureWingStorage(p);return p?.items?.armors?.find(x=>x.instanceId===p.equipment.backArmorId)||null;}
  // 背部欄加入既有防具系統，讓背包、倉庫、角色資訊自動顯示。
  if(Array.isArray(window.armorSlots|| (typeof armorSlots!=='undefined'?armorSlots:null))){const slots=window.armorSlots||(typeof armorSlots!=='undefined'?armorSlots:null);if(!slots.some(x=>x.key==='back'))slots.push({key:'back',label:'背部',equipmentKey:'backArmorId',icon:'🪽'});}
@@ -25917,9 +25964,17 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
  const oldUnequip=window.unequipArmor; window.unequipArmor=function(slot){if(slot==='back'){const p=player();ensureWingStorage(p);p.equipment.backArmorId=null;if(typeof addBattleLog==='function')addBattleLog('🪽 已卸下背部裝備。');if(typeof saveGame==='function')saveGame();if(typeof updateGameUI==='function')updateGameUI();if(typeof renderInventory==='function')renderInventory();refreshWingVfx();return}return typeof oldUnequip==='function'?oldUnequip(slot):undefined};
  // 深淵六龍各自 1% 獨立掉落。
  const oldDefeat=window.resolveMonsterDefeat; if(typeof oldDefeat==='function')window.resolveMonsterDefeat=function(...args){const r=oldDefeat.apply(this,args);const p=player();let m=null;try{m=typeof currentMonster!=='undefined'?currentMonster:window.currentMonster}catch(_){};const d=wingDefs[m?.name];const inAbyssLair=String(m?.zone||window.currentZone||'')==='深淵龍穴';if(p&&inAbyssLair&&d&&Math.random()<0.01){ensureWingStorage(p);const item=makeWing(m.name);p.items.armors.push(item);if(typeof addBattleLog==='function')addBattleLog('🪽 <strong style="color:#ff9b32">稀有掉落！</strong> '+m.name+'掉落【'+item.name+'】！（背部｜需求等級 80｜獨立掉落率 1%）');if(typeof updateGameUI==='function')updateGameUI();if(typeof saveGame==='function')saveGame();if(document.getElementById('inventory-float')?.style.display==='flex'&&typeof renderInventory==='function')renderInventory();}return r};
- function refreshWingVfx(){const p=player(),icon=document.getElementById('player-icon'),w=equippedWing(p);if(!icon)return;icon.querySelector('.abyss-wing-vfx')?.remove();icon.classList.toggle('back-wing-equipped',!!w);if(!w)return;const v=document.createElement('div');v.className='abyss-wing-vfx '+(w.wingCss||'wing-dark');v.title=w.name+'｜'+w.wingEffect;v.innerHTML='<i class="wing-core"></i><i class="wing-spark s1">✦</i><i class="wing-spark s2">✧</i><i class="wing-spark s3">✦</i><i class="wing-spark s4">✧</i>';icon.prepend(v);}
+ let wingTrackFrame=0;
+ function stopWingVfxTracking(){if(wingTrackFrame){cancelAnimationFrame(wingTrackFrame);wingTrackFrame=0;}}
+ function positionWingVfx(){const icon=document.getElementById('player-icon'),v=icon?.querySelector('.abyss-wing-vfx'),sprite=icon?.querySelector('.fighter-sprite, .qdark-player-sprite');if(!icon||!v||!sprite)return;const ir=icon.getBoundingClientRect(),sr=sprite.getBoundingClientRect();if(!ir.width||!ir.height||!sr.width||!sr.height)return;v.style.setProperty('--wing-left',`${sr.left-ir.left+sr.width*.5}px`);v.style.setProperty('--wing-top',`${sr.top-ir.top+sr.height*.4}px`);v.style.setProperty('--wing-width',`${Math.min(200,Math.max(130,sr.width*1.3))}px`);v.style.setProperty('--wing-height',`${Math.min(170,Math.max(112,sr.height*.9))}px`);v.style.setProperty('--wing-glyph-size',`${Math.min(76,Math.max(46,sr.width*.52))}px`);}
+ function trackWingVfx(){const icon=document.getElementById('player-icon');if(!icon?.classList.contains('back-wing-equipped')||!icon.querySelector('.abyss-wing-vfx')){wingTrackFrame=0;return;}positionWingVfx();wingTrackFrame=requestAnimationFrame(trackWingVfx);}
+ function refreshWingVfx(){const p=player(),icon=document.getElementById('player-icon'),w=equippedWing(p);if(!icon)return;icon.classList.toggle('back-wing-equipped',!!w);let v=icon.querySelector('.abyss-wing-vfx');if(!w){v?.remove();stopWingVfxTracking();return;}const wingClass=w.wingCss||'wing-dark';if(v&&!v.classList.contains(wingClass)){v.remove();v=null;}if(!v){v=document.createElement('div');v.className='abyss-wing-vfx '+wingClass;v.innerHTML='<i class="wing-core"></i><i class="wing-spark s1">✦</i><i class="wing-spark s2">✧</i><i class="wing-spark s3">✦</i><i class="wing-spark s4">✧</i>';icon.prepend(v);}v.title=w.name+'｜'+w.wingEffect;positionWingVfx();if(!wingTrackFrame)wingTrackFrame=requestAnimationFrame(trackWingVfx);}
  function wingFlash(){const w=equippedWing();if(!w)return;const f=document.createElement('div');f.className='abyss-wing-skill-flash '+(w.wingCss||'');document.body.appendChild(f);setTimeout(()=>f.remove(),800)}
  window.ABYSS_BACK_WINGS=wingDefs;window.getEquippedBackWing=equippedWing;window.refreshAbyssWingVfx=refreshWingVfx;window.playAbyssWingEffect=wingFlash;
+ const WING_SELF_HEAL_CHANCE=.20,WING_SELF_HEAL_RATIO=.08,WING_SELF_HEAL_COOLDOWN_MS=10000;
+ function tryWingSelfHeal(p){const w=equippedWing(p);if(!['abyss_wing_spore','abyss_wing_tide'].includes(String(w?.templateId||'')))return false;const maxHp=Math.max(1,Number(typeof getPlayerEffectiveMaxHp==='function'?getPlayerEffectiveMaxHp(p):p.maxHp)||1),hp=Math.max(0,Number(p.hp)||0),now=Date.now();if(hp>=maxHp||Number(p.abyssWingSelfHealReadyAt||0)>now||Math.random()>=WING_SELF_HEAL_CHANCE)return false;const amount=Math.max(1,Math.floor(maxHp*WING_SELF_HEAL_RATIO)),actual=Math.min(amount,maxHp-hp);if(actual<=0)return false;p.hp=hp+actual;p.abyssWingSelfHealReadyAt=now+WING_SELF_HEAL_COOLDOWN_MS;if(typeof showFloatingDmg==='function')showFloatingDmg('player-icon',`+${actual}`,'#79e6a2','floating-heal',`${w.name} 自我治療`,w.iconAsset||'');if(typeof addBattleLog==='function')addBattleLog(`🪽【${w.name}】附加技能觸發，回復自身 <b>${actual.toLocaleString()}</b> 生命。`);wingFlash();if(typeof updateGameUI==='function')updateGameUI();return true;}
+ const originalMonsterAttackForWingHeal=window.performMonsterAttack;if(typeof originalMonsterAttackForWingHeal==='function'&&!originalMonsterAttackForWingHeal.__abyssWingSelfHealWrapped){const wrappedMonsterAttackForWingHeal=function(...args){const p=player(),hpBefore=Number(p?.hp)||0,result=originalMonsterAttackForWingHeal.apply(this,args),stage=document.getElementById('battle-stage'),hpAfter=Number(p?.hp)||0;if(p&&player()===p&&hpBefore>hpAfter&&hpAfter>1&&stage&&!stage.classList.contains('village-mode'))tryWingSelfHeal(p);return result;};wrappedMonsterAttackForWingHeal.__abyssWingSelfHealWrapped=true;window.performMonsterAttack=wrappedMonsterAttackForWingHeal;}
+ window.tryAbyssWingSelfHeal=tryWingSelfHeal;
  const oldUI=window.updateGameUI;if(typeof oldUI==='function')window.updateGameUI=function(...a){const r=oldUI.apply(this,a);setTimeout(refreshWingVfx,30);return r};
  setInterval(refreshWingVfx,1200);setTimeout(refreshWingVfx,300);
 })();
@@ -26827,12 +26882,16 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   function makeItem(def, source){
     const isWeapon=weaponSlots.has(def.slot);
     const stats=Object.assign({},def.stats||{});
-    const props=[`九神龍個別專屬裝備｜${def.slot}`,`來源：${source}`,`獨立掉落率 ${(def.dropChance*100).toFixed(0)}%`,'全職業可用','不可強化｜固定 +0'];
+    const props=[`九神龍個別專屬裝備｜${def.slot}`,`來源：${source}`,`獨立掉落率 ${(def.dropChance*100).toFixed(0)}%`,'全職業可用','一般裝備｜可強化：武器每次攻擊 +4、攻速 +0.03；防具每次物防 +4、魔防 +2'];
     Object.entries(stats).forEach(([k,v])=>{if(Number(v))props.push(statText(k,v));});
-    const item={instanceId:`${def.id}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,templateId:def.id,id:def.id,name:def.name,kind:isWeapon?'weapon':'armor',slot:def.slot,slotLabel:def.slot==='weapon'?'武器':def.slot==='necklace'?'項鍊':def.slot==='ringLeft'?'左戒':def.slot==='ringRight'?'右戒':def.slot==='chest'?'胸甲':def.slot==='head'?'頭盔':def.slot==='gloves'?'手部':def.slot==='legs'?'靴子':def.slot==='back'?'背部':'裝備',armorType:def.armorType,weaponType:def.weaponType,level:60,requiredLevel:60,rarity:'神話',quality:'神話',qualityColor:'#9d8cff',classKeys:CLASS_KEYS,classKey:'shared',icon:'✦',iconAsset:def.icon,image:def.icon,stats,statBonuses:Object.assign({},stats),isDivineDragonUnique:true,uniqueDropType:'divine_dragon_unique',sourceMonster:source,sourceDropChance:def.dropChance,cannotEnhance:true,enhancementLevel:0,properties:props,obtainedAt:Date.now()};
+    const item={instanceId:`${def.id}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,templateId:def.id,id:def.id,name:def.name,kind:isWeapon?'weapon':'armor',slot:def.slot,slotLabel:def.slot==='weapon'?'武器':def.slot==='necklace'?'項鍊':def.slot==='ringLeft'?'左戒':def.slot==='ringRight'?'右戒':def.slot==='chest'?'胸甲':def.slot==='head'?'頭盔':def.slot==='gloves'?'手部':def.slot==='legs'?'靴子':def.slot==='back'?'背部':'裝備',armorType:def.armorType,weaponType:def.weaponType,level:60,requiredLevel:60,rarity:'神話',quality:'神話',qualityColor:'#9d8cff',classKeys:CLASS_KEYS,classKey:'shared',icon:'✦',iconAsset:def.icon,image:def.icon,stats,statBonuses:Object.assign({},stats),isDivineDragonUnique:true,uniqueDropType:'divine_dragon_unique',sourceMonster:source,sourceDropChance:def.dropChance,cannotEnhance:false,enhancementLevel:0,properties:props,obtainedAt:Date.now()};
     Object.entries(def).forEach(([key,val])=>{if(!['id','name','slot','dropChance','icon','armorType','weaponType','stats'].includes(key))item[key]=val;});
-    if(isWeapon&&def.meleeAttackBonus)item.meleeAttackBonus=def.meleeAttackBonus;
-    if(isWeapon&&def.magicAttackBonus)item.magicAttackBonus=def.magicAttackBonus;
+    if(isWeapon){
+      const baseAttack=Number(def.meleeAttackBonus)||Number(def.magicAttackBonus)||Number(def.attackBonus)||0;
+      item.baseAttackBonus=baseAttack;item.attackBonus=baseAttack;item.baseAttackSpeedBonus=0;item.attackSpeedBonus=0;
+      if(def.meleeAttackBonus)item.meleeAttackBonus=def.meleeAttackBonus;
+      if(def.magicAttackBonus)item.magicAttackBonus=def.magicAttackBonus;
+    }
     if(def.physicalDefenseBonus)item.physicalDefenseBonus=def.physicalDefenseBonus;
     if(def.magicDefenseBonus)item.magicDefenseBonus=def.magicDefenseBonus;
     return item;
@@ -26851,6 +26910,64 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     if(count){if(typeof saveGame==='function')saveGame();if(document.getElementById('inventory-float')?.style.display==='flex'&&typeof renderInventory==='function')renderInventory();}
     return count;
   }
+  const uniqueIds=new Set(Object.values(defs).flat().map(def=>String(def.id)));
+  const isDivineDragonUniqueEquipment=item=>!!(item&&(item.isDivineDragonUnique===true||item.uniqueDropType==='divine_dragon_unique'||uniqueIds.has(String(item.templateId||item.id||''))));
+  window.isDivineDragonUniqueEquipment=isDivineDragonUniqueEquipment;
+  function normalizeUniqueEquipment(item){
+    if(!isDivineDragonUniqueEquipment(item))return false;
+    let changed=false;
+    const assign=(key,value)=>{if(item[key]!==value){item[key]=value;changed=true;}};
+    assign('isDivineDragonUnique',true);assign('uniqueDropType','divine_dragon_unique');assign('cannotEnhance',false);
+    const level=Math.max(0,Math.floor(Number(item.enhancementLevel)||0));assign('enhancementLevel',level);
+    if(item.kind==='weapon'||item.slot==='weapon'){
+      let baseAttack;
+      if(item.baseAttackBonus!==undefined&&item.baseAttackBonus!==null&&Number.isFinite(Number(item.baseAttackBonus)))baseAttack=Number(item.baseAttackBonus);
+      else baseAttack=[item.attackBonus,item.meleeAttackBonus,item.magicAttackBonus].map(Number).find(value=>Number.isFinite(value)&&value>0)||0;
+      assign('baseAttackBonus',baseAttack);assign('attackBonus',baseAttack+level*4);
+      const baseSpeed=item.baseAttackSpeedBonus!==undefined&&item.baseAttackSpeedBonus!==null&&Number.isFinite(Number(item.baseAttackSpeedBonus))?Number(item.baseAttackSpeedBonus):(Number(item.attackSpeedBonus)||0);
+      assign('baseAttackSpeedBonus',baseSpeed);assign('attackSpeedBonus',baseSpeed+Math.min(0.60,level*0.03));
+    }
+    let properties=Array.isArray(item.properties)?item.properties.slice():[];
+    const nextProperty='一般裝備｜可強化：武器每次攻擊 +4、攻速 +0.03；防具每次物防 +4、魔防 +2';
+    const filtered=properties.filter(value=>!/(不可強化|強化等級固定\s*\+0)/.test(String(value)));
+    if(filtered.length!==properties.length){properties=filtered;changed=true;}
+    if(!properties.includes(nextProperty)){properties.push(nextProperty);changed=true;}
+    if(!Array.isArray(item.properties)){changed=true;}
+    if(changed)item.properties=properties;
+    return changed;
+  }
+  function migrateExistingUniqueEquipment(player){
+    if(!player)return {playerChanged:false,warehouseChanged:false};
+    let playerChanged=false,warehouseChanged=false;
+    const changedPlayerIds=new Set();
+    const normalizeRows=(rows,kind)=>{(Array.isArray(rows)?rows:[]).forEach(row=>{
+      if(kind!=='item'&&!['weapon','armor'].includes(row?.kind))return;
+      const item=kind==='item'?row:row?.item;
+      if(!item)return;
+      const changed=normalizeUniqueEquipment(item);
+      if(kind==='warehouse'){if(changed||changedPlayerIds.has(String(item.instanceId||'')))warehouseChanged=true;}
+      else if(changed){playerChanged=true;if(item.instanceId)changedPlayerIds.add(String(item.instanceId));}
+    });};
+    normalizeRows(player.items?.weapons,'item');normalizeRows(player.items?.armors,'item');
+    normalizeRows(player.storage,'playerStorage');
+    try{const warehouse=typeof window.getSharedWarehouse==='function'?window.getSharedWarehouse():null;if(Array.isArray(warehouse?.items))normalizeRows(warehouse.items,'warehouse');}catch(_){ }
+    return {playerChanged,warehouseChanged};
+  }
+  let migrationInProgress=false;
+  function runUniqueEquipmentMigration(){
+    if(migrationInProgress)return;
+    migrationInProgress=true;
+    try{
+      const player=typeof currentPlayer!=='undefined'?currentPlayer:window.currentPlayer;
+      const changed=migrateExistingUniqueEquipment(player);
+      if(changed.playerChanged&&typeof saveGame==='function')saveGame();
+      if(changed.warehouseChanged&&typeof saveSharedWarehouse==='function')saveSharedWarehouse();
+    }finally{migrationInProgress=false;}
+  }
+  runUniqueEquipmentMigration();
+  const oldUpdateGameUI=window.updateGameUI;
+  if(typeof oldUpdateGameUI==='function')window.updateGameUI=function(...args){runUniqueEquipmentMigration();return oldUpdateGameUI.apply(this,args);};
+  window.migrateDivineDragonUniqueEquipment=migrateExistingUniqueEquipment;
   window.DIVINE_DRAGON_UNIQUE_DEFS=defs;window.awardDivineDragonUniqueDrops=award;
 })();
 </script>
