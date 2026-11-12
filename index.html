@@ -26485,7 +26485,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       [SECOND,'第二層','🌊','#37e8ff','海底深淵、墮落天界特殊怪與 BOSS，以及九神龍規則。'],
       [THIRD,'第三層','🪐','#b35cff','克卜勒異星機械首領層：只收錄 Lv.71–81 特殊怪與 BOSS。']
     ];
-    body.innerHTML = `<div class="bestiary-nav"><button class="modal-btn" onclick="openBestiary()">← 返回區域列表</button><button class="modal-btn" onclick="closeModal()">關閉圖鑑</button></div><h3>🏰 魔物首領窟｜樓層圖鑑</h3><p style="color:#a08080;font-size:13px;">第一層、第二層、第三層分開記錄怪物、掉落與戰鬥資料。</p><div class="bestiary-zone-grid">${rows.map(([key,title,icon,color,desc])=>{const x=statsFor(key);return `<button class="bestiary-zone-button" type="button" style="border-color:${color};" onclick="openLeaderCaveBestiaryLayer('${key}')"><span class="bestiary-zone-icon">${icon}</span><span class="bestiary-zone-name">${title}</span><span class="bestiary-zone-count">${x.range}｜${x.list.length} 種<br>特殊怪 ${x.specials}｜BOSS ${x.bosses}</span><span style="font-size:11px;color:#bdb3cf;line-height:1.4;">${desc}</span></button>`;}).join('')}</div>`;
+    body.innerHTML = `<div class="bestiary-nav"><button class="modal-btn" onclick="openBestiary()">← 返回區域列表</button><button class="modal-btn" onclick="closeModal()">關閉圖鑑</button></div><h3>🏰 魔物首領窟｜樓層圖鑑</h3><p style="color:#a08080;font-size:13px;">第一層、第二層、第三層分開記錄怪物、掉落與戰鬥資料。</p><div class="bestiary-zone-grid">${rows.map(([key,title,icon,color,desc])=>{const x=statsFor(key);return `<button class="bestiary-zone-button" type="button" style="border-color:${color};" onclick="openBestiaryCaveLayerExact('${key}')"><span class="bestiary-zone-icon">${icon}</span><span class="bestiary-zone-name">${title}</span><span class="bestiary-zone-count">${x.range}｜${x.list.length} 種<br>特殊怪 ${x.specials}｜BOSS ${x.bosses}</span><span style="font-size:11px;color:#bdb3cf;line-height:1.4;">${desc}</span></button>`;}).join('')}</div>`;
     body.classList.add('readable-modal'); modal.style.display='flex';
   };
   const originalZone = window.openBestiaryZone;
@@ -26851,6 +26851,50 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     window.__activeBestiaryZone = zoneName;
     window.__activeBestiaryPage = 1;
     return window.openBestiaryZone(zoneName, 1);
+  };
+})();
+</script>
+<script id="leader-cave-exact-renderer-v1">
+(() => {
+  'use strict';
+  if (window.__leaderCaveExactRendererV1) return;
+  window.__leaderCaveExactRendererV1 = true;
+  const zones = {
+    first: '魔物首領窟',
+    second: '魔物首領窟・第二層',
+    third: '魔物首領窟・第三層'
+  };
+  const normalize = value => zones[value] || String(value || '');
+  const escapeHtml = value => {
+    if (typeof window.esc === 'function') return window.esc(String(value ?? ''));
+    return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  };
+  window.openBestiaryCaveLayerExact = function(layer) {
+    const zone = normalize(layer);
+    const source = typeof zoneMonsters !== 'undefined' ? zoneMonsters : {};
+    const list = Array.isArray(source[zone]) ? source[zone].filter(monster => monster && monster.type !== 'training') : [];
+    const body = document.getElementById('modal-body');
+    const modal = document.getElementById('modal-window');
+    if (!body || !modal || !list.length) return;
+    const cards = list.map(monster => {
+      const name = escapeHtml(monster.name);
+      const image = monster.image && typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(monster.image) : monster.image;
+      const portrait = image
+        ? `<img src="${escapeHtml(image)}" alt="${name}" loading="lazy">`
+        : escapeHtml(monster.icon || '👹');
+      const kind = monster.type === 'boss' ? 'BOSS' : monster.type === 'special' ? '特殊怪' : '一般怪';
+      return `<button class="bestiary-monster-button bestiary-type-${escapeHtml(monster.type || 'normal')}" type="button" onclick="openBestiaryDetailV2('${escapeHtml(zone)}','${name}')"><span class="bestiary-monster-portrait">${portrait}</span><span class="bestiary-monster-name">${name}</span><span class="bestiary-monster-level">等級 ${escapeHtml(monster.levelRange || monster.level || '—')} · ${kind}</span></button>`;
+    }).join('');
+    const back = `openBestiaryCaveLayerExactMenu()`;
+    body.innerHTML = `<div class="bestiary-nav"><button class="modal-btn" onclick="${back}">← 返回魔物首領窟樓層</button><button class="modal-btn" onclick="closeModal()">關閉圖鑑</button></div><h3>🏰 ${escapeHtml(zone)}</h3><p style="color:#a08080;font-size:13px">本層固定顯示 ${list.length} 種特殊怪與 BOSS；資料來源：${escapeHtml(zone)}。</p><div class="bestiary-grid">${cards}</div>`;
+    body.classList.add('readable-modal');
+    body.dataset.activeCaveLayer = zone;
+    window.__activeBestiaryZone = zone;
+    window.__activeBestiaryPage = 1;
+    modal.style.display = 'flex';
+  };
+  window.openBestiaryCaveLayerExactMenu = function() {
+    if (typeof window.openBestiaryLeaderCave === 'function') return window.openBestiaryLeaderCave();
   };
 })();
 </script>
