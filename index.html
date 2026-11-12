@@ -7036,6 +7036,14 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                 drops.push(`魔法書｜${monster.type === 'boss' ? 'BOSS' : '特殊怪'}掉落 ${Math.round(spellbookChance*100)}%｜僅掉怪物等級對應階級：${bookNames}｜品質及魔法攻擊、魔法防禦、智力、精神、體質隨機`);
             }
             if (monster?.isShadowVoidBoss) drops.push('影之虛無職業專屬副武（16% 獨立掉落；依目前職業掉落：騎士守誓護腕／戰士裂隙戰腕／獵手寂夜弓之甲／魔導星蝕魔法書；物品需求等級 45；完全沿用 BOSS 品質機率：黃金 40%、特殊 30%、傳說 19%、史詩 9%、神話 2%）');
+            // 共用圖鑑掉落面板接入自訂專屬掉落；有完整 uniqueDrops 時以其為準，避免簡略 dropTable 重複列出。
+            const customDropEntries = Array.isArray(monster?.uniqueDrops) && monster.uniqueDrops.length
+                ? monster.uniqueDrops
+                : Array.isArray(monster?.dropTable) ? monster.dropTable : [];
+            customDropEntries.forEach(entry => {
+                const description = typeof entry === 'string' ? entry.trim() : String(entry?.description || entry?.name || '').trim();
+                if (description && !drops.includes(description)) drops.push(description);
+            });
             const scrollDropChance = getMonsterEnhancementScrollDropChance(monster);
             if (scrollDropChance > 0) drops.push(`普通武器強化卷或普通防具強化卷（${scrollDropChance}% 機率，成功後各 50%）`);
 
