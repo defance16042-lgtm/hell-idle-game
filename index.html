@@ -19489,11 +19489,6 @@ body.qdark-effects-off .qdark-fx { display: none !important; }
 
 </style>
 <style id="qdark-ui-hotfix-v2-style">
-/* Keep the village idle character centered and smaller than the combat sprite. */
-#battle-stage.village-mode #player-icon img.qdark-player-sprite {
-  width:clamp(140px,9vw,165px)!important; height:clamp(140px,9vw,165px)!important;
-  left:calc(50% - 25px)!important; transform:translateX(-50%)!important; bottom:12px!important;
-}
 /* After a kill the stage returns to exploring-mode; center the buffed sprite there too. */
 #battle-stage:not(.village-mode) #player-icon.sunlight-active img.qdark-player-sprite,
 #battle-stage:not(.village-mode) #player-icon.sunlight-active img.fighter-sprite { left:50%!important; transform:translateX(-50%)!important; }
@@ -25297,8 +25292,8 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   filter:blur(4px); mix-blend-mode:screen; box-shadow:0 0 28px 10px rgba(255,205,43,.68),0 0 46px 14px rgba(55,170,255,.42);
 }
 #player-icon > #sunlight-aura.sunlight-aura-active { display:block!important; animation:sunlightAuraPulseV6 1.25s ease-in-out infinite alternate!important; }
-#player-icon > img.fighter-sprite,#player-icon > img.qdark-player-sprite { position:relative!important; z-index:2!important; }
-#battle-stage.village-mode #player-icon:has(> img.qdark-player-sprite) > #sunlight-aura { left:calc(50% - 25px)!important; }
+#player-icon > img.fighter-sprite:not(.qdark-player-sprite) { position:relative!important; z-index:2!important; }
+#player-icon > img.qdark-player-sprite { position:absolute!important; z-index:2!important; }
 @keyframes sunlightAuraPulseV6 { from { opacity:.78; transform:translate(-50%,-50%) scale(.94); } to { opacity:1; transform:translate(-50%,-50%) scale(1.04); } }
 </style>
 <script id="sunlight-aura-v6">
