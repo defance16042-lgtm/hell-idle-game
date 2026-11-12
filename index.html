@@ -11644,7 +11644,10 @@ function getCombatVisualCycleDuration(actionPath) {
             if (!isTrainingDummy) awardSetEquipmentDrop(currentMonster, zoneName);
             // 神龍套裝必須直接掛在戰鬥結算；不能只依賴 window.awardSetEquipmentDrop 的覆寫。
             // awardShenlongDrop 內含每隻怪物一次鎖，避免未來其他接點造成重複掉落。
-            if (!isTrainingDummy) window.awardShenlongDrop?.(currentMonster, zoneName);
+            if (!isTrainingDummy) {
+                window.awardShenlongDrop?.(currentMonster, zoneName);
+                window.awardDivineDragonUniqueDrops?.(currentMonster, zoneName);
+            }
             if (!isTrainingDummy && currentMonster?.type === 'boss' && /逆神.*熾天墮龍|熾天墮龍.*逆神/.test(String(currentMonster.name || '')) && Math.random() < 0.01) {
                 const skill = Math.random() < 0.5 ? 'light' : 'dark';
                 const stats = Object.fromEntries(['str','dex','con','wis','int','cha'].map(key => [key, 20 + Math.floor(Math.random() * 31)]));
@@ -17167,7 +17170,6 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
     if(typeof saveGame==='function')saveGame();if(document.getElementById('inventory-float')?.style.display==='flex'&&typeof renderInventory==='function')renderInventory();
   }
   window.awardShenlongDrop=awardShenlongDrop;
-  if(typeof awardSetEquipmentDrop==='function'){const oldAward=awardSetEquipmentDrop;window.awardSetEquipmentDrop=function(monster,zoneName){oldAward(monster,zoneName);awardShenlongDrop(monster,zoneName);};}
   if(typeof toggleSetGearEquip==='function'){const oldToggle=toggleSetGearEquip;window.toggleSetGearEquip=function(instanceId){const player=window.currentPlayer,item=player?.items?.setEquipment?.find(x=>x.instanceId===instanceId);if(!item||item.setId!==SHENLONG_SET_ID)return oldToggle(instanceId);ensureShenlongStorage(player);const slot=item.pieceSlot,currentlyEquipped=player.equipment.setGearSlots[slot]===instanceId,requiredLevel=Math.max(1,Number(item.requiredLevel??item.level)||1);if(!currentlyEquipped&&(Number(player.level)||1)<requiredLevel){if(typeof addBattleLog==='function')addBattleLog(`⚠️ 需要角色等級 ${requiredLevel} 才能裝備【${item.name}】。`);else if(typeof alert==='function')alert(`需要角色等級 ${requiredLevel} 才能裝備。`);return;}if(currentlyEquipped)delete player.equipment.setGearSlots[slot];else{for(const [key,value] of Object.entries(player.equipment.setGearSlots))if(key===slot||value===instanceId)delete player.equipment.setGearSlots[key];player.equipment.setGearSlots[slot]=instanceId;}if(typeof saveGame==='function')saveGame();if(typeof closeModal==='function')closeModal();if(typeof renderInventory==='function')renderInventory();if(typeof renderCharacterStatus==='function')renderCharacterStatus();};}
   if(typeof showSetEquipmentDetails==='function'){const oldShow=showSetEquipmentDetails;window.showSetEquipmentDetails=function(instanceId,returnToCharacterStats=false){const item=window.currentPlayer?.items?.setEquipment?.find(x=>x.instanceId===instanceId);if(!item||item.setId!==SHENLONG_SET_ID)return oldShow(instanceId,returnToCharacterStats);const labels={str:'力量',dex:'敏捷',con:'體質',wis:'精神',int:'智力',cha:'魅力',attack:'攻擊力',physicalDefense:'物理防禦',magicDefense:'魔法防禦',maxHp:'生命上限',maxMp:'魔力上限',bossDamage:'首領傷害',damageReductionPct:'傷害減免',skillDamagePct:'技能傷害',criticalDamage:'暴擊傷害'};const stats=Object.entries(item.stats||{}).filter(([,v])=>Number(v)).map(([key,value])=>`<span>${labels[key]||translateEquipmentStatText(key)}：${formatEquipmentStatValue(key, value)}</span>`).join('');const equipped=window.currentPlayer.equipment?.setGearSlots?.[item.pieceSlot]===item.instanceId;const modal=document.getElementById('modal-window'),body=document.getElementById('modal-body');body.innerHTML=`<h3 style="color:#37e8ff;">🐉 ${item.name}</h3><div class="set-item-detail"><img class="set-equipment-icon large" src="${(window.SHENLONG_I體質_ASSETS || SET_EQUIPMENT_I體質_ASSETS)[item.asset]}" alt="${item.name}"><div class="set-item-stats">${stats}</div></div><p style="color:#8ff5ff;">神龍套裝｜全職業適用｜神話品質｜需求等級 ${Math.max(1,Number(item.requiredLevel??item.level)||1)}｜九神龍專屬掉落率：22%</p><p style="color:#b9f8ff;font-size:12px;">來源規則：僅目前輪換中的九神龍 BOSS 可掉落，其他怪物不會掉落。</p><p><strong style="color:#ffe38a;">四件套「神龍覺醒」額外效果：</strong>全能力 +35、攻擊 +25%、物理防禦 +25%、魔法防禦 +25%、生命上限 +25%、魔力上限 +25%、技能傷害 +25%、首領傷害 +20%、傷害減免 +10%。</p><p style="color:#d9fbff;font-size:12px;">觸發條件：同時裝備神龍天劫刃、神龍龍首盔、神龍逆鱗甲、神龍踏焰靴；卸下任一件後四件效果與神龍覺醒光暈立即失效。</p><button class="modal-btn" onclick="toggleSetGearEquip('${item.instanceId}')">${equipped?'卸下裝備':'裝備'}</button><button class="modal-btn" onclick="closeModal()">關閉</button>`;modal.style.display='flex';};}
 })();
@@ -22832,7 +22834,10 @@ html,body{
     const attackType = monster.damageType === 'magic' ? '魔法' : monster.damageType === 'physical' ? '物理' : (monster.damageType || '未設定');
     const speed = Number(monster.attackSpeed) > 0 ? `${Number(monster.attackSpeed).toFixed(2)} 次／秒（約每 ${Math.round(1000 / Number(monster.attackSpeed)).toLocaleString('zh-TW')} 毫秒）` : '—';
     const setDrop = monster.shenlongSetDrop || {name:'神龍套裝（四件套）',chance:22,description:'僅目前輪替中的九神龍 BOSS 可掉落。'};
-    const extraDrops = Array.isArray(monster.hiddenBossDrops) ? monster.hiddenBossDrops : [];
+    const setPieceNames = new Set(['神龍天劫刃','神龍龍首盔','神龍逆鱗甲','神龍踏焰靴']);
+    const extraDrops = Array.isArray(monster.hiddenBossDrops)
+      ? monster.hiddenBossDrops.filter(drop => !setPieceNames.has(Array.isArray(drop) ? drop[0] : drop?.name))
+      : [];
     const skills = [...(monster.skills || []), ...(monster.magicSkills || [])];
     const skillMarkup = skills.length ? skills.map((skill, index) => {
       const chance = skill.chance == null ? '未設定' : pct(skill.chance);
@@ -22865,7 +22870,7 @@ html,body{
           <h4>六項能力</h4><div class="dd-grid">${statRows}</div><h4>額外戰鬥加成</h4><div class="dd-grid">${bonusRows(monster)}</div><p class="dd-note">以上為此九神龍的圖鑑基礎資料；戰鬥中實際承傷與傷害仍依遊戲戰鬥規則、玩家等級差與時段加成計算。</p></section>
         <section class="bestiary-detail-page dd-page" data-bestiary-page="skills" hidden><h4>技能清單（依怪物資料欄位）</h4>${skillMarkup}<div class="dd-note">技能機率、階段、傷害類型與倍率直接取自該九神龍的技能資料；低血量階段依遊戲低血量觸發規則判定。</div></section>
         <section class="bestiary-detail-page dd-page" data-bestiary-page="drops" hidden><h4>實際掉落規則</h4><div class="dd-set-drop"><b>${esc(setDrop.name)}｜${nfmt(setDrop.chance)}%</b><p>${esc(setDrop.description)}</p><p>${current ? '此龍目前輪替中，符合九神龍套裝掉落判定。' : '此龍目前未輪替；只有輪替中的九神龍能實際掉落神龍套裝。'}</p></div><h4>套裝效果</h4><div class="dd-set-effect">${esc(monster.shenlongSetEffects || '—')}<br><small>四件：神龍天劫刃、神龍龍首盔、神龍逆鱗甲、神龍踏焰靴。四件同時裝備才啟動；卸下任一件後效果失效。</small></div>
-          <h4>個別掉落欄位（目前尚未接入戰鬥掉落）</h4><div class="dd-drop-list">${extraDropMarkup}</div><div class="dd-note">這些個別素材名稱與機率目前只存在九神龍資料欄位；現有戰鬥掉落程式實際接入的是「輪替中的九神龍 22% 神龍套裝」。因此此處明確標示為未接入，避免誤以為它們已會掉落。</div></section>
+          <h4>九神龍個別專屬裝備（已接入戰鬥掉落）</h4><div class="dd-drop-list">${extraDropMarkup}</div><div class="dd-note">以下兩件為九神龍個別專屬裝備；只有目前輪替中的九神龍在戰鬥擊殺結算時，才會依各自獨立機率實際發放到武器或防具背包。神龍套裝則另外依 22% 套裝掉落規則判定。</div></section>
       </div>`;
     body.innerHTML = html;
     body.classList.add('readable-modal','bestiary-detail-modal');
@@ -26489,7 +26494,11 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     body.classList.add('readable-modal'); modal.style.display='flex';
   };
   const originalZone = window.openBestiaryZone;
-  window.openLeaderCaveBestiaryLayer = key => { if (typeof originalZone === 'function') originalZone.call(window,key); };
+  const layerZoneMap = {first:CAVE, second:SECOND, third:THIRD};
+  window.openLeaderCaveBestiaryLayer = key => {
+    const zoneName = layerZoneMap[key] || key;
+    if (typeof originalZone === 'function') originalZone.call(window,zoneName,1);
+  };
   if (typeof originalZone === 'function' && !originalZone.__leaderCaveUnified) {
     const wrappedZone = function(zoneIndex, ...args) {
       const zoneName = typeof zoneIndex === 'string' ? zoneIndex : (typeof getBestiaryZones === 'function' ? getBestiaryZones()[Number(zoneIndex)]?.[0] : null);
@@ -26793,11 +26802,6 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     return count;
   }
   window.DIVINE_DRAGON_UNIQUE_DEFS=defs;window.awardDivineDragonUniqueDrops=award;
-  const oldResolve=window.resolveMonsterDefeat;
-  if(typeof oldResolve==='function'&&!oldResolve.__divineUniqueWrapped){
-    const wrapped=function(...args){const defeated=typeof currentMonster!=='undefined'?currentMonster:null;const should=defeated?.isDarkDivineBeast&&defeated?.isRotatingHiddenBoss&&Number(defeated.hp)<=0;const result=oldResolve.apply(this,args);if(should)award(defeated);return result;};
-    wrapped.__divineUniqueWrapped=true;window.resolveMonsterDefeat=wrapped;
-  }
 })();
 </script>
 <script id="dong-zhuo-special-tab-fix-v1">
@@ -26832,26 +26836,6 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     window.openBestiaryDetail=wrapped;
   }
   window.injectDongZhuoSpecialTab=inject;
-})();
-</script>
-<script id="leader-cave-layer-route-fix-v1">
-(() => {
-  'use strict';
-  if (window.__leaderCaveLayerRouteFixV1) return;
-  window.__leaderCaveLayerRouteFixV1 = true;
-  const zoneMap = {
-    first: '魔物首領窟',
-    second: '魔物首領窟・第二層',
-    third: '魔物首領窟・第三層'
-  };
-  const original = window.openLeaderCaveBestiaryLayer;
-  window.openLeaderCaveBestiaryLayer = function(layer, ...args) {
-    const zoneName = zoneMap[layer] || layer;
-    if (!zoneName || typeof window.openBestiaryZone !== 'function') return original?.call(this, layer, ...args);
-    window.__activeBestiaryZone = zoneName;
-    window.__activeBestiaryPage = 1;
-    return window.openBestiaryZone(zoneName, 1);
-  };
 })();
 </script>
 <script id="leader-cave-exact-renderer-v1">
