@@ -10215,6 +10215,16 @@ function getCombatVisualCycleDuration(actionPath) {
         hellKnightCustomAssets.hell_knight_female_counter = hellKnightCustomAssets.female_counter;
         hellKnightCustomAssets["assets/classes/refined/knight_male.png"] = hellKnightCustomAssets.idle;
         window.hellKnightCustomAssets = hellKnightCustomAssets;
+        function replacePlayerIconChildrenPreservingWing(icon, ...nodes) {
+            if (!icon) return;
+            const persistentClasses = new Set(['abyss-wing-vfx','shenlong-cosmic-filter-defs','shenlong-cosmos-halo','shenlong-galaxy-band','shenlong-cosmic-dust','shenlong-starfield','shenlong-blackhole-ring','shenlong-awakening-label']);
+            const persistentVfx = [...icon.children].filter(child => [...persistentClasses].some(className => child.classList.contains(className)));
+            [...icon.children].forEach(child => { if (!persistentVfx.includes(child)) child.remove(); });
+            nodes.filter(Boolean).forEach(node => icon.appendChild(node));
+            persistentVfx.forEach(node => icon.appendChild(node));
+        }
+        window.replacePlayerIconChildrenPreservingWing = replacePlayerIconChildrenPreservingWing;
+
         function playPlayerAnimation(state = 'idle') {
             const animationVersion = ++playerAnimationVersion;
             const icon = document.getElementById('player-icon');
@@ -10244,7 +10254,7 @@ function getCombatVisualCycleDuration(actionPath) {
                         img.src = resolvedPortrait;
                         img.dataset.assetPath = portrait;
                         img.dataset.renderMode = 'image';
-                        icon.replaceChildren(img);
+                        replacePlayerIconChildrenPreservingWing(icon, img);
                     }
                 } else icon.textContent = '🛡️';
                 return;
@@ -10275,7 +10285,7 @@ function getCombatVisualCycleDuration(actionPath) {
                     track.style.backgroundPosition = '0% 0';
                     track.dataset.cycleDuration = '';
                     sprite.replaceChildren(track);
-                    icon.replaceChildren(sprite);
+                    replacePlayerIconChildrenPreservingWing(icon, sprite);
                 }
                 sprite = icon.querySelector('.fighter-sprite');
                 if (sprite) sprite.setAttribute('aria-label', `${currentPlayer.name}${state}動作`);
@@ -10294,7 +10304,7 @@ function getCombatVisualCycleDuration(actionPath) {
                     img.src = resolvedAction;
                     img.dataset.assetPath = actionPath;
                     img.dataset.renderMode = 'image';
-                    icon.replaceChildren(img);
+                    replacePlayerIconChildrenPreservingWing(icon, img);
                 } else if (sprite?.tagName === 'IMG') {
                     sprite.alt = `${currentPlayer.name}${state}動作`;
                 }
@@ -16589,10 +16599,10 @@ const PORTAL_MOON_GATE_ICON_V1 = 'assets/base64/11c8f12b0e7c22d9acd6abc0a02072b3
             if (currentPlayer.equipment?.rightRingId === instanceId) equipmentKey = 'rightRingId';
             if (!equipmentKey) { alert('左右戒指欄都已裝備；請先卸下其中一枚戒指。'); return; }
             currentPlayer.equipment[equipmentKey] = instanceId;
-            ring.slot = equipmentKey === 'leftRingId' ? 'ringLeft' : 'ringRight';
-            ring.slotLabel = equipmentKey === 'leftRingId' ? '左戒指' : '右戒指';
+            ring.slot = 'ring';
+            ring.slotLabel = '戒指';
             clampPlayerResourcesToEffectiveMax(currentPlayer);
-            addBattleLog(`💍 已裝備【${ring.name}】至${ring.slotLabel}。`);
+            addBattleLog(`💍 已裝備【${ring.name}】至共用戒指欄。`);
             updateGameUI(); saveGame(); renderInventory();
         };
 
@@ -17966,7 +17976,7 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
 
 
 <script id="knight-female-sequence-script">(()=>{window.combatFrameAssets=window.combatFrameAssets||{};})();</script>
-<script id="female-independent-attack-frames">(()=>{const frames=["assets/qdark/frames/knight_female_1.png","assets/qdark/frames/knight_female_2.png","assets/qdark/frames/knight_female_3.png","assets/qdark/frames/knight_female_4.png","assets/qdark/frames/knight_female_5.png","assets/qdark/frames/knight_female_6.png","assets/qdark/frames/knight_female_7.png","assets/qdark/frames/knight_female_8.png","assets/qdark/frames/knight_female_9.png"];const oldPlay=window.playPlayerAnimation;if(typeof oldPlay!=="function")return;let token=0,timer=0;function isFemaleKnight(){try{return currentPlayer&&currentPlayer.key==="knight"&&String(currentPlayer.gender||"").toLowerCase()==="female"}catch(_){return false}}window.playPlayerAnimation=function(state){if(isFemaleKnight()&&state==="attack"){const icon=document.getElementById("player-icon");if(!icon)return;const my=++token;clearTimeout(timer);const sprite=document.createElement("div");sprite.className="fighter-sprite female-independent-frame";sprite.dataset.renderMode="individual-frames";sprite.style.cssText="position:relative;width:116px;height:116px;display:block;overflow:visible;filter:drop-shadow(0 0 8px rgba(255,69,0,.55));";const img=document.createElement("img");img.alt=(currentPlayer.name||"女性地獄騎士")+"Q版攻擊動作";img.style.cssText="position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:116px;width:auto;max-width:none;object-fit:contain;image-rendering:auto;pointer-events:none;";sprite.appendChild(img);icon.replaceChildren(sprite);icon.classList.add("combat-frame-attack");const frameMs=Math.max(12,Number(window.__combatAttackTimeline?.impactDelay||810)/frames.length);let i=0;function next(){if(my!==token||i>=frames.length)return;img.src=frames[i++];if(i<frames.length)timer=setTimeout(next,frameMs)}next();timer=setTimeout(()=>{if(my===token){token++;clearTimeout(timer);oldPlay("idle")}},Number(window.__combatAttackTimeline?.impactDelay||810)+20);return}return oldPlay(state)}})();</script>
+<script id="female-independent-attack-frames">(()=>{const frames=["assets/qdark/frames/knight_female_1.png","assets/qdark/frames/knight_female_2.png","assets/qdark/frames/knight_female_3.png","assets/qdark/frames/knight_female_4.png","assets/qdark/frames/knight_female_5.png","assets/qdark/frames/knight_female_6.png","assets/qdark/frames/knight_female_7.png","assets/qdark/frames/knight_female_8.png","assets/qdark/frames/knight_female_9.png"];const oldPlay=window.playPlayerAnimation;if(typeof oldPlay!=="function")return;let token=0,timer=0;function isFemaleKnight(){try{return currentPlayer&&currentPlayer.key==="knight"&&String(currentPlayer.gender||"").toLowerCase()==="female"}catch(_){return false}}window.playPlayerAnimation=function(state){if(isFemaleKnight()&&state==="attack"){const icon=document.getElementById("player-icon");if(!icon)return;const my=++token;clearTimeout(timer);const sprite=document.createElement("div");sprite.className="fighter-sprite female-independent-frame";sprite.dataset.renderMode="individual-frames";sprite.style.cssText="position:relative;width:116px;height:116px;display:block;overflow:visible;filter:drop-shadow(0 0 8px rgba(255,69,0,.55));";const img=document.createElement("img");img.alt=(currentPlayer.name||"女性地獄騎士")+"Q版攻擊動作";img.style.cssText="position:absolute;left:50%;bottom:0;transform:translateX(-50%);height:116px;width:auto;max-width:none;object-fit:contain;image-rendering:auto;pointer-events:none;";sprite.appendChild(img);window.replacePlayerIconChildrenPreservingWing?.(icon, sprite);icon.classList.add("combat-frame-attack");const frameMs=Math.max(12,Number(window.__combatAttackTimeline?.impactDelay||810)/frames.length);let i=0;function next(){if(my!==token||i>=frames.length)return;img.src=frames[i++];if(i<frames.length)timer=setTimeout(next,frameMs)}next();timer=setTimeout(()=>{if(my===token){token++;clearTimeout(timer);oldPlay("idle")}},Number(window.__combatAttackTimeline?.impactDelay||810)+20);return}return oldPlay(state)}})();</script>
 
 <style id="login-layout-width-lock">
 /* 修正登入／選角頁在圖片資產更新後被 flex 計算成 0px 寬的問題。 */
@@ -18041,7 +18051,7 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
     const replacement=document.createElement('img');
     replacement.className='fighter-sprite warrior-male-attack-restored';replacement.alt=(player()?.name||'男性修羅戰士')+'攻擊動作';replacement.src=src;replacement.dataset.assetPath=expected;replacement.dataset.renderMode='image';replacement.draggable=false;
     replacement.style.cssText='width:116px;height:116px;max-width:116px;max-height:116px;object-fit:contain;display:block;image-rendering:auto;';
-    icon.replaceChildren(replacement);icon.classList.remove('combat-frame-attack');icon.classList.add('vfx-motion-warrior');
+    window.replacePlayerIconChildrenPreservingWing?.(icon, replacement);icon.classList.remove('combat-frame-attack');icon.classList.add('vfx-motion-warrior');
     clearTimeout(icon.__warriorMotionRestoreTimer);icon.__warriorMotionRestoreTimer=setTimeout(()=>icon.classList.remove('vfx-motion-warrior'),650);
   }
   function install(){
@@ -18775,7 +18785,7 @@ body.qdark-effects-off .qdark-fx { display: none !important; }
       img = document.createElement('img');
       img.className = 'fighter-sprite qdark-player-sprite';
       img.alt = `${player.name || '角色'}Q版戰鬥分鏡`;
-      icon.replaceChildren(img);
+      window.replacePlayerIconChildrenPreservingWing?.(icon, img);
     }
     const src = frameUrl(key, gender, frame);
     if (img.dataset.qdarkSrc !== src) {
@@ -26687,11 +26697,8 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       cannotEnhance: true, enhancementLevel: 0,
       source: '董卓', sourceLabel: '董卓專屬掉落'
     },
-    dropTable: [
-      '魂幣 48,000', '經驗 148,000', '補血藥水（8%）',
-      '董卓專屬：天命玉璽戒｜戒指｜全職業可用｜需求等級 85｜獨立掉落率 5%｜攻擊 +190、物理防禦 +155、魔法防禦 +160、生命上限 +16,000｜不可強化'
-    ],
-    uniqueDrops: ['天命玉璽戒｜BOSS專屬戒指｜全職業可用｜需求等級 85｜獨立掉落 5%；攻擊 +190、物理防禦 +155、魔法防禦 +160、生命上限 +16,000；固定 +0、不可強化。'],
+    dropTable: ['魂幣 48,000', '經驗 148,000', '補血藥水（8%）'],
+    uniqueDrops: [],
     bossPhases: [
       { name: '虎牢關暴君', trigger: '生命值高於 50%', description: '壓低身形蓄力，施展赤燼崩岳斬；偃月刀的紅紫弧光斬向左側。' },
       { name: '玉璽焚宮', trigger: '生命值低於或等於 50%', description: '玉璽發出翠金光芒，接續玉璽焚宮・裂地；重擊地面並釋放紅紫裂地震波。' }
@@ -26841,14 +26848,14 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     ],
     '白虎・黑暗之虎': [
       {id:'white_tiger_soul_fang_v1',name:'白虎裂魂牙',slot:'weapon',dropChance:.16,icon:'assets/items/divine-dragon/white-tiger-soul-fang.png',weaponType:'melee',meleeAttackBonus:265,stats:{str:48,meleeCritRate:.03,meleeCritDamage:.12}},
-      {id:'soul_rift_tiger_claw_v1',name:'裂魂虎爪',slot:'gloves',dropChance:.24,icon:'assets/items/divine-dragon/soul-rift-tiger-claw.png',armorType:'gloves',physicalDefenseBonus:75,stats:{str:32,dex:38,attackSpeedBonus:.01,meleeCritDamage:.08}}
+      {id:'soul_rift_tiger_claw_v1',name:'裂魂虎爪',slot:'wrist',slotLabel:'副武・護腕',dropChance:.24,icon:'assets/items/divine-dragon/soul-rift-tiger-claw.png',armorType:'bracer',physicalDefenseBonus:75,stats:{str:32,dex:38,attackSpeedBonus:.01,meleeCritDamage:.08}}
     ],
     '青龍・黑暗之龍': [
       {id:'azure_wind_vein_crystal_v1',name:'青龍風脈晶',slot:'necklace',dropChance:.16,icon:'assets/items/divine-dragon/azure-wind-vein-crystal.png',armorType:'accessory',rangedAttackBonus:180,stats:{dex:42,rangedCritRate:.03,rangedCritDamage:.12}},
       {id:'azure_dragon_scale_v1',name:'青冥龍鱗',slot:'chest',dropChance:.24,icon:'assets/items/divine-dragon/azure-dragon-scale.png',armorType:'chest',physicalDefenseBonus:175,magicDefenseBonus:180,stats:{dex:40,rangedAttackBonus:8,evasion:.07}}
     ],
     '朱雀・黑暗之凰': [
-      {id:'vermilion_flame_heart_v1',name:'朱雀炎心',slot:'ringLeft',dropChance:.16,icon:'assets/items/divine-dragon/vermilion-flame-heart.png',armorType:'accessory',magicAttackBonus:210,stats:{int:50,maxMp:1200,magicCritRate:.04,skillDamagePct:8}},
+      {id:'vermilion_flame_heart_v1',name:'朱雀炎心',slot:'ring',slotLabel:'戒指',dropChance:.16,icon:'assets/items/divine-dragon/vermilion-flame-heart.png',armorType:'accessory',magicAttackBonus:210,stats:{int:50,maxMp:1200,magicCritRate:.04,skillDamagePct:8}},
       {id:'ghostflame_phoenix_feather_v1',name:'幽炎凰羽',slot:'back',dropChance:.24,icon:'assets/items/divine-dragon/ghostflame-phoenix-feather.png',armorType:'back',magicAttackBonus:120,stats:{int:35,maxMp:1000,skillDamagePct:10,fireDamagePct:8}}
     ],
     '麒麟・黑暗之麟': [
@@ -26856,7 +26863,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       {id:'auspicious_qilin_horn_v1',name:'祥麟金角',slot:'head',dropChance:.24,icon:'assets/items/divine-dragon/auspicious-qilin-horn.png',armorType:'head',physicalDefenseBonus:135,magicDefenseBonus:125,stats:{str:15,dex:15,con:15,wis:15,int:15,cha:15,bossDamage:8}}
     ],
     '九尾・黑暗之狐': [
-      {id:'nine_tail_phantom_orb_v1',name:'九尾幻影珠',slot:'ringRight',dropChance:.16,icon:'assets/items/divine-dragon/nine-tail-phantom-orb.png',armorType:'accessory',stats:{dex:55,cha:35,rangedAttackBonus:110,evasion:.10,rangedCritRate:.03,rangedCritDamage:.10}},
+      {id:'nine_tail_phantom_orb_v1',name:'九尾幻影珠',slot:'ring',slotLabel:'戒指',dropChance:.16,icon:'assets/items/divine-dragon/nine-tail-phantom-orb.png',armorType:'accessory',stats:{dex:55,cha:35,rangedAttackBonus:110,evasion:.10,rangedCritRate:.03,rangedCritDamage:.10}},
       {id:'dark_fox_tailfire_v1',name:'暗狐尾火',slot:'legs',dropChance:.24,icon:'assets/items/divine-dragon/dark-fox-tailfire.png',armorType:'legs',physicalDefenseBonus:85,stats:{dex:48,attackSpeedBonus:.01,rangedAttackBonus:8,evasion:.06}}
     ],
     '應龍・黑暗之蛇': [
@@ -26868,7 +26875,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       {id:'lion_mane_sacred_whisker_v1',name:'獅鬃聖鬚',slot:'head',dropChance:.24,icon:'assets/items/divine-dragon/lion-mane-sacred-whisker.png',armorType:'head',physicalDefenseBonus:175,stats:{str:35,con:45,healthRegenPct:8,damageReductionPct:5}}
     ],
     '饕餮・黑暗之獸': [
-      {id:'taotie_devouring_core_v1',name:'饕餮吞噬核',slot:'ringRight',dropChance:.16,icon:'assets/items/divine-dragon/taotie-devouring-core.png',armorType:'accessory',meleeAttackBonus:175,stats:{str:25,dex:25,con:25,wis:25,int:25,cha:25,maxHp:3800,lifeStealPct:4,killHealPct:2}},
+      {id:'taotie_devouring_core_v1',name:'饕餮吞噬核',slot:'ring',slotLabel:'戒指',dropChance:.16,icon:'assets/items/divine-dragon/taotie-devouring-core.png',armorType:'accessory',meleeAttackBonus:175,stats:{str:25,dex:25,con:25,wis:25,int:25,cha:25,maxHp:3800,lifeStealPct:4,killHealPct:2}},
       {id:'endless_beast_stomach_v1',name:'無盡獸胃',slot:'chest',dropChance:.24,icon:'assets/items/divine-dragon/endless-beast-stomach.png',armorType:'chest',physicalDefenseBonus:190,stats:{con:65,maxHp:7500,damageReductionPct:6,healingReceivedPct:12}}
     ]
   };
@@ -26884,7 +26891,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     const stats=Object.assign({},def.stats||{});
     const props=[`九神龍個別專屬裝備｜${def.slot}`,`來源：${source}`,`獨立掉落率 ${(def.dropChance*100).toFixed(0)}%`,'全職業可用','一般裝備｜可強化：武器每次攻擊 +4、攻速 +0.03；防具每次物防 +4、魔防 +2'];
     Object.entries(stats).forEach(([k,v])=>{if(Number(v))props.push(statText(k,v));});
-    const item={instanceId:`${def.id}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,templateId:def.id,id:def.id,name:def.name,kind:isWeapon?'weapon':'armor',slot:def.slot,slotLabel:def.slot==='weapon'?'武器':def.slot==='necklace'?'項鍊':def.slot==='ringLeft'?'左戒':def.slot==='ringRight'?'右戒':def.slot==='chest'?'胸甲':def.slot==='head'?'頭盔':def.slot==='gloves'?'手部':def.slot==='legs'?'靴子':def.slot==='back'?'背部':'裝備',armorType:def.armorType,weaponType:def.weaponType,level:60,requiredLevel:60,rarity:'神話',quality:'神話',qualityColor:'#9d8cff',classKeys:CLASS_KEYS,classKey:'shared',icon:'✦',iconAsset:def.icon,image:def.icon,stats,statBonuses:Object.assign({},stats),isDivineDragonUnique:true,uniqueDropType:'divine_dragon_unique',sourceMonster:source,sourceDropChance:def.dropChance,cannotEnhance:false,enhancementLevel:0,properties:props,obtainedAt:Date.now()};
+    const item={instanceId:`${def.id}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,templateId:def.id,id:def.id,name:def.name,kind:isWeapon?'weapon':'armor',slot:def.slot,slotLabel:def.slotLabel || (def.slot==='weapon'?'武器':def.slot==='necklace'?'項鍊':def.slot==='ringLeft'?'左戒':def.slot==='ringRight'?'右戒':def.slot==='chest'?'胸甲':def.slot==='head'?'頭盔':def.slot==='gloves'?'手部':def.slot==='wrist'?'副武・護腕':def.slot==='legs'?'靴子':def.slot==='back'?'背部':'裝備'),armorType:def.armorType,weaponType:def.weaponType,level:60,requiredLevel:60,rarity:'神話',quality:'神話',qualityColor:'#9d8cff',classKeys:CLASS_KEYS,classKey:'shared',icon:'✦',iconAsset:def.icon,image:def.icon,stats,statBonuses:Object.assign({},stats),isDivineDragonUnique:true,uniqueDropType:'divine_dragon_unique',sourceMonster:source,sourceDropChance:def.dropChance,cannotEnhance:false,enhancementLevel:0,properties:props,obtainedAt:Date.now()};
     Object.entries(def).forEach(([key,val])=>{if(!['id','name','slot','dropChance','icon','armorType','weaponType','stats'].includes(key))item[key]=val;});
     if(isWeapon){
       const baseAttack=Number(def.meleeAttackBonus)||Number(def.magicAttackBonus)||Number(def.attackBonus)||0;
@@ -26917,6 +26924,13 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     if(!isDivineDragonUniqueEquipment(item))return false;
     let changed=false;
     const assign=(key,value)=>{if(item[key]!==value){item[key]=value;changed=true;}};
+    const itemId=String(item.templateId||item.id||'');
+    if(itemId==='soul_rift_tiger_claw_v1'||item.name==='裂魂虎爪'){
+      assign('slot','wrist');assign('slotLabel','副武・護腕');assign('armorType','bracer');
+    }
+    if(['vermilion_flame_heart_v1','nine_tail_phantom_orb_v1','taotie_devouring_core_v1'].includes(itemId)){
+      assign('slot','ring');assign('slotLabel','戒指');assign('ring',true);assign('ringId',itemId);
+    }
     assign('isDivineDragonUnique',true);assign('uniqueDropType','divine_dragon_unique');assign('cannotEnhance',false);
     const level=Math.max(0,Math.floor(Number(item.enhancementLevel)||0));assign('enhancementLevel',level);
     if(item.kind==='weapon'||item.slot==='weapon'){
