@@ -10821,9 +10821,13 @@ function getCombatVisualCycleDuration(actionPath) {
             };
         }
         function getMonsterDefenseForAttack(monster, attackType = 'melee', isMagicAttack = false) {
-            if (isMagicAttack) return Math.max(0, Number(monster?.magicDefense) || 0);
-            if (attackType === 'ranged') return Math.max(0, Number(monster?.rangedDefense) || 0);
-            return Math.max(0, Number(monster?.meleeDefense) || 0);
+            const baseDefense = isMagicAttack
+                ? Math.max(0, Number(monster?.magicDefense) || 0)
+                : attackType === 'ranged'
+                    ? Math.max(0, Number(monster?.rangedDefense) || 0)
+                    : Math.max(0, Number(monster?.meleeDefense) || 0);
+            const guardActive = Number(monster?._parallelThreeKingdomsGuardUntil) > Date.now();
+            return Math.floor(baseDefense * (guardActive ? 1.5 : 1));
         }
         window.getMonsterDefenseArchetype = getMonsterDefenseArchetype;
         window.getMonsterDefenseValues = getMonsterDefenseValues;
@@ -12281,16 +12285,26 @@ function getCombatVisualCycleDuration(actionPath) {
         function getMonsterMagicSkill(monster) {
             const skills = monster.skills || monster.magicSkills;
             if (!skills) return null;
+            const applySkillEffect = skill => {
+                if (skill?.effect === 'guard') {
+                    const wasActive = Number(monster._parallelThreeKingdomsGuardUntil) > Date.now();
+                    monster._parallelThreeKingdomsGuardUntil = Date.now() + 5000;
+                    if (!wasActive && typeof addBattleLog === 'function') {
+                        addBattleLog(`🛡️ ${monster.name}啟動【${skill.name}】，5 秒內受到的傷害降低（防禦提高 50%）。`);
+                    }
+                }
+                return skill;
+            };
             if (window.isFallenHeavenBoss?.(monster)) {
                 window.syncFallenHeavenBossPhase?.(monster, true);
                 const phaseKey = monster._fallenHeavenPhaseKey || 'fire';
                 const phaseSkill = skills.find(skill => skill.phase === phaseKey);
-                return phaseSkill && Math.random() < (Number(phaseSkill.chance) || 0) ? phaseSkill : null;
+                return phaseSkill && Math.random() < (Number(phaseSkill.chance) || 0) ? applySkillEffect(phaseSkill) : null;
             }
             const criticalPhaseSkill = skills.find(skill => skill.phase === 'lowHp');
-            if (criticalPhaseSkill && monster.hp <= monster.maxHp * 0.5 && Math.random() < criticalPhaseSkill.chance) return criticalPhaseSkill;
+            if (criticalPhaseSkill && monster.hp <= monster.maxHp * 0.5 && Math.random() < criticalPhaseSkill.chance) return applySkillEffect(criticalPhaseSkill);
             const normalSkill = skills.find(skill => skill.phase === 'normal');
-            if (normalSkill && Math.random() < normalSkill.chance) return normalSkill;
+            if (normalSkill && Math.random() < normalSkill.chance) return applySkillEffect(normalSkill);
             return null;
         }
 
