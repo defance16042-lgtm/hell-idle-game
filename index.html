@@ -10217,7 +10217,7 @@ function getCombatVisualCycleDuration(actionPath) {
         window.hellKnightCustomAssets = hellKnightCustomAssets;
         function replacePlayerIconChildrenPreservingWing(icon, ...nodes) {
             if (!icon) return;
-            const persistentClasses = new Set(['abyss-wing-vfx','shenlong-cosmic-filter-defs','shenlong-cosmos-halo','shenlong-galaxy-band','shenlong-cosmic-dust','shenlong-starfield','shenlong-blackhole-ring','shenlong-awakening-label']);
+            const persistentClasses = new Set(['abyss-wing-vfx','shenlong-real-coil','shenlong-cosmic-filter-defs','shenlong-cosmos-halo','shenlong-galaxy-band','shenlong-cosmic-dust','shenlong-starfield','shenlong-blackhole-ring','shenlong-awakening-label']);
             const persistentVfx = [...icon.children].filter(child => [...persistentClasses].some(className => child.classList.contains(className)));
             [...icon.childNodes].forEach(child => { if (!persistentVfx.includes(child)) icon.removeChild(child); });
             nodes.filter(Boolean).forEach(node => icon.appendChild(node));
@@ -12121,7 +12121,13 @@ function getCombatVisualCycleDuration(actionPath) {
                     : (isMagicAttack ? '魔法攻擊' : isRangedAttack ? '遠距攻擊' : '普通攻擊'));
             const battleVisual = getMonsterAttackVisual(currentMonster, magicSkill, isMagicAttack, isRangedAttack);
             // 副龍沿用命中／傷害結算，但動畫只播放在自己的圖示上，避免主龍圖示被共用流程搶播。
-            if (!window.__ABYSS_SECONDARY_ATTACK_IN_PROGRESS) animateMonsterAttack(battleVisual);
+            if (!window.__ABYSS_SECONDARY_ATTACK_IN_PROGRESS) {
+                if (currentMonster?.name === '董卓') {
+                    if (typeof window.playDongZhuoAttackStoryboard === 'function') window.playDongZhuoAttackStoryboard();
+                } else {
+                    animateMonsterAttack(battleVisual);
+                }
+            }
             const monsterAccuracyStat = getMonsterAccuracyStat(currentMonster, magicSkill);
             const monsterWeakeningMultiplier = currentMonster.levelWeakeningMultiplier || 1;
             const monsterHitChance = getHitChance(monsterAccuracyStat, currentMonster.hitBonus || 0) * monsterWeakeningMultiplier;
@@ -19041,7 +19047,7 @@ body.qdark-effects-off .qdark-fx { display: none !important; }
         const playerBefore = (() => { try { return Number(currentPlayer?.hp) || 0; } catch (_) { return 0; } })();
         const monsterBefore = (() => { try { return Number(currentMonster?.hp) || 0; } catch (_) { return 0; } })();
         const beforeLog = latestLogText();
-        pulseIcon('#monster-icon', 'qdark-attack', 250);
+        if (currentMonster?.name !== '董卓') pulseIcon('#monster-icon', 'qdark-attack', 250);
         const result = original.apply(this, args);
         const playerAfter = (() => { try { return Number(currentPlayer?.hp) || 0; } catch (_) { return 0; } })();
         const monsterAfter = (() => { try { return Number(currentMonster?.hp) || 0; } catch (_) { return 0; } })();
@@ -24691,7 +24697,7 @@ if(typeof dropOld==='function'&&!dropOld.__keplerDrop91_100){const wrapped=funct
 #player-icon.shenlong-aura-active .shenlong-coil{position:absolute;inset:-48px -42px -52px;width:calc(100% + 84px);height:calc(100% + 100px);z-index:4;pointer-events:none;overflow:visible;filter:drop-shadow(0 0 3px #fff5a1) drop-shadow(0 0 10px #ffc928) drop-shadow(0 0 18px #ffae00);mix-blend-mode:screen}
 .shenlong-coil .dragon-trail{fill:none;stroke:url(#shenlongGoldGradient);stroke-linecap:round;stroke-width:7;opacity:.72;stroke-dasharray:.13 .035;animation:shenlongCoilFlow 4.8s linear infinite}.shenlong-coil .dragon-ridge{fill:none;stroke:#fff3a0;stroke-width:2.2;opacity:.86;stroke-dasharray:3 7;animation:shenlongRidgeFlow 2.2s linear infinite reverse}.shenlong-coil .dragon-head{fill:#ffd84a;stroke:#fff8bd;stroke-width:2;opacity:.94;animation:shenlongHeadDrift 4.8s ease-in-out infinite}.shenlong-coil .dragon-eye{fill:#fffef0;stroke:#ff8b00;stroke-width:1.5;animation:shenlongEyePulse 1.1s ease-in-out infinite alternate}.shenlong-coil .dragon-horn{fill:#fff1a3}.shenlong-aura-active:before{content:"";position:absolute;inset:-38px;z-index:1;border-radius:50%;background:radial-gradient(ellipse,rgba(255,218,75,.2),rgba(255,160,0,.1) 48%,transparent 75%);filter:blur(4px);animation:shenlongAuraPulse 2.4s ease-in-out infinite alternate;pointer-events:none}.shenlong-aura-active .fighter-sprite{position:relative;z-index:2;filter:drop-shadow(0 0 4px #ffed80) drop-shadow(0 0 13px #ffb100)}.shenlong-equipment-icon{border-radius:10px;filter:drop-shadow(0 0 4px #ffc52e) drop-shadow(0 0 11px #ff9200)}
 .shenlong-coil .dragon-creature{transform-origin:center;animation:shenlongCreatureFloat 3.8s ease-in-out infinite}.shenlong-coil .dragon-scales path{fill:url(#shenlongScaleGradient);stroke:#fff1a0;stroke-width:1.2}.shenlong-coil .dragon-limb path{fill:url(#shenlongGoldGradient);stroke:#fff0a0;stroke-width:1.3}.shenlong-coil .dragon-wings path{fill:url(#shenlongGoldGradient);stroke:#ffe88b;stroke-width:1.4;opacity:.72}.shenlong-coil .dragon-tail{fill:url(#shenlongGoldGradient);stroke:#fff0a0;stroke-width:1.5}.shenlong-coil .dragon-frill,.shenlong-coil .dragon-horn{fill:#ffe890;stroke:#a95a00;stroke-width:1}.shenlong-coil .dragon-snout{fill:#f4a719;stroke:#fff0a0;stroke-width:1.4}.shenlong-coil .dragon-whisker{fill:none;stroke:#fff0a0;stroke-width:1.3;stroke-linecap:round}.shenlong-coil .dragon-eye{fill:#fffef0;stroke:#ff6b00;stroke-width:1.2;animation:shenlongEyePulse 1.1s ease-in-out infinite alternate}.shenlong-coil .dragon-ridge{stroke-width:2.6;opacity:.9}.shenlong-coil .dragon-trail{stroke-width:8;opacity:.58}@keyframes shenlongCreatureFloat{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-2px) rotate(1deg)}}@keyframes shenlongCoilFlow{from{stroke-dashoffset:0}to{stroke-dashoffset:-1}}@keyframes shenlongRidgeFlow{from{stroke-dashoffset:0}to{stroke-dashoffset:-40}}@keyframes shenlongHeadDrift{0%,100%{transform:translate(0) rotate(-3deg)}50%{transform:translate(3px,-2px) rotate(5deg)}}@keyframes shenlongEyePulse{from{opacity:.5}to{opacity:1}}@keyframes shenlongAuraPulse{from{opacity:.55;transform:scale(.96)}to{opacity:1;transform:scale(1.04)}}
-.shenlong-real-coil{position:absolute;inset:-72px -86px -78px;z-index:1;width:calc(100% + 172px);height:calc(100% + 150px);object-fit:contain;object-position:center;pointer-events:none;opacity:.78;filter:drop-shadow(0 0 3px #fff8b0) drop-shadow(0 0 11px #ffd02e) drop-shadow(0 0 24px rgba(255,164,0,.78));mix-blend-mode:screen;animation:shenlongRealDragonFloat 4.8s ease-in-out infinite alternate}.shenlong-real-coil-front{z-index:5;opacity:.9;clip-path:inset(47% 0 0 0)}.shenlong-aura-active .shenlong-real-coil{display:block}@keyframes shenlongRealDragonFloat{from{transform:translate3d(-2px,1px,0) scale(.98) rotate(-1deg)}to{transform:translate3d(2px,-2px,0) scale(1.02) rotate(1deg)}}</style><script id="shenlong-full-body-aura-v1">(()=>{if(window.__shenlongFullBodyAuraV1)return;window.__shenlongFullBodyAuraV1=true;const e=s=>encodeURIComponent(s),svg=k=>{let b=k==='weapon'?'<path d="M31 53L38 16l7 13 9-16-2 25 9 9-20 7z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M38 48l18-21M42 47l8-6M29 55h34" stroke="#fff7c5" stroke-width="2"/>':k==='head'?'<path d="M18 55V31q0-16 14-20l4 9 4-9q14 4 14 20v24z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M25 28l-8-10 13 6M47 24l9-8-14 5" fill="#fff0a0" stroke="#bd7000" stroke-width="2"/>':k==='chest'?'<path d="M19 18l13-7 8 8 8-8 13 7-6 15 5 22H15l5-22z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M29 18q11 10 22 0M25 31h30M24 42h32" fill="none" stroke="#fff4a5" stroke-width="2"/><path d="M36 28l4 5-4 6-4-6z" fill="#fffbe0"/>':'<path d="M19 12h42l-5 34-12 8-4-20-4 20-12-8z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M25 20h30M25 30h30M26 40h9m10 0h9" stroke="#fff4a5" stroke-width="2"/>';return'data:image/svg+xml,'+e('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><defs><linearGradient id="g"><stop stop-color="#fff4a5"/><stop offset=".4" stop-color="#ffc62e"/><stop offset="1" stop-color="#b86400"/></linearGradient></defs>'+b+'</svg>')};window.SHENLONG_ICON_DATA={weapon:svg('weapon'),head:svg('head'),chest:svg('chest'),legs:svg('legs')};const REAL_SHENLONG_ASSET='assets/base64/454dd3b2a66e43af3a35600e45d9ed65df123308c6c4de49b26df61659e1970b.webp';const full=()=>typeof window.isShenlongComplete==='function'&&window.isShenlongComplete(window.currentPlayer);function refresh(){let x=document.getElementById('player-icon');if(!x)return;let on=full();x.classList.toggle('shenlong-aura-active',on);if(on&&!x.querySelector('.shenlong-coil'))x.insertAdjacentHTML('afterbegin',`<img class="shenlong-real-coil shenlong-real-coil-back" src="${REAL_SHENLONG_ASSET}" alt="金色半透明神龍後層"><img class="shenlong-real-coil shenlong-real-coil-front" src="${REAL_SHENLONG_ASSET}" alt="金色半透明神龍前層">`);if(!on)x.querySelectorAll('.shenlong-real-coil').forEach(n=>n.remove());document.querySelectorAll('.set-equipment-icon').forEach(i=>{let it=window.currentPlayer?.items?.setEquipment?.find(x=>x.name===i.alt);if(it?.setId==='shenlong_dragon_v1'&&window.SHENLONG_ICON_DATA[it.pieceSlot]){i.src=window.SHENLONG_ICON_DATA[it.pieceSlot];i.classList.add('shenlong-equipment-icon')}})}window.refreshShenlongVisuals=refresh;setInterval(refresh,1000);document.addEventListener('DOMContentLoaded',refresh)})();</script><script id="hell-knight-shield-system-v1">
+.shenlong-real-coil{position:absolute;inset:-72px -86px -78px;z-index:1;width:calc(100% + 172px);height:calc(100% + 150px);object-fit:contain;object-position:center;pointer-events:none;opacity:.78;filter:drop-shadow(0 0 3px #fff8b0) drop-shadow(0 0 11px #ffd02e) drop-shadow(0 0 24px rgba(255,164,0,.78));mix-blend-mode:screen;animation:shenlongRealDragonFloat 4.8s ease-in-out infinite alternate}.shenlong-real-coil-front{z-index:5;opacity:.9;clip-path:inset(47% 0 0 0)}.shenlong-aura-active .shenlong-real-coil{display:block}@keyframes shenlongRealDragonFloat{from{transform:translate3d(-2px,1px,0) scale(.98) rotate(-1deg)}to{transform:translate3d(2px,-2px,0) scale(1.02) rotate(1deg)}}</style><script id="shenlong-full-body-aura-v1">(()=>{if(window.__shenlongFullBodyAuraV1)return;window.__shenlongFullBodyAuraV1=true;const e=s=>encodeURIComponent(s),svg=k=>{let b=k==='weapon'?'<path d="M31 53L38 16l7 13 9-16-2 25 9 9-20 7z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M38 48l18-21M42 47l8-6M29 55h34" stroke="#fff7c5" stroke-width="2"/>':k==='head'?'<path d="M18 55V31q0-16 14-20l4 9 4-9q14 4 14 20v24z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M25 28l-8-10 13 6M47 24l9-8-14 5" fill="#fff0a0" stroke="#bd7000" stroke-width="2"/>':k==='chest'?'<path d="M19 18l13-7 8 8 8-8 13 7-6 15 5 22H15l5-22z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M29 18q11 10 22 0M25 31h30M24 42h32" fill="none" stroke="#fff4a5" stroke-width="2"/><path d="M36 28l4 5-4 6-4-6z" fill="#fffbe0"/>':'<path d="M19 12h42l-5 34-12 8-4-20-4 20-12-8z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M25 20h30M25 30h30M26 40h9m10 0h9" stroke="#fff4a5" stroke-width="2"/>';return'data:image/svg+xml,'+e('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><defs><linearGradient id="g"><stop stop-color="#fff4a5"/><stop offset=".4" stop-color="#ffc62e"/><stop offset="1" stop-color="#b86400"/></linearGradient></defs>'+b+'</svg>')};window.SHENLONG_ICON_DATA={weapon:svg('weapon'),head:svg('head'),chest:svg('chest'),legs:svg('legs')};const REAL_SHENLONG_ASSET='assets/base64/454dd3b2a66e43af3a35600e45d9ed65df123308c6c4de49b26df61659e1970b.webp';const full=()=>typeof window.isShenlongComplete==='function'&&window.isShenlongComplete(window.currentPlayer);function refresh(){let x=document.getElementById('player-icon');if(!x)return;let on=full();x.classList.toggle('shenlong-aura-active',on);if(on){if(!x.querySelector('.shenlong-real-coil-back'))x.insertAdjacentHTML('afterbegin',`<img class="shenlong-real-coil shenlong-real-coil-back" src="${REAL_SHENLONG_ASSET}" alt="金色半透明神龍後層">`);if(!x.querySelector('.shenlong-real-coil-front'))x.insertAdjacentHTML('beforeend',`<img class="shenlong-real-coil shenlong-real-coil-front" src="${REAL_SHENLONG_ASSET}" alt="金色半透明神龍前層">`);}if(!on)x.querySelectorAll('.shenlong-real-coil').forEach(n=>n.remove());document.querySelectorAll('.set-equipment-icon').forEach(i=>{let it=window.currentPlayer?.items?.setEquipment?.find(x=>x.name===i.alt);if(it?.setId==='shenlong_dragon_v1'&&window.SHENLONG_ICON_DATA[it.pieceSlot]){i.src=window.SHENLONG_ICON_DATA[it.pieceSlot];i.classList.add('shenlong-equipment-icon')}})}window.refreshShenlongVisuals=refresh;setInterval(refresh,1000);document.addEventListener('DOMContentLoaded',refresh)})();</script><script id="hell-knight-shield-system-v1">
 (()=>{
 'use strict';
 if(window.__hellKnightShieldSystemV1)return; window.__hellKnightShieldSystemV1=true;
@@ -25930,14 +25936,9 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 <style id="abyss-back-wings-style">
 /* 深淵龍穴背部翅膀：所有職業共用，包含僧師 */
 .back-wing-equipped{position:relative!important;}
-.abyss-wing-vfx{position:absolute;left:var(--wing-left,50%);top:var(--wing-top,43%);width:var(--wing-width,150px);height:var(--wing-height,130px);transform:translate(-50%,-50%);z-index:0;pointer-events:none;filter:drop-shadow(0 0 8px var(--wing-glow,#8f6cff));opacity:.9;}
-.abyss-wing-vfx::before,.abyss-wing-vfx::after{content:'🪽';position:absolute;top:12px;font-size:var(--wing-glyph-size,62px);line-height:1;filter:saturate(1.3) drop-shadow(0 0 7px var(--wing-glow,#8f6cff));}
-.abyss-wing-vfx::before{left:0;transform:scaleX(-1) rotate(-14deg);}.abyss-wing-vfx::after{right:0;transform:rotate(-14deg);}
-.abyss-wing-vfx .wing-core{position:absolute;left:50%;top:51%;width:24px;height:58px;transform:translate(-50%,-50%);border-radius:50%;background:var(--wing-core,#c6a7ff);box-shadow:0 0 14px 5px var(--wing-glow,#8f6cff);animation:abyssWingPulse 2.3s ease-in-out infinite;}
-.abyss-wing-vfx .wing-spark{position:absolute;color:var(--wing-glow,#8f6cff);font-size:15px;animation:abyssWingSpark 2.2s ease-in-out infinite;}.abyss-wing-vfx .s1{left:14px;top:4px}.abyss-wing-vfx .s2{right:14px;top:21px;animation-delay:.7s}.abyss-wing-vfx .s3{left:34px;bottom:7px;animation-delay:1.2s}.abyss-wing-vfx .s4{right:31px;bottom:2px;animation-delay:1.7s}
-.abyss-wing-vfx.wing-fire{--wing-glow:#ff632e;--wing-core:#ffd078}.abyss-wing-vfx.wing-frost{--wing-glow:#75eaff;--wing-core:#eaffff}.abyss-wing-vfx.wing-spore{--wing-glow:#8dff70;--wing-core:#d6ff9b}.abyss-wing-vfx.wing-amber{--wing-glow:#ffd45a;--wing-core:#fff0a1}.abyss-wing-vfx.wing-tide{--wing-glow:#36dfff;--wing-core:#c8fbff}.abyss-wing-vfx.wing-dark{--wing-glow:#b36cff;--wing-core:#ead0ff}
-.abyss-wing-vfx.wing-fire::before,.abyss-wing-vfx.wing-fire::after{content:'🔥'}.abyss-wing-vfx.wing-frost::before,.abyss-wing-vfx.wing-frost::after{content:'❄️'}.abyss-wing-vfx.wing-spore::before,.abyss-wing-vfx.wing-spore::after{content:'🌿'}.abyss-wing-vfx.wing-amber::before,.abyss-wing-vfx.wing-amber::after{content:'🔶'}.abyss-wing-vfx.wing-tide::before,.abyss-wing-vfx.wing-tide::after{content:'🌊'}.abyss-wing-vfx.wing-dark::before,.abyss-wing-vfx.wing-dark::after{content:'🌑'}
-@keyframes abyssWingPulse{50%{opacity:.55;transform:translate(-50%,-50%) scale(.8)} } @keyframes abyssWingSpark{0%,100%{opacity:0;transform:translateY(8px) scale(.7)}45%{opacity:1}75%{opacity:0;transform:translateY(-15px) scale(1.2)}}
+.abyss-wing-vfx{position:absolute;left:var(--wing-left,50%);top:var(--wing-top,43%);width:var(--wing-width,220px);height:var(--wing-height,124px);transform:translate(-50%,-50%);z-index:0;pointer-events:none;filter:drop-shadow(0 0 8px var(--wing-glow,#8f6cff));opacity:.92;}
+.abyss-wing-art{display:block;width:100%;height:100%;object-fit:contain;opacity:.92;mix-blend-mode:screen;pointer-events:none;user-select:none;-webkit-user-drag:none;}
+.abyss-wing-vfx.wing-fire{--wing-glow:#ff632e}.abyss-wing-vfx.wing-frost{--wing-glow:#75eaff}.abyss-wing-vfx.wing-spore{--wing-glow:#8dff70}.abyss-wing-vfx.wing-amber{--wing-glow:#ffd45a}.abyss-wing-vfx.wing-tide{--wing-glow:#36dfff}.abyss-wing-vfx.wing-dark{--wing-glow:#b36cff}
 .abyss-wing-skill-flash{position:fixed;z-index:2147483000;pointer-events:none;left:50%;top:50%;width:160px;height:160px;border:4px solid var(--wing-glow,#b36cff);border-radius:50%;transform:translate(-50%,-50%) scale(.25);opacity:0;animation:abyssWingFlash .75s ease-out forwards;box-shadow:0 0 28px var(--wing-glow,#b36cff),inset 0 0 24px var(--wing-glow,#b36cff)}
 @keyframes abyssWingFlash{15%{opacity:.95}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
 </style>
@@ -25973,9 +25974,39 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
  const oldDefeat=window.resolveMonsterDefeat; if(typeof oldDefeat==='function')window.resolveMonsterDefeat=function(...args){const r=oldDefeat.apply(this,args);const p=player();let m=null;try{m=typeof currentMonster!=='undefined'?currentMonster:window.currentMonster}catch(_){};const d=wingDefs[m?.name];const inAbyssLair=String(m?.zone||window.currentZone||'')==='深淵龍穴';if(p&&inAbyssLair&&d&&Math.random()<0.01){ensureWingStorage(p);const item=makeWing(m.name);p.items.armors.push(item);if(typeof addBattleLog==='function')addBattleLog('🪽 <strong style="color:#ff9b32">稀有掉落！</strong> '+m.name+'掉落【'+item.name+'】！（背部｜需求等級 80｜獨立掉落率 1%）');if(typeof updateGameUI==='function')updateGameUI();if(typeof saveGame==='function')saveGame();if(document.getElementById('inventory-float')?.style.display==='flex'&&typeof renderInventory==='function')renderInventory();}return r};
  let wingTrackFrame=0;
  function stopWingVfxTracking(){if(wingTrackFrame){cancelAnimationFrame(wingTrackFrame);wingTrackFrame=0;}}
- function positionWingVfx(){const icon=document.getElementById('player-icon'),v=icon?.querySelector('.abyss-wing-vfx'),sprite=icon?.querySelector('.fighter-sprite, .qdark-player-sprite');if(!icon||!v||!sprite)return;const ir=icon.getBoundingClientRect(),sr=sprite.getBoundingClientRect();if(!ir.width||!ir.height||!sr.width||!sr.height)return;v.style.setProperty('--wing-left',`${sr.left-ir.left+sr.width*.5}px`);v.style.setProperty('--wing-top',`${sr.top-ir.top+sr.height*.4}px`);v.style.setProperty('--wing-width',`${Math.min(200,Math.max(130,sr.width*1.3))}px`);v.style.setProperty('--wing-height',`${Math.min(170,Math.max(112,sr.height*.9))}px`);v.style.setProperty('--wing-glyph-size',`${Math.min(76,Math.max(46,sr.width*.52))}px`);}
+ function positionWingVfx(){
+  const icon=document.getElementById('player-icon'),v=icon?.querySelector('.abyss-wing-vfx'),sprite=icon?.querySelector('.fighter-sprite, .qdark-player-sprite');
+  if(!icon||!v||!sprite)return;
+  const ir=icon.getBoundingClientRect(),sr=sprite.getBoundingClientRect();
+  if(!ir.width||!ir.height||!sr.width||!sr.height)return;
+  const wingWidth=Math.min(280,Math.max(190,sr.width*2.1));
+  v.style.setProperty('--wing-left',`${sr.left-ir.left+sr.width*.5}px`);
+  v.style.setProperty('--wing-top',`${sr.top-ir.top+sr.height*.39}px`);
+  v.style.setProperty('--wing-width',`${wingWidth}px`);
+  v.style.setProperty('--wing-height',`${wingWidth*9/16}px`);
+ }
  function trackWingVfx(){const icon=document.getElementById('player-icon');if(!icon?.classList.contains('back-wing-equipped')||!icon.querySelector('.abyss-wing-vfx')){wingTrackFrame=0;return;}positionWingVfx();wingTrackFrame=requestAnimationFrame(trackWingVfx);}
- function refreshWingVfx(){const p=player(),icon=document.getElementById('player-icon'),w=equippedWing(p);if(!icon)return;icon.classList.toggle('back-wing-equipped',!!w);let v=icon.querySelector('.abyss-wing-vfx');if(!w){v?.remove();stopWingVfxTracking();return;}const wingClass=w.wingCss||'wing-dark';if(v&&!v.classList.contains(wingClass)){v.remove();v=null;}if(!v){v=document.createElement('div');v.className='abyss-wing-vfx '+wingClass;v.innerHTML='<i class="wing-core"></i><i class="wing-spark s1">✦</i><i class="wing-spark s2">✧</i><i class="wing-spark s3">✦</i><i class="wing-spark s4">✧</i>';icon.prepend(v);}v.title=w.name+'｜'+w.wingEffect;positionWingVfx();if(!wingTrackFrame)wingTrackFrame=requestAnimationFrame(trackWingVfx);}
+ function refreshWingVfx(){
+  const p=player(),icon=document.getElementById('player-icon'),w=equippedWing(p);
+  if(!icon)return;
+  icon.classList.toggle('back-wing-equipped',!!w);
+  let v=icon.querySelector('.abyss-wing-vfx');
+  if(!w){v?.remove();stopWingVfxTracking();return;}
+  const wingClass=w.wingCss||'wing-dark';
+  const assetPath=w.iconAsset||w.image||'';
+  const assetSrc=assetPath&&typeof resolveEmbeddedAsset==='function'?resolveEmbeddedAsset(assetPath):assetPath;
+  if(v&&(!v.classList.contains(wingClass)||!v.querySelector('.abyss-wing-art'))){v.remove();v=null;}
+  if(!v){
+   v=document.createElement('div');v.className='abyss-wing-vfx '+wingClass;
+   const art=document.createElement('img');art.className='abyss-wing-art';art.alt=w.name+'（已裝備）';art.draggable=false;
+   v.appendChild(art);icon.prepend(v);
+  }
+  const art=v.querySelector('.abyss-wing-art');
+  if(art&&assetSrc&&art.getAttribute('src')!==assetSrc)art.setAttribute('src',assetSrc);
+  v.title=w.name+'｜'+w.wingEffect;
+  positionWingVfx();
+  if(!wingTrackFrame)wingTrackFrame=requestAnimationFrame(trackWingVfx);
+ }
  function wingFlash(){const w=equippedWing();if(!w)return;const f=document.createElement('div');f.className='abyss-wing-skill-flash '+(w.wingCss||'');document.body.appendChild(f);setTimeout(()=>f.remove(),800)}
  window.ABYSS_BACK_WINGS=wingDefs;window.getEquippedBackWing=equippedWing;window.refreshAbyssWingVfx=refreshWingVfx;window.playAbyssWingEffect=wingFlash;
  const WING_SELF_HEAL_CHANCE=.20,WING_SELF_HEAL_RATIO=.08,WING_SELF_HEAL_COOLDOWN_MS=10000;
@@ -26649,15 +26680,6 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 })();
 </script>
 
-<style id="parallel-three-kingdoms-dong-zhuo-style-v1">
-#monster-icon.dong-zhuo-attack-active{animation:dongZhuoBossLunge .76s cubic-bezier(.2,.85,.2,1) both!important;}
-#monster-icon.dong-zhuo-attack-active::after{content:"";position:absolute;left:-36%;top:5%;width:94%;height:74%;pointer-events:none;border-right:6px solid #ffe08a;border-bottom:7px solid #ff4a5b;border-radius:50%;filter:drop-shadow(0 0 5px #fff0a2) drop-shadow(0 0 14px #ff274e);transform:rotate(-28deg);animation:dongZhuoCrescentSlash .68s ease-out both;z-index:8;}
-#monster-icon.dong-zhuo-attack-active::before{content:"";position:absolute;left:-46%;bottom:-5%;width:145%;height:32%;pointer-events:none;border-bottom:4px solid #ff564f;border-radius:50%;filter:drop-shadow(0 0 9px #ffb84f) drop-shadow(0 0 16px #a425ff);animation:dongZhuoGroundShock .76s ease-out both;z-index:7;}
-@keyframes dongZhuoBossLunge{0%,100%{transform:translateX(0) translateY(0) scale(1)}22%{transform:translateX(5px) translateY(3px) scale(.94)}58%{transform:translateX(-21px) translateY(-3px) scale(1.1)}78%{transform:translateX(-8px) translateY(2px) scale(1.04)}}
-@keyframes dongZhuoCrescentSlash{0%{opacity:0;transform:rotate(-54deg) scale(.22)}30%{opacity:1}100%{opacity:0;transform:rotate(13deg) scale(1.12)}}
-@keyframes dongZhuoGroundShock{0%,18%{opacity:0;transform:scaleX(.18)}48%{opacity:1}100%{opacity:0;transform:scaleX(1.16)}}
-@media(prefers-reduced-motion:reduce){#monster-icon.dong-zhuo-attack-active,#monster-icon.dong-zhuo-attack-active::before,#monster-icon.dong-zhuo-attack-active::after{animation-duration:.01ms!important}}
-</style>
 <script id="parallel-three-kingdoms-dong-zhuo-v1">
 (() => {
   'use strict';
@@ -26754,24 +26776,31 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     window.resolveMonsterDefeat = wrappedResolve;
   }
 
-  function animateDongZhuoAttack() {
-    const icon = document.getElementById('monster-icon');
-    if (!icon || !icon.querySelector('.monster-sprite[alt="董卓"]')) return;
-    icon.classList.remove('dong-zhuo-attack-active');
-    void icon.offsetWidth;
-    icon.classList.add('dong-zhuo-attack-active');
-    clearTimeout(icon._dongZhuoMotionTimer);
-    icon._dongZhuoMotionTimer = setTimeout(() => icon.classList.remove('dong-zhuo-attack-active'), 820);
-  }
-  if (typeof window.performMonsterAttack === 'function' && !window.performMonsterAttack.__dongZhuoMotionWrapped) {
-    const originalAttack = window.performMonsterAttack;
-    const wrappedAttack = function(...args) {
-      if (typeof currentMonster !== 'undefined' && currentMonster?.name === monster.name) animateDongZhuoAttack();
-      return originalAttack.apply(this, args);
+  const dongZhuoAttackFramePaths = Array.from({length:8},(_,i)=>`assets/monsters/parallel_three_kingdoms/dong_zhuo_attack/frame_${String(i+1).padStart(2,'0')}.png`);
+  const dongZhuoAttackFrameSources = dongZhuoAttackFramePaths.map(path=>typeof resolveEmbeddedAsset==='function'?resolveEmbeddedAsset(path):path);
+  const dongZhuoAttackFrameImages = dongZhuoAttackFrameSources.map(src=>{const image=new Image();image.decoding='async';image.src=src;return image;});
+  const dongZhuoAttackFrameDurations = [110,90,100,75,60,130,100,110];
+  let dongZhuoAttackRunId=0,dongZhuoAttackTimer=0;
+  function playDongZhuoAttackStoryboard(){
+    if(typeof currentMonster==='undefined'||currentMonster?.name!==monster.name)return false;
+    const sprite=document.querySelector('#monster-icon .monster-sprite[alt="董卓"]');
+    if(!sprite)return false;
+    const idleSrc=sprite.dataset.dongZhuoIdleSrc||sprite.getAttribute('src')||sprite.src;
+    sprite.dataset.dongZhuoIdleSrc=idleSrc;
+    const runId=++dongZhuoAttackRunId;
+    clearTimeout(dongZhuoAttackTimer);
+    let frameIndex=0;
+    const showNextFrame=()=>{
+      if(runId!==dongZhuoAttackRunId||!sprite.isConnected)return;
+      if(frameIndex>=dongZhuoAttackFrameSources.length){sprite.setAttribute('src',idleSrc);return;}
+      const currentFrame=frameIndex++;
+      sprite.setAttribute('src',dongZhuoAttackFrameSources[currentFrame]);
+      dongZhuoAttackTimer=setTimeout(showNextFrame,dongZhuoAttackFrameDurations[currentFrame]);
     };
-    wrappedAttack.__dongZhuoMotionWrapped = true;
-    window.performMonsterAttack = wrappedAttack;
+    showNextFrame();
+    return true;
   }
+  window.playDongZhuoAttackStoryboard=playDongZhuoAttackStoryboard;
 
   const originalBestiaryDetail = window.openBestiaryDetailV2;
   if (typeof originalBestiaryDetail === 'function' && !originalBestiaryDetail.__dongZhuoDropPanelWrapped) {
@@ -27151,5 +27180,47 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   };
 })();
 </script>
+<script id="parallel-three-kingdoms-lu-bu-v1">
+(() => {
+  'use strict';
+  if (window.__parallelThreeKingdomsLuBuV1) return;
+  window.__parallelThreeKingdomsLuBuV1 = true;
+  const ZONE = '平行三國';
+  if (typeof zoneMonsters === 'undefined' || !zoneMonsters) return;
+  const monster = {
+    name: '呂布', icon: '🔱',
+    image: 'assets/monsters/parallel_three_kingdoms/lu_bu-boss.png',
+    battleImage: 'assets/monsters/parallel_three_kingdoms/lu_bu-boss.png',
+    level: 100, levelRange: '100', attackSpeed: 0.88,
+    hp: 2480000, maxHp: 2480000, atk: 12800, def: 4380, magicDefense: 3960,
+    attackType: '赤紫方天裂空斬', basicAttackName: '赤紫方天裂空斬',
+    attackRange: 'melee', damageType: 'physical',
+    exp: 280000, gold: 128000, type: 'boss', encounterChance: 0.5,
+    facing: 'left-full-body', orientation: 'strict-left-profile',
+    visualNote: '可愛黑暗Q版紅紫呂布騎乘赤兔馬，全身與馬匹完整入鏡；呂布、赤兔馬、馬尾、四蹄、披風與方天畫戟全部嚴格朝左，禁止正面、右朝與鏡像。',
+    baseStats: { str: 2680, dex: 1180, con: 2460, wis: 1040, int: 980, cha: 320 },
+    bonusStats: { attack: 326, defense: 284, magicDefense: 246, critical: 0.38, evasion: 0.16 },
+    element: 'shadow',
+    skills: [
+      { name: '赤紫方天裂空斬', phase: 'normal', chance: 0.42, damageType: 'physical', attackRange: 'melee', powerMultiplier: 2.12, effect: 'heavy' },
+      { name: '鬼神踏陣', phase: 'normal', chance: 0.24, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.88, effect: 'shock' },
+      { name: '修羅赤紫天罰', phase: 'lowHp', chance: 0.42, damageType: 'magic', attackRange: 'melee', powerMultiplier: 2.52, effect: 'blast' }
+    ],
+    description: '平行三國的鬼神呂布騎乘赤兔馬，身披赤紅與深紫交織的暗鎧，揮舞方天畫戟。赤兔馬披著暗色紅紫戰甲，與主人並肩衝陣；圓臉、短身與小獠牙帶著可愛黑暗氣息，狂怒時紅紫鬼火包覆全身。',
+    dropTable: ['魂幣 128,000', '經驗 280,000', '補血藥水（12%）'],
+    uniqueDrops: [],
+    bossPhases: [
+      { name: '赤紫鬼神', trigger: '生命值高於 50%', description: '呂布壓低身形，揮動方天畫戟施展赤紫方天裂空斬，紅紫刃光朝左側爆發。' },
+      { name: '修羅覺醒', trigger: '生命值低於或等於 50%', description: '暗鎧裂縫燃起紅紫鬼火，攻勢加劇並施放修羅赤紫天罰，席捲整個戰場。' }
+    ],
+    zone: ZONE, threatTier: 'parallel-three-kingdoms-boss'
+  };
+  const roster = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
+  const previous = roster.find(entry => entry && entry.name === monster.name);
+  if (previous) Object.assign(previous, monster); else roster.push(monster);
+  window.parallelThreeKingdomsLuBu = previous || monster;
+})();
+</script>
+
 </body>
 </html>
