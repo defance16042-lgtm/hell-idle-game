@@ -40,22 +40,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Remove stale release assets before deterministic upload
-        shell: pwsh
-        run: |
-          $assets = gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json assets --jq '.assets[].name' 2>$null
-          foreach ($asset in $assets) {
-            if ($asset) { gh release delete-asset $env:RELEASE_TAG $asset --repo $env:GITHUB_REPOSITORY --yes }
-          }
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Ensure GitHub Release exists
         shell: pwsh
         run: |
           gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY 2>$null
           if ($LASTEXITCODE -ne 0) {
             gh release create $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --title $env:RELEASE_TAG --notes "Windows installer $env:RELEASE_TAG" --target $env:RELEASE_TAG
+          }
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Remove stale release assets before deterministic upload
+        shell: pwsh
+        run: |
+          $assets = gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json assets --jq '.assets[].name' 2>$null
+          foreach ($asset in $assets) {
+            if ($asset) { gh release delete-asset $env:RELEASE_TAG $asset --repo $env:GITHUB_REPOSITORY --yes }
           }
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
