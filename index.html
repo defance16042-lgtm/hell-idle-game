@@ -11416,7 +11416,11 @@ function getCombatVisualCycleDuration(actionPath) {
         function attemptArmorEnhancement(armor, bonus = 0, scrollName = '普通防具強化卷軸') {
             if (!armor) return '請先選擇一件防具。';
             if (armor.templateId === 'inverse_ring_v1') return '逆神之戒不可強化；強化等級固定 +0，不消耗強化卷軸。';
-            if (armor.slot === 'necklace' || armor.cannotEnhance) return '項鍊部位不可強化；六項能力固定，不消耗強化卷軸。';
+            if (armor.slot === 'necklace' || armor.cannotEnhance) {
+                return armor.slot === 'necklace'
+                    ? '項鍊部位不可強化；六項能力固定，不消耗強化卷軸。'
+                    : `【${armor.name}】不可強化；能力固定，強化等級維持 +0，不消耗強化卷軸。`;
+            }
             armor.enhancementLevel = Math.max(0, Number(armor.enhancementLevel) || 0);
             const level = armor.enhancementLevel;
             const maxLevel = getEquipmentEnhancementCap();
@@ -16159,7 +16163,13 @@ function getCombatVisualCycleDuration(actionPath) {
             const armor = (currentPlayer.items.armors || []).find(item => item.instanceId === instanceId);
             if (!armor) { addBattleLog('⚠️ 找不到這件防具，請重新開啟背包。'); return; }
             if (armor.templateId === 'inverse_ring_v1') { armor.enhancementLevel = 0; addBattleLog('💍 逆神之戒不可強化；強化等級固定 +0，未消耗強化卷軸。'); return; }
-            if (armor.slot === 'necklace' || armor.cannotEnhance) { addBattleLog('🌑 項鍊部位不可強化；影虛・六曜冥星墜的六項能力固定。'); return; }
+            if (armor.slot === 'necklace' || armor.cannotEnhance) {
+                const message = armor.slot === 'necklace'
+                    ? '項鍊部位不可強化；影虛・六曜冥星墜的六項能力固定。'
+                    : `【${armor.name}】不可強化；能力固定，強化等級維持 +0。`;
+                addBattleLog(`🌑 ${message}`);
+                return;
+            }
             if ((Number(armor.enhancementLevel) || 0) >= getEquipmentEnhancementCap()) { addBattleLog(`⚠️ 這件防具已達人物等級 +20 的強化上限（+${getEquipmentEnhancementCap()}）。`); return; }
             const scroll = consumeBestEnhancementScroll('armor');
             if (scroll) {
@@ -26568,7 +26578,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       rarity: '神話', quality: '神話', qualityColor: '#80f1bd',
       icon: '💍', iconAsset: 'assets/items/dong_zhuo-jade_seal_ring.png', image: 'assets/items/dong_zhuo-jade_seal_ring.png',
       attackBonus: 190, physicalDefenseBonus: 155, magicDefenseBonus: 160, maxHpBonus: 16000,
-      statBonuses: { ...ringStats }, stats: { ...ringStats }, properties,
+      statBonuses: { ...ringStats, maxHp: 16000 }, stats: { ...ringStats }, properties,
       enhancementLevel: 0, cannotEnhance: true, sourceMonster: monster.name, sourceDropChance: 0.05, obtainedAt: Date.now()
     };
     currentPlayer.items.armors.push(ring);
