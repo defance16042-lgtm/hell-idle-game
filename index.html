@@ -6176,9 +6176,15 @@ function getRpgEquipmentIconImage(item, kind, extraClass) {
         const mountIcon = String(item?.icon || '🐎').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
         return `<span class="${classes} mount-equipment-icon" role="img" aria-label="${safeName}" title="${safeName}" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;box-sizing:border-box;border:1px solid ${borderColor};border-radius:5px;background:radial-gradient(circle at 35% 28%,#71333e,#25121d 72%);font-size:clamp(26px,4vw,44px);line-height:1;text-shadow:0 2px 5px #000;filter:drop-shadow(0 0 4px ${borderColor}88);">${mountIcon}</span>`;
     }
+    const type = item?.type || item?.weaponType || '';
+    const axeIconSrc = item?.isOneHandAxe || type === '單手斧' || nameHas(/單手斧/)
+        ? 'assets/warrior/axe-one-handed.png'
+        : (type === '大斧' || type === '雙斧' || nameHas(/大斧/)
+            ? 'assets/warrior/axe-two-handed.png'
+            : '');
     const inferredSubweaponIcon = item?.iconAsset || (item?.slot === 'bowArmor' || /^elf_bow_armor_/.test(String(item?.templateId || '')) ? 'hell_elf_bow_vambrace' : item?.slot === 'spellbook' || /^mage_spellbook_/.test(String(item?.templateId || '')) ? 'hell_mage_spellbook' : '');
     const customIconSrc = (window.SHADOW_CLASS_NECKLACE_ICON_DATA?.[item?.iconAsset] || (typeof item?.iconAsset === 'string' && (/^data:image\/(?:png|svg\+xml);/i.test(item.iconAsset) || /^(?:assets\/|\/)/.test(item.iconAsset)))) ? (window.SHADOW_CLASS_NECKLACE_ICON_DATA?.[item?.iconAsset] || item.iconAsset) : item?.iconAsset === 'hell_shared_wrist_bracer' ? HELL_WRIST_BRACER_ICON_DATA : inferredSubweaponIcon === 'hell_elf_bow_vambrace' ? 'assets/base64/592c25cf05e0a2c18e284b5edb282c0f0fdf7b8adba70d0de7b1d97fc33efa27.webp' : inferredSubweaponIcon === 'hell_mage_spellbook' ? 'assets/base64/0523f789d0197e49f6a266fe94f75ad68df21c2d31de5a8633713b2fa149bf90.webp' : '';
-    const src = customIconSrc || ORIGINAL_HELL_EQUIPMENT_ICONS[iconIndex] || ORIGINAL_HELL_EQUIPMENT_ICONS[0];
+    const src = axeIconSrc || customIconSrc || ORIGINAL_HELL_EQUIPMENT_ICONS[iconIndex] || ORIGINAL_HELL_EQUIPMENT_ICONS[0];
     return `<img class="${classes}" src="${src}" alt="${safeName}" title="${safeName}" loading="lazy" decoding="async" style="display:block;border:1px solid ${borderColor};border-radius:5px;box-sizing:border-box;object-fit:contain;object-position:center center;" draggable="false">`;
 }
 
@@ -24575,8 +24581,7 @@ if(warrior){
 }
 const tierFor=l=>Math.max(0,Math.min(100,Math.floor((Number(l)||0)/10)*10));
 const defFor=l=>defs.find(x=>x.level===tierFor(l));
-const svg=(kind='great',tier=0)=>{const colors=['#7fd7ff','#ffbd55','#d6a7ff','#ff6d61','#ffe58b'];const c=colors[tier%colors.length];const dark=kind==='great'?'#5f2c24':'#7e3b2e';const blade=kind==='great'?`<path d="M30 7h17q9 0 9 9v12q0 8-8 11H33z" fill="${c}" stroke="#241719" stroke-width="2"/><path d="M34 12h15q4 0 4 5v7q0 5-5 7H34z" fill="${dark}" opacity=".55"/>`:`<path d="M31 9h14q8 0 8 8v9q0 7-7 10H32z" fill="${c}" stroke="#241719" stroke-width="2"/><path d="M35 13h10q4 0 4 4v5q0 5-5 7h-9z" fill="${dark}" opacity=".55"/>`;return `<svg class="equipment-icon axe-custom-icon" viewBox="0 0 64 64" role="img" aria-label="自創${kind==='great'?'大斧':'單手斧'} SVG圖示" xmlns="http://www.w3.org/2000/svg"><path d="M27 53 35 27" stroke="#a87548" stroke-width="6" stroke-linecap="round"/><path d="M25 53h15" stroke="#3b2420" stroke-width="3" stroke-linecap="round"/>${blade}<path d="M34 10v34" stroke="#f8e7b0" stroke-opacity=".45" stroke-width="2"/></svg>`};
-window.WARRIOR_AXE_ICONS={great:'assets/warrior/axe-two-handed.svg',one:defs.reduce((o,d)=>(o[d.level]='assets/warrior/axe-one-handed.svg',o),{})};
+window.WARRIOR_AXE_ICONS={great:'assets/warrior/axe-two-handed.png',one:defs.reduce((o,d)=>(o[d.level]='assets/warrior/axe-one-handed.png',o),{})}
 function createAxe(def,monsterType='normal'){
  const item={instanceId:`onehand-axe-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`,classKey:'warrior',type:'單手斧',weaponType:'單手斧',name:def.name,requiredMonsterLevel:def.level,level:def.level,attackBonus:def.attack,baseAttackBonus:def.attack,attackSpeedBonus:def.speed,baseAttackSpeedBonus:def.speed,meleeHitBonus:0,rarity:'普通',qualityColor:'#d1c2b4',properties:[],statBonuses:{},hitChanceBonus:0,lifeStealRatio:0,enhancementLevel:0,isOneHandAxe:true,icon:''};
  return typeof rollWeaponProperties==='function'?rollWeaponProperties(item,monsterType):item;
