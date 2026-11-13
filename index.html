@@ -27266,6 +27266,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     animation:parallelZhangJiSpearThrust 820ms cubic-bezier(.2,.8,.18,1) both;
   }
   #monster-icon.parallel-three-attack-fan-chou::before {
+    content:"" !important; display:block!important;
     color:#ff8b35; background:linear-gradient(100deg,transparent 5%,rgba(255,82,27,.08) 27%,rgba(255,143,48,.72) 58%,rgba(255,237,159,.98) 72%,rgba(190,54,24,.24) 84%,transparent 100%);
     clip-path:polygon(0 57%,32% 52%,50% 39%,67% 24%,83% 10%,77% 34%,66% 50%,53% 63%,39% 75%,20% 90%);
     animation:parallelFanChouHeavyCleave 720ms cubic-bezier(.2,.82,.24,1) both;
@@ -27348,6 +27349,8 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   @media(prefers-reduced-motion:reduce){
     #monster-icon.parallel-three-attack-active::before,
     #monster-icon.parallel-three-attack-active .monster-sprite{animation-duration:1ms!important}
+    #monster-icon.parallel-three-attack-active.parallel-three-attack-fan-chou::before,
+    #monster-icon.parallel-three-attack-active.parallel-three-attack-fan-chou .monster-sprite{animation-duration:480ms!important}
   }
 </style>
 
