@@ -5422,7 +5422,6 @@ html body #shenlong-aura-overlay .shenlong-real-coil{display:none!important}
                     <div class="save-transfer-actions">
                         <button type="button" class="save-transfer-btn" onclick="exportCharacterSaves()" title="匯出此瀏覽器內所有角色存檔">📤 匯出</button>
                         <button type="button" class="save-transfer-btn" onclick="document.getElementById('character-save-import-file').click()" title="匯入角色存檔">📥 匯入</button>
-                        <button class="logout-btn" id="logout-btn" style="display: none;" onclick="logoutGame()">登出切換</button>
                         <input id="character-save-import-file" type="file" accept=".json,application/json" hidden onchange="importCharacterSaves(this)">
                     </div>
                     <small id="save-transfer-status" role="status"></small>
@@ -5643,6 +5642,7 @@ html body #shenlong-aura-overlay .shenlong-real-coil{display:none!important}
                     <button type="button" class="game-save-btn" onclick="manualSaveGame()" title="Windows 版寫入 save.json；同時匯出可攜式 JSON 角色存檔">💾 匯出</button>
                     <button type="button" class="game-save-btn" onclick="chooseSaveDirectory()" title="選擇 Windows 版 save.json 存放的資料夾">📁 資料夾</button>
                     <button type="button" class="game-save-btn game-load-btn" onclick="document.getElementById('game-save-import-file').click()" title="匯入本遊戲匯出的 JSON；讀取時會自動執行舊裝備強化遷移">📂 匯入</button>
+                    <button type="button" class="game-save-btn logout-btn" id="logout-btn" style="display:none" onclick="logoutGame()" title="先自動存檔，再登出並切換角色">⇄ 登出切換</button>
                     <input id="game-save-import-file" type="file" accept=".json,application/json" hidden onchange="importCharacterSaves(this)">
                     <span id="game-save-status" role="status" aria-live="polite">自動存檔已啟用</span>
                 </div>
@@ -22042,9 +22042,9 @@ html,body{
   /* 保留所有原有存檔操作，將可拖曳 HUD 固定整理為緊湊兩行。 */
   #game-save-controls.game-save-controls {
     display:grid!important;
-    grid-template-columns:max-content max-content max-content!important;
+    grid-template-columns:max-content max-content max-content max-content!important;
     grid-template-rows:auto auto!important;
-    grid-template-areas:"handle export import" "folder status status"!important;
+    grid-template-areas:"handle export import logout" "folder status status status"!important;
     align-items:center!important; justify-content:start!important;
     gap:4px 6px!important; padding:6px 8px!important;
     width:max-content!important; max-width:calc(100vw - 16px)!important;
@@ -22054,6 +22054,7 @@ html,body{
   #game-save-controls button:nth-of-type(1) { grid-area:export; }
   #game-save-controls button:nth-of-type(2) { grid-area:folder; }
   #game-save-controls button:nth-of-type(3) { grid-area:import; }
+  #game-save-controls button:nth-of-type(4) { grid-area:logout; }
   #game-save-controls .game-save-btn { min-height:27px!important; padding:4px 7px!important; font-size:11px!important; white-space:nowrap; }
   #game-save-status { grid-area:status; min-width:0!important; max-width:min(240px,calc(100vw - 130px)); overflow-wrap:anywhere; font-size:10px!important; line-height:1.25; }
   .save-transfer-panel { grid-template-columns:minmax(0,1fr) auto!important; column-gap:8px!important; row-gap:2px!important; margin-bottom:8px!important; padding:7px 9px!important; }
@@ -27264,6 +27265,18 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     clip-path:polygon(0 48%,33% 42%,51% 8%,69% 24%,94% 26%,76% 50%,94% 74%,69% 76%,51% 92%,33% 58%);
     animation:parallelFanChouHeavyCleave 1040ms cubic-bezier(.2,.85,.22,1) both;
   }
+  /* 樊稠重斬追加大型弧形刀氣，橙焰外緣搭配青藍／白色刃芯與長拖尾。 */
+  #monster-icon.parallel-three-attack-fan-chou::after {
+    content:""; position:absolute; left:-84%; top:-13%; width:258%; height:126%; z-index:91;
+    display:block; pointer-events:none; opacity:0; transform-origin:78% 52%;
+    background:
+      linear-gradient(112deg,transparent 2%,rgba(255,74,29,.12) 17%,rgba(255,113,37,.9) 31%,rgba(48,190,255,.96) 47%,rgba(230,252,255,1) 57%,rgba(65,175,255,.92) 66%,rgba(255,117,39,.84) 77%,rgba(255,62,27,.2) 91%,transparent 100%),
+      linear-gradient(112deg,transparent 15%,rgba(255,217,146,.15) 37%,rgba(255,255,241,.9) 56%,rgba(99,221,255,.7) 63%,transparent 82%);
+    clip-path:polygon(0 83%,8% 67%,20% 50%,34% 35%,49% 23%,65% 13%,82% 6%,100% 0%,91% 17%,78% 26%,64% 36%,50% 48%,37% 61%,26% 75%,15% 91%,4% 100%);
+    filter:drop-shadow(0 0 8px #ff633a) drop-shadow(0 0 17px #42cfff) drop-shadow(0 0 28px rgba(255,144,65,.82));
+    will-change:transform,opacity,filter;
+    animation:parallelFanChouArcSlash 1040ms cubic-bezier(.16,.82,.2,1) both;
+  }
   #monster-icon.parallel-three-attack-lu-bu::before {
     color:#e349ff; background:linear-gradient(100deg,transparent 4%,rgba(151,40,255,.18) 25%,rgba(255,51,112,.82) 56%,rgba(255,220,255,.98) 70%,rgba(130,42,255,.32) 84%,transparent 100%);
     clip-path:polygon(0 49%,38% 40%,55% 4%,69% 29%,100% 50%,69% 71%,55% 96%,38% 60%);
@@ -27332,6 +27345,13 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     58%{opacity:1;transform:translate(-12%,-1%) rotate(4deg) scale(1.08);filter:drop-shadow(0 0 19px #ff822d)}
     72%{opacity:.9;transform:translate(-10%,0) rotate(12deg) scale(1.12)}
     100%{opacity:0;transform:translate(-25%,4%) rotate(20deg) scale(1.2)}
+  }
+  @keyframes parallelFanChouArcSlash {
+    0%,21%{opacity:0;transform:translate(16%,12%) rotate(-24deg) scale(.32,.7)}
+    39%{opacity:.76;transform:translate(7%,4%) rotate(-16deg) scale(.76,.88)}
+    55%{opacity:1;transform:translate(-12%,-4%) rotate(-5deg) scale(1.08,1.08);filter:drop-shadow(0 0 12px #ff633a) drop-shadow(0 0 26px #42cfff) drop-shadow(0 0 38px rgba(255,144,65,.92))}
+    70%{opacity:.92;transform:translate(-20%,0) rotate(5deg) scale(1.12,1.02)}
+    100%{opacity:0;transform:translate(-37%,8%) rotate(17deg) scale(1.22,.82)}
   }
   @keyframes parallelLuBuFangtianSlash {
     0%,20%{opacity:0;transform:translate(14%,12%) rotate(-34deg) scale(.4)}
