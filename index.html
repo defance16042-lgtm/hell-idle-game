@@ -12125,6 +12125,7 @@ function getCombatVisualCycleDuration(actionPath) {
                     window.showShadowDepthCombatEffect?.('blue-shield');
                     addBattleLog(`🔷 ${currentMonster.name}發動【魔法護盾】（本次發動率 ${Math.round(shadowDefense.profile.magicShieldChance * 100)}%），物理與魔法傷害降低 ${Math.round(shieldReduction * 100)}%：${damageBeforeShield} → ${damage}。`);
                 }
+                damage = window.applyAbyssWingOutgoingDamage?.(damage, { attackType, skillTriggered, activeSkill, target: currentMonster, trainingSimulation }) ?? damage;
                 if (currentMonster.type !== 'training') { const abyssHpDamage = window.applyAbyssDragonIncomingDamage?.(currentMonster, damage, attackType === 'magic' ? 'magic' : 'physical') ?? damage; currentMonster.hp = Math.max(0, currentMonster.hp - abyssHpDamage); }
                 window.syncFallenHeavenBossPhase?.(currentMonster, true);
                 if (typeof updateMonsterHealthUI === 'function') updateMonsterHealthUI();
@@ -12326,6 +12327,7 @@ function getCombatVisualCycleDuration(actionPath) {
             if (shenlongDefenseBonus) damage = Math.max(0, Math.floor(damage * (1 - shenlongDefenseBonus.damageReductionPct / 100)));
             const monsterElementMultiplier = getElementMultiplier(currentMonster.element, getPlayerElement(currentPlayer));
             damage = Math.max(0, Math.floor(damage * monsterElementMultiplier));
+            damage = window.applyAbyssWingIncomingDamage?.(damage, { monster: currentMonster, magic: isMagicAttack, blocked, critical, trainingSimulation: currentMonster.type === 'training' }) ?? damage;
             showMonsterAttackImpact(battleVisual.effect);
             const trainingSimulation = currentMonster.type === 'training';
             if (isKnightFighter() && currentPlayer.gender === 'male' && damage > 0 && !blocked) playPlayerAnimation('hurt');
@@ -27872,5 +27874,33 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 })();
 </script>
 
+<style id="abyss-wing-effects-v2-style">
+.abyss-wing-burst{position:fixed;z-index:2147483001;left:50%;top:50%;width:92px;height:92px;transform:translate(-50%,-50%);pointer-events:none;border-radius:50%;opacity:0;animation:abyssWingBurstV2 .72s ease-out forwards;mix-blend-mode:screen}
+.abyss-wing-burst::before,.abyss-wing-burst::after{content:"";position:absolute;inset:8px;border-radius:50%;border:3px solid var(--wing-vfx-color);box-shadow:0 0 14px var(--wing-vfx-color),inset 0 0 16px var(--wing-vfx-color)}
+.abyss-wing-burst::after{inset:-8px;border-width:2px;transform:rotate(45deg) scale(.7);border-radius:22%}
+.abyss-wing-burst.fire{--wing-vfx-color:#ff6330}.abyss-wing-burst.frost{--wing-vfx-color:#9cf5ff}.abyss-wing-burst.dark{--wing-vfx-color:#bd75ff}.abyss-wing-burst.spore{--wing-vfx-color:#9dff72}.abyss-wing-burst.amber{--wing-vfx-color:#ffd45a}.abyss-wing-burst.tide{--wing-vfx-color:#42e5ff}
+@keyframes abyssWingBurstV2{0%{opacity:0;transform:translate(-50%,-50%) scale(.25) rotate(0)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(1.45) rotate(110deg)}}
+#player-icon.abyss-wing-shield-dark::before,#player-icon.abyss-wing-shield-amber::before{content:"";position:absolute;inset:-14px;border-radius:50%;pointer-events:none;z-index:1;animation:abyssWingShieldPulseV2 .9s ease-out forwards}
+#player-icon.abyss-wing-shield-dark::before{border:2px solid #c084fc;box-shadow:0 0 12px #a855f7, inset 0 0 20px #6d28d9;background:radial-gradient(circle,transparent 42%,#7e22ce22 72%,transparent 74%)}
+#player-icon.abyss-wing-shield-amber::before{border:2px solid #ffe08a;clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);box-shadow:0 0 12px #fbbf24,inset 0 0 20px #f59e0b66;background:#ffd16616}
+@keyframes abyssWingShieldPulseV2{0%{opacity:0;transform:scale(.72)}24%{opacity:1}100%{opacity:0;transform:scale(1.14)}}
+</style>
+<script id="abyss-wing-effects-v2-script">
+(function(){'use strict';if(window.ABYSS_WING_EFFECTS_V2)return;window.ABYSS_WING_EFFECTS_V2=true;
+ const ids={dark:'abyss_wing_dark',fire:'abyss_wing_fire',frost:'abyss_wing_frost',spore:'abyss_wing_spore',amber:'abyss_wing_amber',tide:'abyss_wing_tide'};
+ const key=w=>String(w?.templateId||'').replace('abyss_wing_','');
+ const player=()=>window.currentPlayer||(typeof currentPlayer!=='undefined'?currentPlayer:null);
+ const wing=()=>window.getEquippedBackWing?.(player())||null;
+ function burst(kind,target='player-icon',label=''){const node=document.createElement('div');node.className='abyss-wing-burst '+kind;node.title=label;const host=document.getElementById(target);if(host){const r=host.getBoundingClientRect();node.style.left=(r.left+r.width/2)+'px';node.style.top=(r.top+r.height*.42)+'px';}document.body.appendChild(node);setTimeout(()=>node.remove(),800);}
+ function pulse(className){const n=document.getElementById('player-icon');if(!n)return;n.classList.remove(className);void n.offsetWidth;n.classList.add(className);setTimeout(()=>n.classList.remove(className),950);}
+ function log(msg){if(typeof addBattleLog==='function')addBattleLog(msg)}
+ function healIfReady(w){const p=player(),k=key(w),now=Date.now();if(!p||!['spore','tide'].includes(k)||Number(p.hp)>=Number(window.getPlayerEffectiveMaxHp?.(p)||p.maxHp||1)||Number(p.abyssWingSelfHealReadyAt||0)>now||Math.random()>=.20)return false;const max=Math.max(1,Number(window.getPlayerEffectiveMaxHp?.(p)||p.maxHp)||1),amount=Math.max(1,Math.floor(max*.08)),actual=Math.min(amount,max-Math.max(0,Number(p.hp)||0));if(actual<=0)return false;p.hp=Math.min(max,(Number(p.hp)||0)+actual);p.abyssWingSelfHealReadyAt=now+10000;showFloatingDmg?.('player-icon','+'+actual,'#9dff72','floating-heal',w.name,w.iconAsset||'');burst(k,'player-icon',w.name);log(`🪽【${w.name}】觸發${k==='spore'?'孢子再生':'潮汐回響'}，回復 <b>${actual.toLocaleString()}</b> 生命（冷卻 10 秒）。`);updateGameUI?.();return true;}
+ window.applyAbyssWingOutgoingDamage=function(damage,ctx={}){const w=wing(),k=key(w);let value=Math.max(0,Number(damage)||0);if(!w||ctx.trainingSimulation)return value;if(k==='fire'&&value>0&&Date.now()>Number(w._emberReadyAt||0)){const bonus=Math.max(1,Math.floor(value*.12));value+=bonus;w._emberReadyAt=Date.now()+2200;burst('fire','monster-icon',w.name);showFloatingDmg?.('monster-icon','-'+bonus,'#ff8b42','floating-wing-fire',w.name,w.iconAsset||'');log(`🔥【${w.name}】餘燼爆燃追加 <b>${bonus}</b> 火焰傷害。`);}return value;};
+ window.applyAbyssWingIncomingDamage=function(damage,ctx={}){const w=wing(),k=key(w),p=player();let value=Math.max(0,Number(damage)||0);if(!w||ctx.trainingSimulation)return value;const max=Math.max(1,Number(window.getPlayerEffectiveMaxHp?.(p)||p?.maxHp)||1),hp=Math.max(0,Number(p?.hp)||0);if(k==='dark'&&hp/max<=.35&&Date.now()>Number(w._eclipseReadyAt||0)){w._eclipseReadyAt=Date.now()+20000;w._eclipseShieldUntil=Date.now()+6000;burst('dark','player-icon',w.name);pulse('abyss-wing-shield-dark');log(`🌑【${w.name}】星蝕守護展開：6 秒內受到傷害降低 30%。`);}if(k==='dark'&&Date.now()<Number(w._eclipseShieldUntil||0))value=Math.floor(value*.70);if(k==='amber'&&value>0){value=Math.floor(value*.92);burst('amber','player-icon',w.name);pulse('abyss-wing-shield-amber');log(`🔶【${w.name}】星晶壁壘吸收 8% 傷害，形成六角晶體護罩。`);}return Math.max(0,value);};
+ const oldMonster=window.performMonsterAttack;if(typeof oldMonster==='function'&&!oldMonster.__abyssWingEffectsV2){const wrapped=function(...args){const p=player(),before=Number(p?.hp)||0,logBefore=(document.getElementById('battle-log-list')?.textContent||'');const r=oldMonster.apply(this,args);const after=Number(p?.hp)||0,logNow=(document.getElementById('battle-log-list')?.textContent||'');const w=wing(),k=key(w);if(w&&logNow!==logBefore){if(k==='frost'&&after===before&&/閃避|MISS/.test(logNow)){burst('frost','player-icon',w.name);log(`❄️【${w.name}】月霜幻影留下冰晶殘影。`);}if(after<before)healIfReady(w);}return r;};wrapped.__abyssWingEffectsV2=true;window.performMonsterAttack=wrapped;}
+ const oldPlayer=window.performPlayerAttack;if(typeof oldPlayer==='function'&&!oldPlayer.__abyssWingEffectsV2){const wrapped=function(...args){const r=oldPlayer.apply(this,args);return r;};wrapped.__abyssWingEffectsV2=true;window.performPlayerAttack=wrapped;}
+ window.playAbyssWingEffectV2=(kind,target)=>burst(kind,target||'player-icon','翅膀特效');
+})();
+</script>
 </body>
 </html>
