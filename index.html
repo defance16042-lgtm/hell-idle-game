@@ -25976,10 +25976,21 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 /* 深淵龍穴背部翅膀：所有職業共用，包含僧師 */
 .back-wing-equipped{position:relative!important;}
 .abyss-wing-vfx{position:absolute;left:var(--wing-left,50%);top:var(--wing-top,43%);width:var(--wing-width,220px);height:var(--wing-height,124px);transform:translate(-50%,-50%);z-index:0;pointer-events:none;filter:drop-shadow(0 0 8px var(--wing-glow,#8f6cff));opacity:.92;}
-.abyss-wing-art{display:block;width:100%;height:100%;object-fit:contain;opacity:.92;mix-blend-mode:screen;pointer-events:none;user-select:none;-webkit-user-drag:none;}
+.abyss-wing-half{position:absolute;top:0;width:50%;height:100%;overflow:hidden;backface-visibility:hidden;transform-style:preserve-3d;}
+.abyss-wing-half-left{left:0;transform-origin:100% 50%;}
+.abyss-wing-half-right{right:0;transform-origin:0 50%;}
+.abyss-wing-art{position:absolute;top:0;display:block;width:200%;max-width:none!important;height:100%;object-fit:fill;opacity:.92;mix-blend-mode:screen;pointer-events:none;user-select:none;-webkit-user-drag:none;}
+.abyss-wing-half-left .abyss-wing-art{left:0;}
+.abyss-wing-half-right .abyss-wing-art{right:0;}
+.back-wing-equipped.wing-flapping .abyss-wing-half{will-change:transform;animation-duration:1.12s;animation-timing-function:cubic-bezier(.38,.02,.65,.98);animation-iteration-count:infinite;}
+.back-wing-equipped.wing-flapping .abyss-wing-half-left{animation-name:abyssWingLeftFlap;}
+.back-wing-equipped.wing-flapping .abyss-wing-half-right{animation-name:abyssWingRightFlap;animation-delay:-.07s;}
+@keyframes abyssWingLeftFlap{0%,100%{transform:rotate(0deg) scaleY(1)}28%{transform:rotate(-8deg) scaleY(.91)}64%{transform:rotate(4deg) scaleY(1.04)}82%{transform:rotate(2deg) scaleY(1.02)}}
+@keyframes abyssWingRightFlap{0%,100%{transform:rotate(0deg) scaleY(1)}28%{transform:rotate(8deg) scaleY(.91)}64%{transform:rotate(-4deg) scaleY(1.04)}82%{transform:rotate(-2deg) scaleY(1.02)}}
 .abyss-wing-vfx.wing-fire{--wing-glow:#ff632e}.abyss-wing-vfx.wing-frost{--wing-glow:#75eaff}.abyss-wing-vfx.wing-spore{--wing-glow:#8dff70}.abyss-wing-vfx.wing-amber{--wing-glow:#ffd45a}.abyss-wing-vfx.wing-tide{--wing-glow:#36dfff}.abyss-wing-vfx.wing-dark{--wing-glow:#b36cff}
 .abyss-wing-skill-flash{position:fixed;z-index:2147483000;pointer-events:none;left:50%;top:50%;width:160px;height:160px;border:4px solid var(--wing-glow,#b36cff);border-radius:50%;transform:translate(-50%,-50%) scale(.25);opacity:0;animation:abyssWingFlash .75s ease-out forwards;box-shadow:0 0 28px var(--wing-glow,#b36cff),inset 0 0 24px var(--wing-glow,#b36cff)}
 @keyframes abyssWingFlash{15%{opacity:.95}100%{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
+@media(prefers-reduced-motion:reduce){.back-wing-equipped.wing-flapping .abyss-wing-half{animation:none!important;will-change:auto;}}
 </style>
 <script id="abyss-back-wings-script">
 (function(){'use strict';if(window.ABYSS_BACK_WINGS_V1)return;window.ABYSS_BACK_WINGS_V1=true;
@@ -26024,24 +26035,24 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   v.style.setProperty('--wing-width',`${wingWidth}px`);
   v.style.setProperty('--wing-height',`${wingWidth*9/16}px`);
  }
- function trackWingVfx(){const icon=document.getElementById('player-icon');if(!icon?.classList.contains('back-wing-equipped')||!icon.querySelector('.abyss-wing-vfx')){wingTrackFrame=0;return;}positionWingVfx();wingTrackFrame=requestAnimationFrame(trackWingVfx);}
+ function trackWingVfx(){const icon=document.getElementById('player-icon');if(!icon?.classList.contains('back-wing-equipped')||!icon.querySelector('.abyss-wing-vfx')){icon?.classList.remove('wing-flapping');wingTrackFrame=0;return;}const stage=document.getElementById('battle-stage');const inBattle=!!stage&&getComputedStyle(stage).display!=='none'&&!stage.classList.contains('village-mode')&&!stage.classList.contains('exploring-mode');icon.classList.toggle('wing-flapping',inBattle);positionWingVfx();wingTrackFrame=requestAnimationFrame(trackWingVfx);}
  function refreshWingVfx(){
   const p=player(),icon=document.getElementById('player-icon'),w=equippedWing(p);
   if(!icon)return;
   icon.classList.toggle('back-wing-equipped',!!w);
   let v=icon.querySelector('.abyss-wing-vfx');
-  if(!w){v?.remove();stopWingVfxTracking();return;}
+  if(!w){v?.remove();icon.classList.remove('wing-flapping');stopWingVfxTracking();return;}
   const wingClass=w.wingCss||'wing-dark';
   const assetPath=w.iconAsset||w.image||'';
   const assetSrc=assetPath&&typeof resolveEmbeddedAsset==='function'?resolveEmbeddedAsset(assetPath):assetPath;
   if(v&&(!v.classList.contains(wingClass)||!v.querySelector('.abyss-wing-art'))){v.remove();v=null;}
   if(!v){
    v=document.createElement('div');v.className='abyss-wing-vfx '+wingClass;
-   const art=document.createElement('img');art.className='abyss-wing-art';art.alt=w.name+'（已裝備）';art.draggable=false;
-   v.appendChild(art);icon.prepend(v);
+   v.setAttribute('aria-hidden','true');
+   for(const side of ['left','right']){const half=document.createElement('span');half.className='abyss-wing-half abyss-wing-half-'+side;const art=document.createElement('img');art.className='abyss-wing-art';art.alt='';art.draggable=false;half.appendChild(art);v.appendChild(half);}
+   icon.prepend(v);
   }
-  const art=v.querySelector('.abyss-wing-art');
-  if(art&&assetSrc&&art.getAttribute('src')!==assetSrc)art.setAttribute('src',assetSrc);
+  v.querySelectorAll('.abyss-wing-art').forEach(art=>{if(assetSrc&&art.getAttribute('src')!==assetSrc)art.setAttribute('src',assetSrc);});
   v.title=w.name+'｜'+w.wingEffect;
   positionWingVfx();
   if(!wingTrackFrame)wingTrackFrame=requestAnimationFrame(trackWingVfx);
