@@ -27340,5 +27340,122 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 })();
 </script>
 
+<script id="lu-bu-divine-treasures-config-v1">
+(() => {
+  'use strict';
+  if (window.__luBuDivineTreasuresConfigV1) return;
+  window.__luBuDivineTreasuresConfigV1 = true;
+
+  const ALL_CLASSES = ['knight', 'warrior', 'elf', 'mage', 'monk'];
+  const TREASURES = Object.freeze({
+    redhare_mount_v1: {
+      id: 'redhare_mount_v1', name: '赤兔馬', kind: 'armor', slot: 'mount', slotLabel: '座騎',
+      icon: '🐎', iconAsset: 'assets/items/lu-bu/redhare-mount.png', armorType: 'mount',
+      level: 100, requiredLevel: 100, rarity: '神話', quality: '神話', qualityColor: '#ff526d',
+      classKeys: ALL_CLASSES, classKey: 'shared', dropChance: 0.03, sourceMonster: '呂布',
+      physicalDefenseBonus: 220, magicDefenseBonus: 220,
+      statBonuses: { attack: 280, maxHp: 24000, maxMp: 3000, str: 50, dex: 50, con: 50, wis: 50, int: 50, cha: 30, attackSpeedBonus: 0.10, hitRate: 0.03, evasion: 0.03, allResistance: 0.03 },
+      passiveSkills: [
+        { id: 'redhare_thunder', name: '赤兔奔雷', trigger: 'attack', chance: 0.08, damageMultiplier: 1.25 },
+        { id: 'battle_gallop', name: '戰場疾馳', trigger: 'lowHp', threshold: 0.35, damageReductionPct: 8, attackSpeedBonus: 0.05 }
+      ],
+      properties: ['座騎部位｜全職業可用｜需求等級 100', '攻擊力 +280', '生命上限 +24,000', '魔力上限 +3,000', '物理防禦 +220', '魔法防禦 +220', '力量 +50｜敏捷 +50｜體質 +50｜精神 +50｜智力 +50｜魅力 +30', '攻擊速度 +0.10｜命中率 +3%｜閃避率 +3%｜全屬性抗性 +3%', '赤兔奔雷：攻擊時 8% 機率使本次傷害提高 25%。', '戰場疾馳：生命低於 35% 時，受到傷害降低 8%，攻擊速度額外提高 0.05。', '呂布專屬掉落｜獨立掉落率 3%', '不可強化｜強化等級固定 +0']
+    },
+    fangtian_halberd_v1: {
+      id: 'fangtian_halberd_v1', name: '方天畫戟', kind: 'weapon', slot: 'weapon', slotLabel: '武器',
+      icon: '🔱', iconAsset: 'assets/items/lu-bu/fangtian-halberd.png', weaponType: 'melee',
+      level: 100, requiredLevel: 100, rarity: '神話', quality: '神話', qualityColor: '#c879ff',
+      classKeys: ['knight', 'warrior'], classKey: 'knight', dropChance: 0.02, sourceMonster: '呂布',
+      attackBonus: 520, baseAttackBonus: 520, attackSpeedBonus: 0, baseAttackSpeedBonus: 0,
+      statBonuses: { str: 85, con: 45, physicalDefense: 120, meleeHitBonus: 0.05, meleeCritRate: 0.06, meleeCritDamage: 0.12 },
+      passiveSkills: [{ id: 'ghost_god_breaker', name: '鬼神破陣', trigger: 'meleeHit', chance: 0.10, damageMultiplier: 1.35, bossDamageMultiplier: 1.10 }],
+      properties: ['武器部位｜騎士、修羅戰士可用｜需求等級 100', '攻擊力 +520', '力量 +85｜體質 +45｜物理防禦 +120', '近戰命中率 +5%｜近戰暴擊率 +6%｜近戰暴擊傷害 +12%', '鬼神破陣：近戰攻擊命中時 10% 機率觸發，本次傷害提高 35%，對 BOSS 額外提高 10%。', '呂布專屬掉落｜獨立掉落率 2%', '不可強化｜強化等級固定 +0']
+    },
+    golden_armor_v1: {
+      id: 'golden_armor_v1', name: '黃金鎧甲', kind: 'armor', slot: 'chest', slotLabel: '胸甲',
+      icon: '🛡️', iconAsset: 'assets/items/lu-bu/golden-armor.png', armorType: 'heavy',
+      level: 100, requiredLevel: 100, rarity: '神話', quality: '神話', qualityColor: '#ffd34e',
+      classKeys: ALL_CLASSES, classKey: 'shared', dropChance: 0.02, sourceMonster: '呂布',
+      physicalDefenseBonus: 420, magicDefenseBonus: 320,
+      statBonuses: { maxHp: 28000, str: 30, dex: 30, con: 75, wis: 30, int: 30 },
+      passiveSkills: [
+        { id: 'golden_guard', name: '金甲護身', trigger: 'bossDamageTaken', chance: 0.08, damageReductionPct: 35, cooldownMs: 6000 },
+        { id: 'unyielding_gold', name: '不屈金身', trigger: 'lowHp', threshold: 0.30, damageReductionPct: 8, controlResistPct: 10, healthRegenPct: 2, intervalMs: 5000 }
+      ],
+      properties: ['胸甲部位｜全職業可用｜需求等級 100', '生命上限 +28,000', '物理防禦 +420｜魔法防禦 +320', '力量 +30｜敏捷 +30｜體質 +75｜精神 +30｜智力 +30', '金甲護身：受到 BOSS 傷害時 8% 機率觸發，該次傷害降低 35%，冷卻 6 秒。', '不屈金身：生命低於 30% 時，受到傷害降低 8%，控制抵抗提高 10%，每 5 秒恢復最大生命值 2%。', '呂布專屬掉落｜獨立掉落率 2%', '不可強化｜強化等級固定 +0']
+    }
+  });
+
+  const treasureList = Object.values(TREASURES);
+  const addMountSlot = () => {
+    if (Array.isArray(armorSlots) && !armorSlots.some(slot => slot.key === 'mount')) {
+      armorSlots.push({ key: 'mount', label: '座騎', equipmentKey: 'mountId', icon: '🐎', classKeys: ALL_CLASSES });
+    }
+  };
+  addMountSlot();
+
+  // 讓圖鑑與既有掉落顯示讀到完整三寶資料；實際戰鬥被動保留在 passiveSkills 供戰鬥模組消費。
+  const luBu = window.parallelThreeKingdomsLuBu;
+  if (luBu) {
+    luBu.uniqueDrops = treasureList.map(item => `${item.name}｜${item.slotLabel}｜神話｜需求等級 ${item.requiredLevel}｜獨立掉落率 ${(item.dropChance * 100).toFixed(0)}%｜${item.properties.slice(1, -2).join('；')}｜不可強化（固定 +0）`);
+  }
+
+  const statLabels = { attack: '攻擊力', maxHp: '生命上限', maxMp: '魔力上限', str: '力量', dex: '敏捷', con: '體質', wis: '精神', int: '智力', cha: '魅力', physicalDefense: '物理防禦', magicDefense: '魔法防禦', attackSpeedBonus: '攻擊速度', hitRate: '命中率', evasion: '閃避率', allResistance: '全屬性抗性', meleeHitBonus: '近戰命中率', meleeCritRate: '近戰暴擊率', meleeCritDamage: '近戰暴擊傷害' };
+  const createItem = (def, player) => {
+    const isWeapon = def.kind === 'weapon';
+    const properties = def.properties.slice();
+    const item = {
+      instanceId: `${def.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      templateId: def.id, id: def.id, name: def.name, kind: def.kind, slot: def.slot, slotLabel: def.slotLabel,
+      icon: def.icon, iconAsset: def.iconAsset, image: def.iconAsset, armorType: def.armorType, weaponType: def.weaponType,
+      level: def.level, requiredLevel: def.requiredLevel, requiredMonsterLevel: def.requiredLevel,
+      rarity: def.rarity, quality: def.quality, qualityColor: def.qualityColor,
+      classKey: isWeapon && ['knight', 'warrior'].includes(player?.key) ? player.key : def.classKey,
+      classKeys: def.classKeys.slice(),
+      dropChance: def.dropChance, sourceMonster: def.sourceMonster, sourceDropChance: def.dropChance,
+      statBonuses: { ...def.statBonuses }, stats: { ...def.statBonuses }, passiveSkills: def.passiveSkills.map(skill => ({ ...skill })),
+      properties, enhancementLevel: 0, cannotEnhance: true, uniqueDropType: 'lu_bu_divine_treasure', isLuBuDivineTreasure: true, obtainedAt: Date.now()
+    };
+    if (isWeapon) { item.attackBonus = def.attackBonus; item.baseAttackBonus = def.baseAttackBonus; item.attackSpeedBonus = 0; item.baseAttackSpeedBonus = 0; }
+    if (def.physicalDefenseBonus) { item.physicalDefenseBonus = def.physicalDefenseBonus; item.basePhysicalDefenseBonus = def.physicalDefenseBonus; }
+    if (def.magicDefenseBonus) { item.magicDefenseBonus = def.magicDefenseBonus; item.baseMagicDefenseBonus = def.magicDefenseBonus; }
+    return item;
+  };
+
+  function awardLuBuDivineTreasures(target) {
+    if (!target || target.name !== '呂布' || target.__luBuDivineTreasuresResolved) return 0;
+    target.__luBuDivineTreasuresResolved = true;
+    const player = typeof currentPlayer !== 'undefined' ? currentPlayer : window.currentPlayer;
+    if (!player) return 0;
+    player.items ||= {}; player.items.weapons = Array.isArray(player.items.weapons) ? player.items.weapons : []; player.items.armors = Array.isArray(player.items.armors) ? player.items.armors : [];
+    let count = 0;
+    treasureList.forEach(def => {
+      if (Math.random() >= def.dropChance) return;
+      const item = createItem(def, player);
+      (def.kind === 'weapon' ? player.items.weapons : player.items.armors).push(item);
+      count++;
+      if (typeof addBattleLog === 'function') addBattleLog(`🔱 <strong style="color:${def.qualityColor}">呂布掉落【${def.rarity} ${def.name}】</strong>（${def.slotLabel}｜獨立掉落率 ${(def.dropChance * 100).toFixed(0)}%｜不可強化）！`);
+    });
+    if (count) { if (typeof saveGame === 'function') saveGame(); if (typeof renderInventory === 'function' && document.getElementById('inventory-float')?.style.display === 'flex') renderInventory(); }
+    return count;
+  }
+
+  window.LU_BU_DIVINE_TREASURES = TREASURES;
+  window.awardLuBuDivineTreasures = awardLuBuDivineTreasures;
+  if (typeof window.resolveMonsterDefeat === 'function' && !window.resolveMonsterDefeat.__luBuDivineTreasuresWrapped) {
+    const originalResolve = window.resolveMonsterDefeat;
+    const wrappedResolve = function(...args) {
+      const defeated = typeof currentMonster !== 'undefined' ? currentMonster : null;
+      const shouldRoll = defeated?.name === '呂布' && !defeated.__luBuDivineTreasuresResolved && !monsterDefeatInProgress && Number(defeated.hp) <= 0;
+      const result = originalResolve.apply(this, args);
+      if (shouldRoll) awardLuBuDivineTreasures(defeated);
+      return result;
+    };
+    wrappedResolve.__luBuDivineTreasuresWrapped = true;
+    window.resolveMonsterDefeat = wrappedResolve;
+  }
+})();
+</script>
+
 </body>
 </html>
