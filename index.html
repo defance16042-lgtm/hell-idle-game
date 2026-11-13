@@ -12122,11 +12122,10 @@ function getCombatVisualCycleDuration(actionPath) {
             const battleVisual = getMonsterAttackVisual(currentMonster, magicSkill, isMagicAttack, isRangedAttack);
             // 副龍沿用命中／傷害結算，但動畫只播放在自己的圖示上，避免主龍圖示被共用流程搶播。
             if (!window.__ABYSS_SECONDARY_ATTACK_IN_PROGRESS) {
-                if (currentMonster?.name === '董卓') {
-                    if (typeof window.playDongZhuoAttackStoryboard === 'function') window.playDongZhuoAttackStoryboard();
-                } else {
-                    animateMonsterAttack(battleVisual);
-                }
+                const storyboardPlayed = typeof window.playParallelThreeKingdomsBossAttackStoryboard === 'function'
+                    ? window.playParallelThreeKingdomsBossAttackStoryboard(currentMonster?.name)
+                    : false;
+                if (!storyboardPlayed) animateMonsterAttack(battleVisual);
             }
             const monsterAccuracyStat = getMonsterAccuracyStat(currentMonster, magicSkill);
             const monsterWeakeningMultiplier = currentMonster.levelWeakeningMultiplier || 1;
@@ -26801,6 +26800,13 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     return true;
   }
   window.playDongZhuoAttackStoryboard=playDongZhuoAttackStoryboard;
+  window.playParallelThreeKingdomsBossAttackStoryboard = function(name) {
+    if (name === '董卓') return playDongZhuoAttackStoryboard();
+    if (name === '呂布' && typeof window.playLuBuAttackStoryboard === 'function') {
+      return window.playLuBuAttackStoryboard();
+    }
+    return false;
+  };
 
   const originalBestiaryDetail = window.openBestiaryDetailV2;
   if (typeof originalBestiaryDetail === 'function' && !originalBestiaryDetail.__dongZhuoDropPanelWrapped) {
@@ -27219,6 +27225,61 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   const previous = roster.find(entry => entry && entry.name === monster.name);
   if (previous) Object.assign(previous, monster); else roster.push(monster);
   window.parallelThreeKingdomsLuBu = previous || monster;
+
+  let luBuAttackRunId = 0;
+  let luBuAttackTimer = 0;
+  function installLuBuStoryboardStyle() {
+    if (document.getElementById('lu-bu-storyboard-attack-style')) return;
+    const style = document.createElement('style');
+    style.id = 'lu-bu-storyboard-attack-style';
+    style.textContent = `
+      @keyframes luBuStoryboardBody {
+        0% { transform: translate3d(0,0,0) scale(1); filter: drop-shadow(0 0 5px rgba(122,38,255,.35)); }
+        22% { transform: translate3d(-8px,2px,0) scale(1.04); filter: drop-shadow(0 0 14px rgba(176,49,255,.8)); }
+        48% { transform: translate3d(-32px,-2px,0) scale(1.1); filter: drop-shadow(0 0 22px rgba(255,57,91,.95)); }
+        64% { transform: translate3d(14px,0,0) scale(1.03); filter: drop-shadow(0 0 30px rgba(255,45,70,1)); }
+        100% { transform: translate3d(0,0,0) scale(1); filter: drop-shadow(0 0 5px rgba(122,38,255,.35)); }
+      }
+      @keyframes luBuStoryboardSlash {
+        0%,38% { opacity:0; transform: translate(-20%, -50%) rotate(-24deg) scaleX(.15); }
+        52% { opacity:1; transform: translate(-50%, -50%) rotate(-24deg) scaleX(1); }
+        78% { opacity:.9; transform: translate(-72%, -50%) rotate(-24deg) scaleX(1.18); }
+        100% { opacity:0; transform: translate(-92%, -50%) rotate(-24deg) scaleX(1.28); }
+      }
+      @keyframes luBuStoryboardAura {
+        0%,42% { opacity:0; transform:translate(-50%,-50%) scale(.35); }
+        58% { opacity:.95; transform:translate(-50%,-50%) scale(1); }
+        100% { opacity:0; transform:translate(-50%,-50%) scale(1.55); }
+      }
+      #monster-icon.lu-bu-storyboard-attack .monster-sprite { animation: luBuStoryboardBody 820ms cubic-bezier(.18,.72,.2,1) both; }
+      #monster-icon.lu-bu-storyboard-attack::before { content:""; position:absolute; left:8%; top:50%; width:140%; height:16px; z-index:5; pointer-events:none; border-radius:999px; background:linear-gradient(90deg,transparent 0%,#8d42ff 24%,#ff3159 58%,#ffe3f4 72%,transparent 100%); box-shadow:0 0 16px #ff3159,0 0 28px #7d35ff; animation:luBuStoryboardSlash 820ms ease-out both; }
+      #monster-icon.lu-bu-storyboard-attack::after { content:""; position:absolute; left:52%; top:52%; width:110px; height:110px; z-index:4; pointer-events:none; border:3px solid rgba(255,66,112,.92); border-radius:50%; box-shadow:0 0 18px #9e3cff, inset 0 0 18px rgba(255,52,92,.7); animation:luBuStoryboardAura 820ms ease-out both; }
+      #battle-stage.lu-bu-storyboard-impact { animation: specialCriticalStageShake .38s ease-out; }
+    `;
+    (document.head || document.documentElement).appendChild(style);
+  }
+  function playLuBuAttackStoryboard() {
+    if (typeof currentMonster === 'undefined' || currentMonster?.name !== monster.name) return false;
+    const icon = document.getElementById('monster-icon');
+    const sprite = icon?.querySelector('.monster-sprite');
+    const stage = document.getElementById('battle-stage');
+    if (!icon || !sprite || !stage) return false;
+    installLuBuStoryboardStyle();
+    const runId = ++luBuAttackRunId;
+    clearTimeout(luBuAttackTimer);
+    icon.classList.remove('lu-bu-storyboard-attack');
+    stage.classList.remove('lu-bu-storyboard-impact');
+    void icon.offsetWidth;
+    icon.classList.add('lu-bu-storyboard-attack');
+    stage.classList.add('lu-bu-storyboard-impact');
+    luBuAttackTimer = setTimeout(() => {
+      if (runId !== luBuAttackRunId) return;
+      icon.classList.remove('lu-bu-storyboard-attack');
+      stage.classList.remove('lu-bu-storyboard-impact');
+    }, 860);
+    return true;
+  }
+  window.playLuBuAttackStoryboard = playLuBuAttackStoryboard;
 })();
 </script>
 
