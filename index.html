@@ -27262,20 +27262,8 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   }
   #monster-icon.parallel-three-attack-fan-chou::before {
     color:#ff8b35; background:linear-gradient(100deg,transparent 5%,rgba(255,82,27,.08) 27%,rgba(255,143,48,.72) 58%,rgba(255,237,159,.98) 72%,rgba(190,54,24,.24) 84%,transparent 100%);
-    clip-path:polygon(0 48%,33% 42%,51% 8%,69% 24%,94% 26%,76% 50%,94% 74%,69% 76%,51% 92%,33% 58%);
-    animation:parallelFanChouHeavyCleave 1040ms cubic-bezier(.2,.85,.22,1) both;
-  }
-  /* 樊稠重斬追加大型弧形刀氣，橙焰外緣搭配青藍／白色刃芯與長拖尾。 */
-  #monster-icon.parallel-three-attack-fan-chou::after {
-    content:""; position:absolute; left:-84%; top:-13%; width:258%; height:126%; z-index:91;
-    display:block; pointer-events:none; opacity:0; transform-origin:78% 52%;
-    background:
-      linear-gradient(112deg,transparent 2%,rgba(255,74,29,.12) 17%,rgba(255,113,37,.9) 31%,rgba(48,190,255,.96) 47%,rgba(230,252,255,1) 57%,rgba(65,175,255,.92) 66%,rgba(255,117,39,.84) 77%,rgba(255,62,27,.2) 91%,transparent 100%),
-      linear-gradient(112deg,transparent 15%,rgba(255,217,146,.15) 37%,rgba(255,255,241,.9) 56%,rgba(99,221,255,.7) 63%,transparent 82%);
-    clip-path:polygon(0 83%,8% 67%,20% 50%,34% 35%,49% 23%,65% 13%,82% 6%,100% 0%,91% 17%,78% 26%,64% 36%,50% 48%,37% 61%,26% 75%,15% 91%,4% 100%);
-    filter:drop-shadow(0 0 8px #ff633a) drop-shadow(0 0 17px #42cfff) drop-shadow(0 0 28px rgba(255,144,65,.82));
-    will-change:transform,opacity,filter;
-    animation:parallelFanChouArcSlash 1040ms cubic-bezier(.16,.82,.2,1) both;
+    clip-path:polygon(0 57%,32% 52%,50% 39%,67% 24%,83% 10%,77% 34%,66% 50%,53% 63%,39% 75%,20% 90%);
+    animation:parallelFanChouHeavyCleave 720ms cubic-bezier(.2,.82,.24,1) both;
   }
   #monster-icon.parallel-three-attack-lu-bu::before {
     color:#e349ff; background:linear-gradient(100deg,transparent 4%,rgba(151,40,255,.18) 25%,rgba(255,51,112,.82) 56%,rgba(255,220,255,.98) 70%,rgba(130,42,255,.32) 84%,transparent 100%);
@@ -27291,7 +27279,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     transform-origin:28% 68%!important; will-change:transform,filter;
   }
   #monster-icon.parallel-three-attack-fan-chou .monster-sprite {
-    animation:parallelFanChouCleaveBody 1040ms cubic-bezier(.2,.85,.22,1) both!important;
+    animation:parallelFanChouCleaveBody 720ms cubic-bezier(.2,.82,.24,1) both!important;
     transform-origin:28% 70%!important; will-change:transform,filter;
   }
   #monster-icon.parallel-three-attack-lu-bu .monster-sprite {
@@ -27313,11 +27301,10 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     100%{transform:translate(0,0) rotate(0) scale(1);filter:brightness(1)}
   }
   @keyframes parallelFanChouCleaveBody {
-    0%,100%{transform:translate(0,0) rotate(0) scale(1);filter:brightness(1)}
-    24%{transform:translate(9px,-7px) rotate(9deg) scale(1.015);filter:brightness(1.18) drop-shadow(0 0 8px #ff8738)}
-    46%{transform:translate(-18px,3px) rotate(-16deg) scale(1.06);filter:brightness(1.55) drop-shadow(0 0 18px #ff9b43)}
-    67%{transform:translate(8px,2px) rotate(5deg) scale(1.025);filter:brightness(1.45) drop-shadow(0 0 16px #fff0a7)}
-    100%{transform:translate(0,0) rotate(0) scale(1);filter:brightness(1)}
+    0%,100%{transform:translate(0,0) rotate(0);filter:brightness(1)}
+    28%{transform:translate(3px,-2px) rotate(3deg);filter:brightness(1.08)}
+    61%{transform:translate(-12px,1px) rotate(-9deg);filter:brightness(1.22)}
+    78%{transform:translate(-3px,0) rotate(2deg);filter:brightness(1.08)}
   }
   @keyframes parallelLuBuChargeBody {
     0%,100%{transform:translate(0,0) rotate(0) scale(1);filter:brightness(1)}
@@ -27340,18 +27327,11 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     100%{opacity:0;transform:translateX(-30%) scaleX(.92)}
   }
   @keyframes parallelFanChouHeavyCleave {
-    0%,24%{opacity:0;transform:translate(12%,8%) rotate(-28deg) scale(.42)}
-    40%{opacity:.8;transform:translate(4%,2%) rotate(-17deg) scale(.76)}
-    58%{opacity:1;transform:translate(-12%,-1%) rotate(4deg) scale(1.08);filter:drop-shadow(0 0 19px #ff822d)}
-    72%{opacity:.9;transform:translate(-10%,0) rotate(12deg) scale(1.12)}
-    100%{opacity:0;transform:translate(-25%,4%) rotate(20deg) scale(1.2)}
-  }
-  @keyframes parallelFanChouArcSlash {
-    0%,21%{opacity:0;transform:translate(16%,12%) rotate(-24deg) scale(.32,.7)}
-    39%{opacity:.76;transform:translate(7%,4%) rotate(-16deg) scale(.76,.88)}
-    55%{opacity:1;transform:translate(-12%,-4%) rotate(-5deg) scale(1.08,1.08);filter:drop-shadow(0 0 12px #ff633a) drop-shadow(0 0 26px #42cfff) drop-shadow(0 0 38px rgba(255,144,65,.92))}
-    70%{opacity:.92;transform:translate(-20%,0) rotate(5deg) scale(1.12,1.02)}
-    100%{opacity:0;transform:translate(-37%,8%) rotate(17deg) scale(1.22,.82)}
+    0%,24%{opacity:0;transform:translate(8%,5%) rotate(-12deg) scale(.62,.8)}
+    45%{opacity:.85;transform:translate(2%,1%) rotate(-7deg) scale(.9,.92)}
+    62%{opacity:1;transform:translate(-9%,0) rotate(2deg) scale(1,.95);filter:drop-shadow(0 0 8px #ff7b37)}
+    82%{opacity:.8;transform:translate(-12%,2%) rotate(7deg) scale(1.04,.9)}
+    100%{opacity:0;transform:translate(-18%,4%) rotate(11deg) scale(1.08,.82)}
   }
   @keyframes parallelLuBuFangtianSlash {
     0%,20%{opacity:0;transform:translate(14%,12%) rotate(-34deg) scale(.4)}
