@@ -12100,7 +12100,7 @@ function getCombatVisualCycleDuration(actionPath) {
             // 副龍沿用命中／傷害結算，但動畫只播放在自己的圖示上，避免主龍圖示被共用流程搶播。
             if (!window.__ABYSS_SECONDARY_ATTACK_IN_PROGRESS) {
                 const storyboardPlayed = typeof window.playParallelThreeKingdomsBossAttackStoryboard === 'function'
-                    ? window.playParallelThreeKingdomsBossAttackStoryboard(currentMonster?.name)
+                    ? window.playParallelThreeKingdomsBossAttackStoryboard(currentMonster?.name, magicSkill?.name)
                     : false;
                 if (!storyboardPlayed) animateMonsterAttack(battleVisual);
             }
@@ -17541,27 +17541,55 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
 @keyframes cosmicLabel{0%,100%{opacity:.62;letter-spacing:0}50%{opacity:1;letter-spacing:1px}}
 @keyframes cosmicRune{0%,100%{transform:scale(.91) rotate(0deg);opacity:.5}50%{transform:scale(1.08) rotate(11deg);opacity:.96}}
 @media(prefers-reduced-motion:reduce){.shenlong-cosmos-halo,.shenlong-galaxy-band,.shenlong-blackhole-ring,.shenlong-starfield,.shenlong-cosmic-dust,.shenlong-awakening-label,.shenlong-rune-ring{animation:none!important}}
+
+/* 神龍光環位於 battle-stage 的獨立層；位置同步，但不繼承 fighter 的 transform。 */
+#player-icon.shenlong-aura-active::before{display:none!important}
+#shenlong-aura-overlay{position:absolute;inset:0;z-index:45;pointer-events:none;overflow:visible;isolation:isolate}
+#shenlong-aura-overlay .shenlong-cosmos-halo,#shenlong-aura-overlay .shenlong-galaxy-band,#shenlong-aura-overlay .shenlong-cosmic-dust,#shenlong-aura-overlay .shenlong-starfield,#shenlong-aura-overlay .shenlong-blackhole-ring{left:var(--shenlong-x)!important;top:var(--shenlong-y)!important}
+#shenlong-aura-overlay .shenlong-awakening-label{left:var(--shenlong-x)!important;top:calc(var(--shenlong-y) + var(--shenlong-h)/2 + 7px)!important;bottom:auto!important}
+#shenlong-aura-overlay .shenlong-real-coil{position:absolute!important;left:calc(var(--shenlong-x) - var(--shenlong-w)/2 - 86px)!important;top:calc(var(--shenlong-y) - var(--shenlong-h)/2 - 72px)!important;width:calc(var(--shenlong-w) + 172px)!important;height:calc(var(--shenlong-h) + 150px)!important}
 </style>
 <script id="shenlong-awakening-aura-script">
 (() => {
   'use strict';
   const getPlayer=()=>{try{if(typeof currentPlayer!=='undefined'&&currentPlayer)return currentPlayer;}catch(_){}return window.currentPlayer||null;};
   const complete=p=>{const slots=['weapon','head','chest','legs'],eq=p?.equipment?.setGearSlots||{},items=p?.items?.setEquipment||[];return slots.every(slot=>{const id=eq[slot];return !!id&&items.some(item=>item?.instanceId===id&&item.setId==='shenlong_dragon_v1'&&item.pieceSlot===slot);});};
-  let active=false; const visualEpoch=performance.now();
-  const clear=el=>el.querySelectorAll('.shenlong-cosmic-filter-defs,.shenlong-cosmos-halo,.shenlong-galaxy-band,.shenlong-cosmic-dust,.shenlong-starfield,.shenlong-blackhole-ring,.shenlong-awakening-label').forEach(x=>x.remove());
-  function sync(){const el=document.getElementById('player-icon');if(!el)return;const should=complete(getPlayer());const layersPresent=Boolean(el.querySelector('.shenlong-cosmos-halo,.shenlong-galaxy-band,.shenlong-starfield'));if(!should&&active){active=false;el.classList.remove('shenlong-awakened','shenlong-burst');clear(el);}if(should&&(!active||!layersPresent)){clear(el);active=true;el.classList.add('shenlong-awakened');el.insertAdjacentHTML('beforeend','<svg class="shenlong-cosmic-filter-defs" aria-hidden="true"><defs><filter id="shenlong-cosmic-noise-v6" x="-30%" y="-35%" width="160%" height="180%"><feTurbulence type="fractalNoise" baseFrequency=".012 .038" numOctaves="3" seed="11" result="cosmicNoise"/><feDisplacementMap in="SourceGraphic" in2="cosmicNoise" scale="18" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg><span class="shenlong-cosmos-halo" aria-hidden="true"></span><span class="shenlong-galaxy-band" aria-hidden="true"></span><span class="shenlong-cosmic-dust" aria-hidden="true"></span><span class="shenlong-starfield" aria-hidden="true"></span><span class="shenlong-blackhole-ring" aria-hidden="true"></span><span class="shenlong-awakening-label" aria-hidden="true">✦ 神龍・深空覺醒</span>');const age=(performance.now()-visualEpoch)/1000;[['.shenlong-cosmos-halo',3.6],['.shenlong-galaxy-band',10],['.shenlong-cosmic-dust',6.4],['.shenlong-starfield',5.2],['.shenlong-blackhole-ring',3.6]].forEach(([selector,duration])=>{const node=el.querySelector(selector);if(node)node.style.animationDelay=`-${age%duration}s`;});}}
-  function burst(){const el=document.getElementById('player-icon');if(!el||!complete(getPlayer()))return;el.classList.remove('shenlong-burst');void el.offsetWidth;el.classList.add('shenlong-burst');setTimeout(()=>el.classList.remove('shenlong-burst'),650);}
-  let queued=false;
-  function ensureNow(){if(queued)return;queued=true;queueMicrotask(()=>{queued=false;sync();});}
-  function boot(){
-    sync();
-    // 只觀察戰鬥舞台，避免全頁任何 DOM 變更都喚醒角色光環同步。
-    const stage=document.getElementById('battle-stage');
-    if(stage){new MutationObserver(ensureNow).observe(stage,{subtree:true,childList:true});}
-    setInterval(sync,1000);
+  const selectors='.shenlong-cosmic-filter-defs,.shenlong-cosmos-halo,.shenlong-galaxy-band,.shenlong-cosmic-dust,.shenlong-starfield,.shenlong-blackhole-ring,.shenlong-awakening-label,.shenlong-real-coil';
+  let active=false, overlay=null, raf=0;
+  const svgFilter='<svg class="shenlong-cosmic-filter-defs" aria-hidden="true"><defs><filter id="shenlong-cosmic-noise-v6" x="-30%" y="-35%" width="160%" height="180%"><feTurbulence type="fractalNoise" baseFrequency=".012 .038" numOctaves="3" seed="11" result="cosmicNoise"/><feDisplacementMap in="SourceGraphic" in2="cosmicNoise" scale="18" xChannelSelector="R" yChannelSelector="G"/></filter></defs></svg>';
+  const cosmic='<span class="shenlong-cosmos-halo" aria-hidden="true"></span><span class="shenlong-galaxy-band" aria-hidden="true"></span><span class="shenlong-cosmic-dust" aria-hidden="true"></span><span class="shenlong-starfield" aria-hidden="true"></span><span class="shenlong-blackhole-ring" aria-hidden="true"></span><span class="shenlong-awakening-label" aria-hidden="true">✦ 神龍・深空覺醒</span>';
+  function ensureOverlay(stage){
+    if(overlay&&overlay.parentElement===stage)return;
+    overlay?.remove();
+    if(getComputedStyle(stage).position==='static')stage.style.position='relative';
+    overlay=document.createElement('div');overlay.id='shenlong-aura-overlay';overlay.setAttribute('aria-hidden','true');
+    overlay.innerHTML=svgFilter+cosmic+`<img class="shenlong-real-coil shenlong-real-coil-back" src="${REAL_SHENLONG_ASSET}" alt=""><img class="shenlong-real-coil shenlong-real-coil-front" src="${REAL_SHENLONG_ASSET}" alt="">`;
+    stage.appendChild(overlay);
   }
+  const REAL_SHENLONG_ASSET='assets/base64/454dd3b2a66e43af3a35600e45d9ed65df123308c6c4de49b26df61659e1970b.webp';
+  function positionOverlay(icon,stage){
+    if(!overlay||!overlay.isConnected)return;
+    const ir=icon.getBoundingClientRect(),sr=stage.getBoundingClientRect();
+    const x=ir.left-sr.left+ir.width/2,y=ir.top-sr.top+ir.height/2;
+    overlay.style.setProperty('--shenlong-x',`${x}px`);overlay.style.setProperty('--shenlong-y',`${y}px`);
+    // Use untransformed layout dimensions; attack scale/rotation never becomes the aura's transform.
+    overlay.style.setProperty('--shenlong-w',`${icon.offsetWidth||ir.width}px`);overlay.style.setProperty('--shenlong-h',`${icon.offsetHeight||ir.height}px`);
+    const visible=sr.width>0&&sr.height>0&&getComputedStyle(stage).display!=='none';overlay.style.display=visible?'block':'none';
+    raf=requestAnimationFrame(()=>positionOverlay(icon,stage));
+  }
+  function stop(){if(raf)cancelAnimationFrame(raf);raf=0;overlay?.remove();overlay=null;}
+  function sync(){
+    const icon=document.getElementById('player-icon'),stage=document.getElementById('battle-stage');if(!icon||!stage)return;
+    const should=complete(getPlayer());icon.classList.toggle('shenlong-awakened',should);icon.classList.toggle('shenlong-aura-active',should);
+    if(!should){active=false;icon.classList.remove('shenlong-burst');stop();return;}
+    if(!active||!overlay?.isConnected){active=true;ensureOverlay(stage);const age=performance.now()/1000;[['.shenlong-cosmos-halo',3.6],['.shenlong-galaxy-band',10],['.shenlong-cosmic-dust',6.4],['.shenlong-starfield',5.2],['.shenlong-blackhole-ring',3.6]].forEach(([sel,d])=>{const n=overlay.querySelector(sel);if(n)n.style.animationDelay=`-${age%d}s`;});}
+    if(!raf)positionOverlay(icon,stage);
+    document.querySelectorAll('.set-equipment-icon').forEach(i=>{let it=getPlayer()?.items?.setEquipment?.find(x=>x.name===i.alt);if(it?.setId==='shenlong_dragon_v1'&&window.SHENLONG_ICON_DATA?.[it.pieceSlot]){i.src=window.SHENLONG_ICON_DATA[it.pieceSlot];i.classList.add('shenlong-equipment-icon');}});
+  }
+  function burst(){if(!active)return;const ring=overlay?.querySelector('.shenlong-blackhole-ring');if(!ring)return;ring.style.animation='none';void ring.offsetWidth;ring.style.animation='blackholePulse 3.6s ease-in-out infinite';}
+  function boot(){sync();const stage=document.getElementById('battle-stage');if(stage)new MutationObserver(()=>queueMicrotask(sync)).observe(stage,{subtree:true,childList:true});setInterval(sync,1000);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-  window.syncShenlongAwakeningAura=sync;window.shenlongAwakeningVisualBurstV2=burst;
+  window.refreshShenlongVisuals=sync;window.syncShenlongAwakeningAura=sync;window.shenlongAwakeningVisualBurstV2=burst;
 })();
 </script>
 
@@ -24673,7 +24701,9 @@ if(typeof dropOld==='function'&&!dropOld.__keplerDrop91_100){const wrapped=funct
 #player-icon.shenlong-aura-active .shenlong-coil{position:absolute;inset:-48px -42px -52px;width:calc(100% + 84px);height:calc(100% + 100px);z-index:4;pointer-events:none;overflow:visible;filter:drop-shadow(0 0 3px #fff5a1) drop-shadow(0 0 10px #ffc928) drop-shadow(0 0 18px #ffae00);mix-blend-mode:screen}
 .shenlong-coil .dragon-trail{fill:none;stroke:url(#shenlongGoldGradient);stroke-linecap:round;stroke-width:7;opacity:.72;stroke-dasharray:.13 .035;animation:shenlongCoilFlow 4.8s linear infinite}.shenlong-coil .dragon-ridge{fill:none;stroke:#fff3a0;stroke-width:2.2;opacity:.86;stroke-dasharray:3 7;animation:shenlongRidgeFlow 2.2s linear infinite reverse}.shenlong-coil .dragon-head{fill:#ffd84a;stroke:#fff8bd;stroke-width:2;opacity:.94;animation:shenlongHeadDrift 4.8s ease-in-out infinite}.shenlong-coil .dragon-eye{fill:#fffef0;stroke:#ff8b00;stroke-width:1.5;animation:shenlongEyePulse 1.1s ease-in-out infinite alternate}.shenlong-coil .dragon-horn{fill:#fff1a3}.shenlong-aura-active:before{content:"";position:absolute;inset:-38px;z-index:1;border-radius:50%;background:radial-gradient(ellipse,rgba(255,218,75,.2),rgba(255,160,0,.1) 48%,transparent 75%);filter:blur(4px);animation:shenlongAuraPulse 2.4s ease-in-out infinite alternate;pointer-events:none}.shenlong-aura-active .fighter-sprite{position:relative;z-index:2;filter:drop-shadow(0 0 4px #ffed80) drop-shadow(0 0 13px #ffb100)}.shenlong-equipment-icon{border-radius:10px;filter:drop-shadow(0 0 4px #ffc52e) drop-shadow(0 0 11px #ff9200)}
 .shenlong-coil .dragon-creature{transform-origin:center;animation:shenlongCreatureFloat 3.8s ease-in-out infinite}.shenlong-coil .dragon-scales path{fill:url(#shenlongScaleGradient);stroke:#fff1a0;stroke-width:1.2}.shenlong-coil .dragon-limb path{fill:url(#shenlongGoldGradient);stroke:#fff0a0;stroke-width:1.3}.shenlong-coil .dragon-wings path{fill:url(#shenlongGoldGradient);stroke:#ffe88b;stroke-width:1.4;opacity:.72}.shenlong-coil .dragon-tail{fill:url(#shenlongGoldGradient);stroke:#fff0a0;stroke-width:1.5}.shenlong-coil .dragon-frill,.shenlong-coil .dragon-horn{fill:#ffe890;stroke:#a95a00;stroke-width:1}.shenlong-coil .dragon-snout{fill:#f4a719;stroke:#fff0a0;stroke-width:1.4}.shenlong-coil .dragon-whisker{fill:none;stroke:#fff0a0;stroke-width:1.3;stroke-linecap:round}.shenlong-coil .dragon-eye{fill:#fffef0;stroke:#ff6b00;stroke-width:1.2;animation:shenlongEyePulse 1.1s ease-in-out infinite alternate}.shenlong-coil .dragon-ridge{stroke-width:2.6;opacity:.9}.shenlong-coil .dragon-trail{stroke-width:8;opacity:.58}@keyframes shenlongCreatureFloat{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-2px) rotate(1deg)}}@keyframes shenlongCoilFlow{from{stroke-dashoffset:0}to{stroke-dashoffset:-1}}@keyframes shenlongRidgeFlow{from{stroke-dashoffset:0}to{stroke-dashoffset:-40}}@keyframes shenlongHeadDrift{0%,100%{transform:translate(0) rotate(-3deg)}50%{transform:translate(3px,-2px) rotate(5deg)}}@keyframes shenlongEyePulse{from{opacity:.5}to{opacity:1}}@keyframes shenlongAuraPulse{from{opacity:.55;transform:scale(.96)}to{opacity:1;transform:scale(1.04)}}
-.shenlong-real-coil{position:absolute;inset:-72px -86px -78px;z-index:1;width:calc(100% + 172px);height:calc(100% + 150px);object-fit:contain;object-position:center;pointer-events:none;opacity:.78;filter:drop-shadow(0 0 3px #fff8b0) drop-shadow(0 0 11px #ffd02e) drop-shadow(0 0 24px rgba(255,164,0,.78));mix-blend-mode:screen;animation:shenlongRealDragonFloat 4.8s ease-in-out infinite alternate}.shenlong-real-coil-front{z-index:5;opacity:.9;clip-path:inset(47% 0 0 0)}.shenlong-aura-active .shenlong-real-coil{display:block}@keyframes shenlongRealDragonFloat{from{transform:translate3d(-2px,1px,0) scale(.98) rotate(-1deg)}to{transform:translate3d(2px,-2px,0) scale(1.02) rotate(1deg)}}</style><script id="shenlong-full-body-aura-v1">(()=>{if(window.__shenlongFullBodyAuraV1)return;window.__shenlongFullBodyAuraV1=true;const e=s=>encodeURIComponent(s),svg=k=>{let b=k==='weapon'?'<path d="M31 53L38 16l7 13 9-16-2 25 9 9-20 7z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M38 48l18-21M42 47l8-6M29 55h34" stroke="#fff7c5" stroke-width="2"/>':k==='head'?'<path d="M18 55V31q0-16 14-20l4 9 4-9q14 4 14 20v24z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M25 28l-8-10 13 6M47 24l9-8-14 5" fill="#fff0a0" stroke="#bd7000" stroke-width="2"/>':k==='chest'?'<path d="M19 18l13-7 8 8 8-8 13 7-6 15 5 22H15l5-22z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M29 18q11 10 22 0M25 31h30M24 42h32" fill="none" stroke="#fff4a5" stroke-width="2"/><path d="M36 28l4 5-4 6-4-6z" fill="#fffbe0"/>':'<path d="M19 12h42l-5 34-12 8-4-20-4 20-12-8z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M25 20h30M25 30h30M26 40h9m10 0h9" stroke="#fff4a5" stroke-width="2"/>';return'data:image/svg+xml,'+e('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><defs><linearGradient id="g"><stop stop-color="#fff4a5"/><stop offset=".4" stop-color="#ffc62e"/><stop offset="1" stop-color="#b86400"/></linearGradient></defs>'+b+'</svg>')};window.SHENLONG_ICON_DATA={weapon:svg('weapon'),head:svg('head'),chest:svg('chest'),legs:svg('legs')};const REAL_SHENLONG_ASSET='assets/base64/454dd3b2a66e43af3a35600e45d9ed65df123308c6c4de49b26df61659e1970b.webp';const full=()=>typeof window.isShenlongComplete==='function'&&window.isShenlongComplete(window.currentPlayer);function refresh(){let x=document.getElementById('player-icon');if(!x)return;let on=full();x.classList.toggle('shenlong-aura-active',on);if(on){if(!x.querySelector('.shenlong-real-coil-back'))x.insertAdjacentHTML('afterbegin',`<img class="shenlong-real-coil shenlong-real-coil-back" src="${REAL_SHENLONG_ASSET}" alt="金色半透明神龍後層">`);if(!x.querySelector('.shenlong-real-coil-front'))x.insertAdjacentHTML('beforeend',`<img class="shenlong-real-coil shenlong-real-coil-front" src="${REAL_SHENLONG_ASSET}" alt="金色半透明神龍前層">`);}if(!on)x.querySelectorAll('.shenlong-real-coil').forEach(n=>n.remove());document.querySelectorAll('.set-equipment-icon').forEach(i=>{let it=window.currentPlayer?.items?.setEquipment?.find(x=>x.name===i.alt);if(it?.setId==='shenlong_dragon_v1'&&window.SHENLONG_ICON_DATA[it.pieceSlot]){i.src=window.SHENLONG_ICON_DATA[it.pieceSlot];i.classList.add('shenlong-equipment-icon')}})}window.refreshShenlongVisuals=refresh;setInterval(refresh,1000);document.addEventListener('DOMContentLoaded',refresh)})();</script><script id="hell-knight-shield-system-v1">
+.shenlong-real-coil{position:absolute;inset:-72px -86px -78px;z-index:1;width:calc(100% + 172px);height:calc(100% + 150px);object-fit:contain;object-position:center;pointer-events:none;opacity:.78;filter:drop-shadow(0 0 3px #fff8b0) drop-shadow(0 0 11px #ffd02e) drop-shadow(0 0 24px rgba(255,164,0,.78));mix-blend-mode:screen;animation:shenlongRealDragonFloat 4.8s ease-in-out infinite alternate}.shenlong-real-coil-front{z-index:5;opacity:.9;clip-path:inset(47% 0 0 0)}.shenlong-aura-active .shenlong-real-coil{display:block}@keyframes shenlongRealDragonFloat{from{transform:translate3d(-2px,1px,0) scale(.98) rotate(-1deg)}to{transform:translate3d(2px,-2px,0) scale(1.02) rotate(1deg)}}
+#shenlong-aura-overlay .shenlong-real-coil{display:block!important}
+</style><script id="shenlong-full-body-aura-v1">(()=>{if(window.__shenlongFullBodyAuraV1)return;window.__shenlongFullBodyAuraV1=true;const e=s=>encodeURIComponent(s),svg=k=>{let b=k==='weapon'?'<path d="M31 53L38 16l7 13 9-16-2 25 9 9-20 7z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M38 48l18-21M42 47l8-6M29 55h34" stroke="#fff7c5" stroke-width="2"/>':k==='head'?'<path d="M18 55V31q0-16 14-20l4 9 4-9q14 4 14 20v24z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M25 28l-8-10 13 6M47 24l9-8-14 5" fill="#fff0a0" stroke="#bd7000" stroke-width="2"/>':k==='chest'?'<path d="M19 18l13-7 8 8 8-8 13 7-6 15 5 22H15l5-22z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M29 18q11 10 22 0M25 31h30M24 42h32" fill="none" stroke="#fff4a5" stroke-width="2"/><path d="M36 28l4 5-4 6-4-6z" fill="#fffbe0"/>':'<path d="M19 12h42l-5 34-12 8-4-20-4 20-12-8z" fill="url(#g)" stroke="#ffe980" stroke-width="2"/><path d="M25 20h30M25 30h30M26 40h9m10 0h9" stroke="#fff4a5" stroke-width="2"/>';return'data:image/svg+xml,'+e('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><defs><linearGradient id="g"><stop stop-color="#fff4a5"/><stop offset=".4" stop-color="#ffc62e"/><stop offset="1" stop-color="#b86400"/></linearGradient></defs>'+b+'</svg>')};window.SHENLONG_ICON_DATA={weapon:svg('weapon'),head:svg('head'),chest:svg('chest'),legs:svg('legs')};const REAL_SHENLONG_ASSET='assets/base64/454dd3b2a66e43af3a35600e45d9ed65df123308c6c4de49b26df61659e1970b.webp';const full=()=>typeof window.isShenlongComplete==='function'&&window.isShenlongComplete(window.currentPlayer);function refresh(){let x=document.getElementById('player-icon');if(!x)return;let on=full();x.classList.toggle('shenlong-aura-active',on);x.querySelectorAll('.shenlong-real-coil').forEach(n=>n.remove());document.querySelectorAll('.set-equipment-icon').forEach(i=>{let it=window.currentPlayer?.items?.setEquipment?.find(x=>x.name===i.alt);if(it?.setId==='shenlong_dragon_v1'&&window.SHENLONG_ICON_DATA[it.pieceSlot]){i.src=window.SHENLONG_ICON_DATA[it.pieceSlot];i.classList.add('shenlong-equipment-icon')}})}window.refreshShenlongVisuals=refresh;setInterval(refresh,1000);document.addEventListener('DOMContentLoaded',refresh)})();</script><script id="hell-knight-shield-system-v1">
 (()=>{
 'use strict';
 if(window.__hellKnightShieldSystemV1)return; window.__hellKnightShieldSystemV1=true;
@@ -27283,57 +27313,134 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 <script id="parallel-three-kingdoms-generals-attack-v1">
 (() => {
   'use strict';
-  if (window.__parallelThreeKingdomsGeneralsAttackV1) return;
-  window.__parallelThreeKingdomsGeneralsAttackV1 = true;
+  if (window.__parallelThreeKingdomsGeneralsAttackV2) return;
+  window.__parallelThreeKingdomsGeneralsAttackV2 = true;
   const roles = {
-    '李儒': { className: 'li-ru', color: '#a75cff', accent: '#ddbbff', motion: 'cast' },
-    '張濟將軍': { className: 'zhang-ji', color: '#4dc9ff', accent: '#d7f6ff', motion: 'thrust' },
-    '樊稠將軍': { className: 'fan-chou', color: '#ff8b42', accent: '#ffe0a6', motion: 'heavy' }
+    '李儒': { color: '#b65cff', bright: '#f2c8ff', kind: 'poison' },
+    '張濟將軍': { color: '#42dcff', bright: '#d8fbff', kind: 'spear' },
+    '樊稠將軍': { color: '#ff8738', bright: '#fff0a7', kind: 'cleave' }
   };
-  function installStyle() {
-    if (document.getElementById('parallel-generals-storyboard-style')) return;
-    const style = document.createElement('style');
-    style.id = 'parallel-generals-storyboard-style';
-    style.textContent = `
-      @keyframes parallelGeneralBody { 0%{transform:translate3d(0,0,0) scale(1)} 32%{transform:translate3d(-12px,-2px,0) scale(1.04)} 58%{transform:translate3d(22px,0,0) scale(1.08)} 100%{transform:translate3d(0,0,0) scale(1)} }
-      @keyframes parallelGeneralCast { 0%,28%{opacity:0;transform:translate(-50%,-50%) scale(.2)} 52%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.45)} }
-      @keyframes parallelGeneralSlash { 0%,34%{opacity:0;transform:translate(-15%,-50%) rotate(-18deg) scaleX(.1)} 55%{opacity:1;transform:translate(-50%,-50%) rotate(-18deg) scaleX(1)} 100%{opacity:0;transform:translate(-90%,-50%) rotate(-18deg) scaleX(1.2)} }
-      @keyframes parallelGeneralThrust { 0%,35%{opacity:0;transform:translate(-10%,-50%) rotate(-8deg) scaleX(.1)} 55%{opacity:1;transform:translate(-45%,-50%) rotate(-8deg) scaleX(1)} 100%{opacity:0;transform:translate(-85%,-50%) rotate(-8deg) scaleX(1.15)} }
-      #monster-icon.parallel-general-storyboard-attack .monster-sprite { animation:parallelGeneralBody 760ms cubic-bezier(.18,.72,.2,1) both; filter:drop-shadow(0 0 10px var(--general-color)); }
-      #monster-icon.parallel-general-storyboard-attack::before { content:"";position:absolute;left:6%;top:50%;width:145%;height:12px;z-index:5;pointer-events:none;border-radius:999px;background:linear-gradient(90deg,transparent,var(--general-color),var(--general-accent),transparent);box-shadow:0 0 15px var(--general-color);animation:parallelGeneralSlash 760ms ease-out both; }
-      #monster-icon.parallel-general-storyboard-attack::after { content:"";position:absolute;left:55%;top:50%;width:84px;height:84px;z-index:4;pointer-events:none;border:2px solid var(--general-accent);border-radius:50%;box-shadow:0 0 18px var(--general-color),inset 0 0 14px var(--general-color);animation:parallelGeneralCast 760ms ease-out both; }
-      #monster-icon.parallel-general-storyboard-attack.li-ru::before { animation-name:parallelGeneralCast; }
-      #monster-icon.parallel-general-storyboard-attack.zhang-ji::before { animation-name:parallelGeneralThrust; }
-      #monster-icon.parallel-general-storyboard-attack.fan-chou::before { animation-name:parallelGeneralSlash; }
-    `;
-    (document.head || document.documentElement).appendChild(style);
+  let canvas, ctx, raf = 0, run = 0, savedSprite = null, savedVisibility = '';
+  function releaseSprite() {
+    if (savedSprite) savedSprite.style.visibility = savedVisibility;
+    savedSprite = null;
   }
-  let runId = 0;
-  let timer = 0;
-  function playParallelGeneralStoryboard() {
-    const name = typeof currentMonster === 'undefined' ? '' : currentMonster?.name;
-    const role = roles[name];
+  function stageCanvas(stage) {
+    if (!canvas || canvas.parentElement !== stage) {
+      canvas?.remove();
+      canvas = document.createElement('canvas');
+      canvas.setAttribute('aria-hidden', 'true');
+      canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:80;overflow:visible';
+      const position = getComputedStyle(stage).position;
+      if (position === 'static') stage.style.position = 'relative';
+      stage.appendChild(canvas);
+      ctx = canvas.getContext('2d');
+    }
+    const rect = stage.getBoundingClientRect();
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const w = Math.max(1, Math.round(rect.width * dpr));
+    const h = Math.max(1, Math.round(rect.height * dpr));
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { rect, width: rect.width, height: rect.height };
+  }
+  function roundedRect(ctx, x, y, w, h, r) {
+    ctx.beginPath(); ctx.roundRect(x, y, w, h, r);
+  }
+  function glow(ctx, x, y, radius, color, alpha = 1) {
+    const g = ctx.createRadialGradient(x, y, 0, x, y, radius);
+    g.addColorStop(0, `rgba(255,255,255,${.88 * alpha})`);
+    g.addColorStop(.18, color);
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.globalAlpha = alpha; ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+  }
+  function drawParticles(ctx, x, y, t, color, count, spread, size = 3) {
+    for (let i = 0; i < count; i++) {
+      const seed = i * 2.399963;
+      const p = (t * (1.1 + (i % 4) * .14) + i / count) % 1;
+      const a = seed + p * Math.PI * 2;
+      const r = spread * (.22 + p * .82);
+      ctx.globalAlpha = Math.sin(Math.PI * p) * .92;
+      ctx.fillStyle = i % 3 === 0 ? '#fff' : color;
+      ctx.beginPath(); ctx.arc(x + Math.cos(a) * r, y + Math.sin(a) * r, size * (.4 + (1-p)*.6), 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+  function drawPoison(ctx, sx, sy, tx, ty, t, role) {
+    if (t < .3) {
+      const q = t / .3, r = 10 + q * 38;
+      glow(ctx, sx, sy - 20, r, 'rgba(181,83,255,.68)', .9);
+      for (let i=0;i<3;i++) {
+        ctx.strokeStyle = i%2 ? role.bright : role.color; ctx.lineWidth = 3 - i*.45; ctx.globalAlpha = .85-q*.2;
+        ctx.beginPath(); ctx.ellipse(sx, sy-20, 8+q*(18+i*7), 5+q*(11+i*4), q*1.8+i, q*3, q*3+Math.PI*1.45); ctx.stroke();
+      }
+      ctx.globalAlpha = 1; drawParticles(ctx,sx,sy-18,t,role.bright,10,30,2.5);
+    }
+    if (t >= .2 && t < .82) {
+      const q = (t-.2)/.62, x=sx+(tx-sx)*q, y=sy-28+(ty-sy+12)*q-Math.sin(q*Math.PI)*36;
+      ctx.save(); ctx.lineCap='round';
+      for(let i=0;i<4;i++){ctx.strokeStyle=i===0?'#fff':role.color;ctx.lineWidth=10-i*2;ctx.globalAlpha=.7-i*.12;ctx.beginPath();ctx.moveTo(x-(tx-sx)*.1,y+5+i*3);ctx.quadraticCurveTo(x-25,y-25+i*9,x+8,y);ctx.stroke();}
+      ctx.globalAlpha=1; glow(ctx,x,y,25,role.color,.92); drawParticles(ctx,x,y,t,role.bright,9,18,2); ctx.restore();
+    }
+    if (t >= .72) {
+      const q=Math.min(1,(t-.72)/.28), x=tx, y=ty-16;
+      ctx.globalAlpha=1-q; glow(ctx,x,y,28+q*48,'rgba(169,63,255,.65)',1-q*.3);
+      for(let i=0;i<4;i++){ctx.fillStyle=i%2?'rgba(115,255,105,.55)':'rgba(174,91,255,.62)';ctx.beginPath();ctx.ellipse(x+Math.sin(i*3+t*8)*20,y-18+i*11,11+q*9,8+q*7,i*.6,0,Math.PI*2);ctx.fill();}
+      drawParticles(ctx,x,y,t,role.bright,12,44,3);ctx.globalAlpha=1;
+    }
+  }
+  function drawSpear(ctx,sx,sy,tx,ty,t,role){
+    const angle=Math.atan2(ty-sy,tx-sx), len=Math.hypot(tx-sx,ty-sy);
+    if(t<.32){const q=t/.32;glow(ctx,sx,sy-12,15+q*26,'rgba(50,220,255,.72)',.85);ctx.save();ctx.translate(sx,sy-12);ctx.rotate(angle);ctx.strokeStyle=role.bright;ctx.lineWidth=3;ctx.globalAlpha=.5+q*.5;ctx.beginPath();ctx.moveTo(-20,0);ctx.lineTo(12+q*18,0);ctx.stroke();ctx.restore();drawParticles(ctx,sx,sy-12,t,role.color,8,27,2);}
+    if(t>=.24&&t<.74){const q=(t-.24)/.5, reach=len*q;ctx.save();ctx.translate(sx,sy-12);ctx.rotate(angle);ctx.lineCap='round';ctx.shadowBlur=18;ctx.shadowColor=role.color;ctx.strokeStyle='rgba(131,245,255,.35)';ctx.lineWidth=18;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(reach,0);ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle=role.bright;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(reach,0);ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(reach+18,0);ctx.lineTo(reach-2,-8);ctx.lineTo(reach-2,8);ctx.closePath();ctx.fill();ctx.restore();drawParticles(ctx,sx+(tx-sx)*q,sy+(ty-sy)*q-12,t,role.bright,6,14,2);}
+    if(t>=.68){const q=Math.min(1,(t-.68)/.32);ctx.save();ctx.globalAlpha=1-q;ctx.strokeStyle=role.bright;ctx.lineWidth=3;ctx.shadowBlur=16;ctx.shadowColor=role.color;for(let i=0;i<2;i++){ctx.beginPath();ctx.arc(tx,ty-12,12+q*40+i*9,angle-1.15,angle+1.15);ctx.stroke();}ctx.restore();drawParticles(ctx,tx,ty-12,t,role.bright,13,42,3);glow(ctx,tx,ty-12,25+q*45,role.color,1-q*.35);}
+  }
+  function drawCleave(ctx,sx,sy,tx,ty,t,role){
+    const angle=Math.atan2(ty-sy,tx-sx), d=Math.hypot(tx-sx,ty-sy);
+    if(t<.34){const q=t/.34;glow(ctx,sx,sy-8,14+q*25,'rgba(255,124,41,.72)',.8);ctx.save();ctx.translate(sx,sy-8);ctx.rotate(angle);ctx.strokeStyle=role.bright;ctx.lineWidth=4;ctx.globalAlpha=.65;ctx.beginPath();ctx.arc(0,0,16+q*20,-.9,.7);ctx.stroke();ctx.restore();}
+    if(t>=.24&&t<.8){const q=(t-.24)/.56, x=sx+(tx-sx)*q*.92,y=sy+(ty-sy)*q*.92-10;ctx.save();ctx.translate(x,y);ctx.rotate(angle+(.95-q*1.9));ctx.lineCap='round';ctx.shadowBlur=20;ctx.shadowColor=role.color;ctx.strokeStyle='rgba(255,132,38,.28)';ctx.lineWidth=24;ctx.beginPath();ctx.arc(0,0,Math.min(68,d*.22),-.65,1.05);ctx.stroke();ctx.shadowBlur=0;ctx.strokeStyle=role.bright;ctx.lineWidth=6;ctx.beginPath();ctx.arc(0,0,Math.min(68,d*.22),-.65,1.05);ctx.stroke();ctx.restore();drawParticles(ctx,x,y,t,role.bright,6,24,2.5);}
+    if(t>=.72){const q=Math.min(1,(t-.72)/.28);ctx.globalAlpha=1-q;glow(ctx,tx,ty-10,30+q*48,'rgba(255,129,39,.72)',1-q*.25);ctx.strokeStyle=role.bright;ctx.lineWidth=4;ctx.beginPath();ctx.arc(tx,ty-10,12+q*44,0,Math.PI*2);ctx.stroke();for(let i=0;i<5;i++){const a=i*1.2566+t*5;ctx.strokeStyle=role.color;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(tx+Math.cos(a)*8,ty-10+Math.sin(a)*8);ctx.lineTo(tx+Math.cos(a)*(24+q*28),ty-10+Math.sin(a)*(24+q*28));ctx.stroke();}drawParticles(ctx,tx,ty-10,t,role.bright,14,50,3);ctx.globalAlpha=1;}
+  }
+  function playStoryboard(name, skillName) {
+    const monster = typeof currentMonster !== 'undefined' ? currentMonster : null;
+    const role = roles[name || monster?.name];
     if (!role) return false;
-    const icon = document.getElementById('monster-icon');
-    const sprite = icon?.querySelector('.monster-sprite');
-    const stage = document.getElementById('battle-stage');
-    if (!icon || !sprite || !stage) return false;
-    installStyle();
-    const token = ++runId;
-    clearTimeout(timer);
-    icon.classList.remove('parallel-general-storyboard-attack', 'li-ru', 'zhang-ji', 'fan-chou');
-    void icon.offsetWidth;
-    icon.style.setProperty('--general-color', role.color);
-    icon.style.setProperty('--general-accent', role.accent);
-    icon.classList.add('parallel-general-storyboard-attack', role.className);
-    timer = setTimeout(() => {
-      if (token !== runId) return;
-      icon.classList.remove('parallel-general-storyboard-attack', role.className);
-    }, 800);
+    const stage=document.getElementById('battle-stage'), icon=document.getElementById('monster-icon'), sprite=icon?.querySelector('.monster-sprite'), player=document.getElementById('player-icon');
+    if(!stage||!icon||!player||!sprite) return false;
+    if(raf)cancelAnimationFrame(raf);releaseSprite();
+    const token=++run, dimensions=stageCanvas(stage), start=performance.now(), duration=940;
+    const stageRect=dimensions.rect, m=sprite.getBoundingClientRect(), p=player.getBoundingClientRect();
+    const sx=m.left-stageRect.left+m.width*.5, sy=m.top-stageRect.top+m.height*.55;
+    const tx=p.left-stageRect.left+p.width*.5, ty=p.top-stageRect.top+p.height*.48;
+    savedSprite=sprite;savedVisibility=sprite.style.visibility;sprite.style.visibility='hidden';
+    function frame(now){
+      if(token!==run){releaseSprite();return;}
+      const fresh=stage.getBoundingClientRect(), dpr=Math.min(2,window.devicePixelRatio||1), w=Math.max(1,Math.round(fresh.width*dpr)), h=Math.max(1,Math.round(fresh.height*dpr));
+      if(canvas.width!==w||canvas.height!==h)canvas.width=w,canvas.height=h;
+      ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,fresh.width,fresh.height);
+      const t=Math.max(0,Math.min(1,(now-start)/duration));
+      // Canvas 直接繪製怪物姿勢：蓄力後前衝，再回到原位；不使用 CSS 動畫。
+      const body=sprite.getBoundingClientRect();
+      const bx=body.left-fresh.left+body.width/2, by=body.top-fresh.top+body.height/2;
+      let lunge=0, lift=0, tilt=0;
+      if(role.kind==='poison'){lunge=t<.24?-5*t/.24:t<.52?3*Math.sin((t-.24)/.28*Math.PI):0;lift=t<.4?-5*Math.sin(Math.PI*t/.4):0;tilt=-.035*Math.sin(Math.PI*t);}
+      if(role.kind==='spear'){lunge=t<.3?-8*t/.3:t<.63?20*Math.sin((t-.3)/.33*Math.PI):0;lift=-3*Math.sin(Math.PI*t);tilt=-.10*Math.sin(Math.PI*t);}
+      if(role.kind==='cleave'){lunge=t<.28?-10*t/.28:t<.62?16*Math.sin((t-.28)/.34*Math.PI):0;lift=-5*Math.sin(Math.PI*t);tilt=.08*Math.sin(Math.PI*t);}
+      const imgRect={x:bx+lunge-sprite.offsetWidth/2,y:by+lift-sprite.offsetHeight/2,w:sprite.offsetWidth,h:sprite.offsetHeight};
+      ctx.save();ctx.translate(imgRect.x+imgRect.w/2,imgRect.y+imgRect.h/2);ctx.rotate(tilt);ctx.shadowColor=role.color;ctx.shadowBlur=13+Math.sin(t*Math.PI)*10;
+      try{if(sprite instanceof HTMLImageElement && sprite.complete && sprite.naturalWidth)ctx.drawImage(sprite,-imgRect.w/2,-imgRect.h/2,imgRect.w,imgRect.h);else{ctx.font='64px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(monster?.icon||'👹',0,0);}}catch(_){}
+      ctx.restore();
+      if(role.kind==='poison')drawPoison(ctx,sx,sy,tx,ty,t,role);
+      else if(role.kind==='spear')drawSpear(ctx,sx,sy,tx,ty,t,role);
+      else drawCleave(ctx,sx,sy,tx,ty,t,role);
+      if(t<1)raf=requestAnimationFrame(frame);else{ctx.clearRect(0,0,fresh.width,fresh.height);releaseSprite();raf=0;}
+    }
+    raf=requestAnimationFrame(frame);
     return true;
   }
-  const previous = window.playParallelThreeKingdomsBossAttackStoryboard;
-  window.playParallelThreeKingdomsBossAttackStoryboard = name => previous?.(name) || playParallelGeneralStoryboard();
+  const previous=window.playParallelThreeKingdomsBossAttackStoryboard;
+  window.playParallelThreeKingdomsBossAttackStoryboard=(name,skillName)=>previous?.(name,skillName)||playStoryboard(name,skillName);
 })();
 </script>
 
