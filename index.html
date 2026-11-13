@@ -6082,8 +6082,9 @@ function getEquipmentTooltipText(item, kind = 'weapon') {
     const isRing = kind === 'armor' && item.templateId === 'inverse_ring_v1';
     const isDivineDragonUnique = item.isDivineDragonUnique === true || item.uniqueDropType === 'divine_dragon_unique';
     const isLiRuStaff = item.templateId === 'li_ru_poison_wine_staff_v1';
+    const isLuBuHalberd = item.templateId === 'fangtian_halberd_v1';
     const isNecklace = kind === 'armor' && item.slot === 'necklace';
-    const isUnenhanceable = !isDivineDragonUnique && !isLiRuStaff && (isNecklace || Boolean(item.cannotEnhance));
+    const isUnenhanceable = !isDivineDragonUnique && !isLiRuStaff && !isLuBuHalberd && (isNecklace || Boolean(item.cannotEnhance));
     const equipmentPartLabel = isRing ? '戒指' : isNecklace ? '項鍊' : item?.slot === 'shield' ? '盾牌' : '裝備';
     const rows = [`${getEquipmentQualityIcon(item)} ${rarity}品質｜${getEquipmentDisplayName(item)}`, `${equipmentPartLabel}等級：LV ${requiredLevel}`];
     if (isUnenhanceable) rows.push(isRing ? '強化限制：逆神之戒不可強化｜強化等級固定 +0' : isNecklace ? '強化限制：項鍊不可強化｜強化等級固定 +0' : '強化限制：此裝備不可強化｜強化等級固定 +0');
@@ -7123,6 +7124,20 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             weapon.properties.push('強化規則：每次成功魔法攻擊 +4、攻速 +0.03（攻速加成上限 +0.60）');
         }
 
+        function syncLuBuHalberdEnhancementProperties(weapon) {
+            if (!weapon || weapon.templateId !== 'fangtian_halberd_v1') return;
+            const properties = Array.isArray(weapon.properties) ? weapon.properties : [];
+            weapon.properties = properties.filter(property =>
+                !/^攻擊力\s*\+\d+/.test(String(property)) &&
+                !/不可強化|固定\s*\+0/.test(String(property)) &&
+                !/^強化規則：/.test(String(property))
+            );
+            const attack = Math.max(0, Math.floor(Number(weapon.attackBonus) || 0));
+            const levelIndex = weapon.properties.findIndex(property => String(property).includes('需求等級'));
+            weapon.properties.splice(levelIndex >= 0 ? levelIndex + 1 : Math.min(1, weapon.properties.length), 0, `攻擊力 +${attack}`);
+            weapon.properties.push('強化規則：每次成功強化攻擊力 +4、攻速 +0.03（攻速加成上限 +0.60）');
+        }
+
         function ensurePlayerWeapon(player) {
             if (!player) return null;
             player.equipment ||= {};
@@ -7163,7 +7178,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             }
 
             const isDivineDragonUniqueWeapon = weapon => !!(weapon && (weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique'));
-            player.items.weapons = player.items.weapons.filter(weapon => weapon && weapon.instanceId && (weapon.classKey === player.key || weapon.templateId === 'li_ru_poison_wine_staff_v1' || isDivineDragonUniqueWeapon(weapon)));
+            player.items.weapons = player.items.weapons.filter(weapon => weapon && weapon.instanceId && (weapon.classKey === player.key || weapon.templateId === 'li_ru_poison_wine_staff_v1' || weapon.templateId === 'fangtian_halberd_v1' || isDivineDragonUniqueWeapon(weapon)));
             const family = weaponFamilies[player.key] || weaponFamilies.knight;
             player.items.weapons.forEach(weapon => {
                 const enhancementLevel = Number(weapon.enhancementLevel) || 0;
@@ -7179,6 +7194,19 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                     weapon.baseAttackSpeedBonus = savedBaseSpeed;
                     weapon.attackSpeedBonus = savedBaseSpeed + Math.min(0.60, enhancementLevel * 0.03);
                     weapon.enhancementLevel = enhancementLevel;
+                    return;
+                }
+                if (weapon.templateId === 'fangtian_halberd_v1') {
+                    weapon.name = '方天畫戟';
+                    weapon.baseAttackBonus = Math.max(0, Number(weapon.baseAttackBonus) || 520);
+                    weapon.attackBonus = weapon.baseAttackBonus + enhancementLevel * 4;
+                    weapon.baseAttackSpeedBonus = Number(weapon.baseAttackSpeedBonus) || 0;
+                    weapon.attackSpeedBonus = weapon.baseAttackSpeedBonus + Math.min(0.60, enhancementLevel * 0.03);
+                    weapon.cannotEnhance = false;
+                    weapon.uniqueDropType = 'lu_bu_divine_treasure';
+                    weapon.isLuBuDivineTreasure = true;
+                    weapon.enhancementLevel = enhancementLevel;
+                    syncLuBuHalberdEnhancementProperties(weapon);
                     return;
                 }
                 if (weapon.templateId === 'li_ru_poison_wine_staff_v1') {
@@ -7216,7 +7244,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                     rollWeaponProperties(weapon);
                 }
             });
-            const usableWeapons = player.items.weapons.filter(weapon => weapon.classKey === player.key || isDivineDragonUniqueWeapon(weapon));
+            const usableWeapons = player.items.weapons.filter(weapon => weapon.classKey === player.key || weapon.templateId === 'fangtian_halberd_v1' || isDivineDragonUniqueWeapon(weapon));
             if (player.equipment.weaponId === undefined) {
                 if (!usableWeapons.length) {
                     const starter = rollWeaponProperties(createWeaponItem(player.key, 0, { attackSpeedBonus: (weaponFamilies[player.key] || weaponFamilies.knight).speed + player.equipment.weaponAttackSpeedBonus }));
@@ -8487,20 +8515,26 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                     if (kind === 'weapon') {
                         const family = weaponFamilies[player.key] || weaponFamilies.knight;
                         const isLiRuStaff = item.templateId === 'li_ru_poison_wine_staff_v1';
-                        const attackPerLevel = isLiRuStaff ? 4 : 2;
+                        const isLuBuHalberd = item.templateId === 'fangtian_halberd_v1';
+                        const isCustomEnhanceableWeapon = isLiRuStaff || isLuBuHalberd;
+                        const attackPerLevel = isCustomEnhanceableWeapon ? 4 : 2;
                         const qualityAttackBonus = Math.max(0, Number(item.qualityAttackBonus) || 0);
-                        // 一般舊版武器每級 +2；李儒專武採新規格每級 +4，再套用人物等級上限。
-                        const baseAttack = isLiRuStaff && Number.isFinite(Number(item.baseAttackBonus))
+                        // 一般舊版武器每級 +2；李儒專武與方天畫戟每級 +4，再套用人物等級上限。
+                        const baseAttack = isCustomEnhanceableWeapon && Number.isFinite(Number(item.baseAttackBonus))
                             ? Number(item.baseAttackBonus)
                             : Math.max(0, (Number(item.attackBonus) || 0) - oldLevel * attackPerLevel - (isLiRuStaff ? qualityAttackBonus : 0));
+                        const baseAttackSpeed = isCustomEnhanceableWeapon && Number.isFinite(Number(item.baseAttackSpeedBonus))
+                            ? Number(item.baseAttackSpeedBonus)
+                            : (Number(item.baseAttackSpeedBonus) || Number(family.speed) || 0);
                         item.enhancementLevel = newLevel;
                         item.attackBonus = baseAttack + newLevel * attackPerLevel + (isLiRuStaff ? qualityAttackBonus : 0);
-                        item.attackSpeedBonus = (Number(item.baseAttackSpeedBonus) || Number(family.speed) || 0) + Math.min(0.60, newLevel * 0.03);
-                        if (isLiRuStaff) {
+                        item.attackSpeedBonus = baseAttackSpeed + Math.min(0.60, newLevel * 0.03);
+                        if (isCustomEnhanceableWeapon) {
                             item.baseAttackBonus = baseAttack;
-                            item.baseAttackSpeedBonus = Number(item.baseAttackSpeedBonus) || 0;
+                            item.baseAttackSpeedBonus = baseAttackSpeed;
                             item.cannotEnhance = false;
-                            syncLiRuStaffEnhancementProperties(item);
+                            if (isLiRuStaff) syncLiRuStaffEnhancementProperties(item);
+                            if (isLuBuHalberd) syncLuBuHalberdEnhancementProperties(item);
                         }
                     } else if (kind === 'armor') {
                         const removed = oldLevel - newLevel;
@@ -11446,7 +11480,8 @@ function getCombatVisualCycleDuration(actionPath) {
         function applyWeaponUpgrade(weapon = ensurePlayerWeapon(currentPlayer)) {
             if (!weapon) return false;
             const isLiRuStaff = weapon.templateId === 'li_ru_poison_wine_staff_v1';
-            if (!isLiRuStaff) weapon.attackBonus = (Number(weapon.attackBonus) || 0) + 4;
+            const isLuBuHalberd = weapon.templateId === 'fangtian_halberd_v1';
+            if (!isLiRuStaff && !isLuBuHalberd) weapon.attackBonus = (Number(weapon.attackBonus) || 0) + 4;
             weapon.enhancementLevel += 1;
             const previousBonus = Number(weapon.attackSpeedBonus) || 0;
             if (isLiRuStaff) {
@@ -11456,9 +11491,12 @@ function getCombatVisualCycleDuration(actionPath) {
                 syncLiRuStaffEnhancementProperties(weapon);
                 return weapon.attackSpeedBonus > previousBonus;
             }
-            if (weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique') {
+            if (weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique' || isLuBuHalberd) {
+                if (isLuBuHalberd) weapon.cannotEnhance = false;
                 const baseSpeed = Number(weapon.baseAttackSpeedBonus) || 0;
+                if (isLuBuHalberd) weapon.attackBonus = (Number(weapon.baseAttackBonus) || 520) + weapon.enhancementLevel * 4;
                 weapon.attackSpeedBonus = baseSpeed + Math.min(0.60, weapon.enhancementLevel * 0.03);
+                if (isLuBuHalberd) syncLuBuHalberdEnhancementProperties(weapon);
                 return weapon.attackSpeedBonus > previousBonus;
             }
             const family = weaponFamilies[weapon.classKey || currentPlayer?.key] || weaponFamilies.knight;
@@ -11484,7 +11522,8 @@ function getCombatVisualCycleDuration(actionPath) {
             if (!weapon) return '請先裝備武器。';
             const isDivineDragonUnique = weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique';
             const isLiRuStaff = weapon.templateId === 'li_ru_poison_wine_staff_v1';
-            if (weapon.cannotEnhance && !isDivineDragonUnique && !isLiRuStaff) return `【${weapon.name}】不可強化；不消耗強化卷軸。`;
+            const isLuBuHalberd = weapon.templateId === 'fangtian_halberd_v1';
+            if (weapon.cannotEnhance && !isDivineDragonUnique && !isLiRuStaff && !isLuBuHalberd) return `【${weapon.name}】不可強化；不消耗強化卷軸。`;
             const level = Number(weapon.enhancementLevel) || 0;
             const maxLevel = getEquipmentEnhancementCap();
             if (level >= maxLevel) return `已達人物等級 +20 的強化上限（+${maxLevel}），無法繼續強化。`;
@@ -11501,9 +11540,10 @@ function getCombatVisualCycleDuration(actionPath) {
                 const stageFloor = getEnhancementStageFloor(level);
                 weapon.enhancementLevel = Math.max(stageFloor, level - 1);
                 if (weapon.enhancementLevel === level) return `強化失敗（成功率 ${chance}%），已達 +${stageFloor} 階段保護，武器維持 +${level}，不會降級。`;
-                if (isDivineDragonUnique) {
+                if (isDivineDragonUnique || isLuBuHalberd) {
                     weapon.attackBonus = Math.max(0, (Number(weapon.baseAttackBonus) || 0) + weapon.enhancementLevel * 4);
                     weapon.attackSpeedBonus = (Number(weapon.baseAttackSpeedBonus) || 0) + Math.min(0.60, weapon.enhancementLevel * 0.03);
+                    if (isLuBuHalberd) syncLuBuHalberdEnhancementProperties(weapon);
                 } else {
                     weapon.attackBonus = Math.max((Number(weapon.attackBonus) || 0) - 4, 1);
                     weapon.attackSpeedBonus = Math.max((weapon.attackSpeedBonus || 0) - 0.03, (weaponFamilies[currentPlayer.key] || weaponFamilies.knight).speed);
@@ -14524,6 +14564,17 @@ function getCombatVisualCycleDuration(actionPath) {
                 item.cannotEnhance = false;
                 syncLiRuStaffEnhancementProperties(item);
             }
+            if (isWeapon && item.templateId === 'fangtian_halberd_v1') {
+                item.enhancementLevel = Math.max(0, Math.floor(Number(item.enhancementLevel) || 0));
+                item.baseAttackBonus = Math.max(0, Number(item.baseAttackBonus) || 520);
+                item.baseAttackSpeedBonus = Number(item.baseAttackSpeedBonus) || 0;
+                item.attackBonus = item.baseAttackBonus + item.enhancementLevel * 4;
+                item.attackSpeedBonus = item.baseAttackSpeedBonus + Math.min(0.60, item.enhancementLevel * 0.03);
+                item.cannotEnhance = false;
+                item.uniqueDropType = 'lu_bu_divine_treasure';
+                item.isLuBuDivineTreasure = true;
+                syncLuBuHalberdEnhancementProperties(item);
+            }
             const equipped = isWeapon
                 ? currentPlayer.equipment.weaponId === item.instanceId
                 : isArmorItemEquipped(item, currentPlayer);
@@ -14535,9 +14586,10 @@ function getCombatVisualCycleDuration(actionPath) {
                 ? window.isDivineDragonUniqueEquipment(item)
                 : item.isDivineDragonUnique === true || item.uniqueDropType === 'divine_dragon_unique';
             const isLiRuStaff = isWeapon && item.templateId === 'li_ru_poison_wine_staff_v1';
+            const isLuBuHalberd = isWeapon && item.templateId === 'fangtian_halberd_v1';
             const successChance = Math.min(100, getEnhancementSuccessChance(level, isWeapon ? 6 : 4) + (bestScroll?.bonus || 0));
             const scrollCount = ['weaponScroll','armorScroll','weaponScrollAdvanced','armorScrollAdvanced','weaponScrollHigh','armorScrollHigh'].reduce((sum,key) => sum + ((isWeapon ? key.startsWith('weaponScroll') : key.startsWith('armorScroll')) ? Math.max(0,Number(currentPlayer.items[key])||0) : 0),0);
-            const canEnhance = (isDivineDragonUnique || isLiRuStaff || (!item.cannotEnhance && item.slot !== 'necklace')) && !!bestScroll && level < maxEnhancementLevel;
+            const canEnhance = (isDivineDragonUnique || isLiRuStaff || isLuBuHalberd || (!item.cannotEnhance && item.slot !== 'necklace')) && !!bestScroll && level < maxEnhancementLevel;
             const equipmentLevelText = `LV ${getEquipmentRequiredLevel(item, kind)}`;
             const isShadowVoidSixLumenItem = item.templateId === 'shadow_void_six_lumen_pendant' || item.id === 'shadow_void_six_lumen_pendant' || item.name === '影虛・六曜冥星墜';
             const enhancementText = isDivineDragonUnique
@@ -14548,6 +14600,8 @@ function getCombatVisualCycleDuration(actionPath) {
                 ? `${equipmentLevelText}｜${item.material || '六曜冥星晶'}｜項鍊｜不可強化｜六項能力各 +50（可突破上限）`
                 : item.slot === 'necklace'
                 ? `${equipmentLevelText}｜${item.material || '項鍊材料'}｜項鍊｜不可強化｜${(item.properties || []).filter(property => !String(property).includes('六項能力各 +50')).join('｜') || '依物品能力加成為準'}`
+                : isWeapon && isLuBuHalberd
+                ? `${equipmentLevelText}｜攻擊力 ${formatEquipmentStatValue('attackBonus', item.attackBonus)}｜攻速 ${formatEquipmentNumber(item.attackSpeedBonus || 0, 2)} 次/秒｜每次成功強化：攻擊 +4、攻速 +0.03（攻速加成上限 +0.60）｜強化 +${level}／上限 +${maxEnhancementLevel}`
                 : isWeapon && isLiRuStaff
                 ? `${equipmentLevelText}｜魔法攻擊力 ${formatEquipmentStatValue('attackBonus', item.attackBonus)}｜攻速 ${formatEquipmentNumber(item.attackSpeedBonus || 0, 2)} 次/秒｜每次成功強化：魔攻 +4、攻速 +0.03（攻速加成上限 +0.60）｜強化 +${level}／上限 +${maxEnhancementLevel}`
                 : isWeapon
@@ -16309,7 +16363,8 @@ function getCombatVisualCycleDuration(actionPath) {
             const weapon = (currentPlayer.items.weapons || []).find(item => item.instanceId === instanceId);
             if (!weapon) { addBattleLog('⚠️ 找不到這件武器，請重新開啟背包。'); return; }
             const isLiRuStaff = weapon.templateId === 'li_ru_poison_wine_staff_v1';
-            if (weapon.cannotEnhance && !(weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique' || isLiRuStaff)) { addBattleLog(`⚠️【${weapon.name}】不可強化；未消耗強化卷軸。`); return; }
+            const isLuBuHalberd = weapon.templateId === 'fangtian_halberd_v1';
+            if (weapon.cannotEnhance && !(weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique' || isLiRuStaff || isLuBuHalberd)) { addBattleLog(`⚠️【${weapon.name}】不可強化；未消耗強化卷軸。`); return; }
             if ((Number(weapon.enhancementLevel) || 0) >= getEquipmentEnhancementCap()) { addBattleLog(`⚠️ 這件武器已達人物等級 +20 的強化上限（+${getEquipmentEnhancementCap()}）。`); return; }
             const scroll = consumeBestEnhancementScroll('weapon');
             if (scroll) {
@@ -17101,7 +17156,8 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
   if(kind==='armor'&&item.templateId==='inverse_ring_v1'){item.enhancementLevel=0;addBattleLog('💍 逆神之戒不可批次強化；強化等級固定 +0，未消耗強化卷軸。');return;}
   const isDivineDragonUnique=item.isDivineDragonUnique===true||item.uniqueDropType==='divine_dragon_unique';
   const isLiRuStaff=kind==='weapon'&&item.templateId==='li_ru_poison_wine_staff_v1';
-  if(kind==='weapon'&&item.cannotEnhance&&!isDivineDragonUnique&&!isLiRuStaff){addBattleLog(`⚠️【${item.name}】不可強化，不消耗強化卷軸。`);return;}
+  const isLuBuHalberd=kind==='weapon'&&item.templateId==='fangtian_halberd_v1';
+  if(kind==='weapon'&&item.cannotEnhance&&!isDivineDragonUnique&&!isLiRuStaff&&!isLuBuHalberd){addBattleLog(`⚠️【${item.name}】不可強化，不消耗強化卷軸。`);return;}
   if(kind==='armor'&&!isDivineDragonUnique&&(item.slot==='necklace'||item.cannotEnhance)){addBattleLog('🌑 此項鍊／防具不可強化；不消耗強化卷軸。');return;}
   const selector=buttonElement?.closest('.enhance-batch-control')?.querySelector('.enhance-batch-count')
     || document.querySelector('.enhance-batch-count');
@@ -18429,6 +18485,16 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
       sourceItem.attackSpeedBonus = Number(sourceItem.baseAttackSpeedBonus) || Number(family.speed) || 0;
       targetItem.attackBonus = targetBaseAttack + amount * 4;
       targetItem.attackSpeedBonus = Math.min(0.60 + (Number(family.speed) || 0), (Number(targetItem.baseAttackSpeedBonus) || Number(family.speed) || 0) + amount * 0.03);
+      if (sourceItem.templateId === 'fangtian_halberd_v1') {
+        sourceItem.attackBonus = sourceBaseAttack;
+        sourceItem.attackSpeedBonus = Number(sourceItem.baseAttackSpeedBonus) || 0;
+        sourceItem.cannotEnhance = false;
+      }
+      if (targetItem.templateId === 'fangtian_halberd_v1') {
+        targetItem.attackBonus = targetBaseAttack + amount * 4;
+        targetItem.attackSpeedBonus = (Number(targetItem.baseAttackSpeedBonus) || 0) + Math.min(0.60, amount * 0.03);
+        targetItem.cannotEnhance = false;
+      }
     } else if (src.kind === 'armor') {
       const sourceBasePhysical = Number.isFinite(Number(sourceItem.basePhysicalDefenseBonus))
         ? Number(sourceItem.basePhysicalDefenseBonus)
@@ -18468,6 +18534,8 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
     targetItem.enhancementLevel=amount;
     syncLiRuStaffEnhancementProperties(sourceItem);
     syncLiRuStaffEnhancementProperties(targetItem);
+    syncLuBuHalberdEnhancementProperties(sourceItem);
+    syncLuBuHalberdEnhancementProperties(targetItem);
     saveGame();
     updateGameUI();
     renderInventory();
@@ -27653,7 +27721,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       attackBonus: 520, baseAttackBonus: 520, attackSpeedBonus: 0, baseAttackSpeedBonus: 0,
       statBonuses: { str: 85, con: 45, physicalDefense: 120, meleeHitBonus: 0.05, meleeCritRate: 0.06, meleeCritDamage: 0.12 },
       passiveSkills: [{ id: 'ghost_god_breaker', name: '鬼神破陣', trigger: 'meleeHit', chance: 0.10, damageMultiplier: 1.35, bossDamageMultiplier: 1.10 }],
-      properties: ['武器部位｜騎士、修羅戰士可用｜需求等級 100', '攻擊力 +520', '力量 +85｜體質 +45｜物理防禦 +120', '近戰命中率 +5%｜近戰暴擊率 +6%｜近戰暴擊傷害 +12%', '鬼神破陣：近戰攻擊命中時 10% 機率觸發，本次傷害提高 35%，對 BOSS 額外提高 10%。', '呂布專屬掉落｜獨立掉落率 2%', '不可強化｜強化等級固定 +0']
+      properties: ['武器部位｜騎士、修羅戰士可用｜需求等級 100', '攻擊力 +520', '力量 +85｜體質 +45｜物理防禦 +120', '近戰命中率 +5%｜近戰暴擊率 +6%｜近戰暴擊傷害 +12%', '鬼神破陣：近戰攻擊命中時 10% 機率觸發，本次傷害提高 35%，對 BOSS 額外提高 10%。', '呂布專屬掉落｜獨立掉落率 2%', '強化規則：每次成功強化攻擊力 +4、攻速 +0.03（攻速加成上限 +0.60）']
     },
     golden_armor_v1: {
       id: 'golden_armor_v1', name: '黃金鎧甲', kind: 'armor', slot: 'chest', slotLabel: '胸甲',
@@ -27681,7 +27749,12 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   // 讓圖鑑與既有掉落顯示讀到完整三寶資料；實際戰鬥被動保留在 passiveSkills 供戰鬥模組消費。
   const luBu = window.parallelThreeKingdomsLuBu;
   if (luBu) {
-    luBu.uniqueDrops = treasureList.map(item => `${item.name}｜${item.slotLabel}｜神話｜需求等級 ${item.requiredLevel}｜獨立掉落率 ${(item.dropChance * 100).toFixed(0)}%｜${item.properties.slice(1, -2).join('；')}｜不可強化（固定 +0）`);
+    luBu.uniqueDrops = treasureList.map(item => {
+      const enhancementText = item.id === 'fangtian_halberd_v1'
+        ? '可強化：每次成功攻擊 +4、攻速 +0.03（攻速加成上限 +0.60）'
+        : '不可強化（固定 +0）';
+      return `${item.name}｜${item.slotLabel}｜神話｜需求等級 ${item.requiredLevel}｜獨立掉落率 ${(item.dropChance * 100).toFixed(0)}%｜${item.properties.slice(1, -2).join('；')}｜${enhancementText}`;
+    });
   }
 
   const statLabels = { attack: '攻擊力', maxHp: '生命上限', maxMp: '魔力上限', str: '力量', dex: '敏捷', con: '體質', wis: '精神', int: '智力', cha: '魅力', physicalDefense: '物理防禦', magicDefense: '魔法防禦', attackSpeedBonus: '攻擊速度', hitRate: '命中率', evasion: '閃避率', allResistance: '全屬性抗性', meleeHitBonus: '近戰命中率', meleeCritRate: '近戰暴擊率', meleeCritDamage: '近戰暴擊傷害' };
@@ -27698,7 +27771,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       classKeys: def.classKeys.slice(),
       dropChance: def.dropChance, sourceMonster: def.sourceMonster, sourceDropChance: def.dropChance,
       statBonuses: { ...def.statBonuses }, stats: { ...def.statBonuses }, passiveSkills: def.passiveSkills.map(skill => ({ ...skill })),
-      properties, enhancementLevel: 0, cannotEnhance: true, uniqueDropType: 'lu_bu_divine_treasure', isLuBuDivineTreasure: true, obtainedAt: Date.now()
+      properties, enhancementLevel: 0, cannotEnhance: !(isWeapon && def.id === 'fangtian_halberd_v1'), uniqueDropType: 'lu_bu_divine_treasure', isLuBuDivineTreasure: true, obtainedAt: Date.now()
     };
     if (isWeapon) { item.attackBonus = def.attackBonus; item.baseAttackBonus = def.baseAttackBonus; item.attackSpeedBonus = 0; item.baseAttackSpeedBonus = 0; }
     if (def.physicalDefenseBonus) { item.physicalDefenseBonus = def.physicalDefenseBonus; item.basePhysicalDefenseBonus = def.physicalDefenseBonus; }
@@ -27718,7 +27791,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       const item = createItem(def, player);
       (def.kind === 'weapon' ? player.items.weapons : player.items.armors).push(item);
       count++;
-      if (typeof addBattleLog === 'function') addBattleLog(`🔱 <strong style="color:${def.qualityColor}">呂布掉落【${def.rarity} ${def.name}】</strong>（${def.slotLabel}｜獨立掉落率 ${(def.dropChance * 100).toFixed(0)}%｜不可強化）！`);
+      if (typeof addBattleLog === 'function') addBattleLog(`🔱 <strong style="color:${def.qualityColor}">呂布掉落【${def.rarity} ${def.name}】</strong>（${def.slotLabel}｜獨立掉落率 ${(def.dropChance * 100).toFixed(0)}%｜${def.id === 'fangtian_halberd_v1' ? '可強化' : '不可強化'}）！`);
     });
     if (count) { if (typeof saveGame === 'function') saveGame(); if (typeof renderInventory === 'function' && document.getElementById('inventory-float')?.style.display === 'flex') renderInventory(); }
     return count;
