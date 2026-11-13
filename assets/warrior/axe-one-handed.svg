@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+<title id="title">修羅戰士單手斧</title><desc id="desc">短柄、單側弧形斧刃、暗紅寶石與金色刃口的單手戰斧</desc>
+<defs>
+ <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff1d0"/><stop offset=".25" stop-color="#9ca9b0"/><stop offset=".58" stop-color="#3d4854"/><stop offset=".82" stop-color="#d7d9d2"/><stop offset="1" stop-color="#626d78"/></linearGradient>
+ <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0b4"/><stop offset=".5" stop-color="#d7a34a"/><stop offset="1" stop-color="#70431f"/></linearGradient>
+ <linearGradient id="wood" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#24171a"/><stop offset=".4" stop-color="#a96c3c"/><stop offset=".7" stop-color="#63351f"/><stop offset="1" stop-color="#21151a"/></linearGradient>
+ <radialGradient id="gem"><stop stop-color="#ffd6a0"/><stop offset=".3" stop-color="#ef4b3b"/><stop offset="1" stop-color="#64111d"/></radialGradient>
+ <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur in="SourceAlpha" stdDeviation="2"/><feOffset dy="2"/><feComponentTransfer><feFuncA type="linear" slope=".65"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<g filter="url(#shadow)" stroke-linejoin="round">
+ <path d="M48 115 73 48 82 51 58 119Z" fill="url(#wood)" stroke="#24171a" stroke-width="3"/>
+ <path d="m55 96 11 4-3 7-11-4zm6-17 11 4-3 7-11-4" fill="none" stroke="#d7ad68" stroke-width="3"/>
+ <path d="M70 49C51 46 32 32 20 13 18 37 29 58 56 69L77 62Z" fill="url(#steel)" stroke="#24171a" stroke-width="3"/>
+ <path d="M23 18c12 15 27 25 49 31l-12 14C38 55 27 39 23 18Z" fill="none" stroke="url(#edge)" stroke-width="4"/>
+ <path d="M70 49 99 33 90 58 77 64Z" fill="url(#steel)" stroke="#24171a" stroke-width="3"/>
+ <path d="m74 50 20-12-7 17-11 5Z" fill="none" stroke="url(#edge)" stroke-width="3"/>
+ <path d="M63 45 80 50 78 68 60 64 53 53Z" fill="#30333b" stroke="url(#edge)" stroke-width="3"/>
+ <path d="m68 49 7 6-7 9-7-8Z" fill="url(#gem)" stroke="#ffd58b" stroke-width="1.5"/>
+ <circle cx="68" cy="55" r="2" fill="#fff2c7"/>
+ <path d="M48 115 55 110 62 116 59 125 48 126Z" fill="url(#edge)" stroke="#24171a" stroke-width="2.5"/>
+</g></svg>
