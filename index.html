@@ -11702,6 +11702,7 @@ function getCombatVisualCycleDuration(actionPath) {
                 window.awardShenlongDrop?.(currentMonster, zoneName);
                 window.awardDivineDragonUniqueDrops?.(currentMonster, zoneName);
                 window.awardLiRuStaffDrop?.(currentMonster, zoneName);
+                window.awardParallelThreeKingdomsChestArmorDrop?.(currentMonster);
             }
             if (!isTrainingDummy && currentMonster?.type === 'boss' && /逆神.*熾天墮龍|熾天墮龍.*逆神/.test(String(currentMonster.name || '')) && Math.random() < 0.01) {
                 const skill = Math.random() < 0.5 ? 'light' : 'dark';
@@ -26365,7 +26366,8 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       { name: '赤燼回斬', phase: 'lowHp', chance: 0.34, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.88 }
     ],
     description: '平行三國的樊稠將軍，披著厚重暗鎧、拖著巨大的彎刃長柄武器。牠看似威風凜凜，卻有一張圓滾滾的 Q 版臉與不太嚇人的小小獠牙。',
-    dropTable: ['樊稠暗鎧', '斷陣偃月刃', '平行兵符・赤', '特殊怪殘頁'],
+    dropTable: [],
+    uniqueDrops: ['樊稠暗鎧｜特殊胸甲｜需求等級 80｜全職業可穿戴｜樊稠將軍獨立掉落率 5%｜物理防禦 +212｜魔法防禦 +128｜力量 +30、體質 +48、精神 +14'],
     zone: ZONE, threatTier: 'parallel-three-kingdoms-special'
   };
   const monsters = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
@@ -26401,7 +26403,8 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       { name: '幽玉封喉', phase: 'lowHp', chance: 0.32, damageType: 'magic', attackRange: 'melee', powerMultiplier: 1.92 }
     ],
     description: '平行三國的張濟將軍，身披暗黑玉甲、手持帶符鉤槍，冷冷的青玉鬼火在身邊飄動。牠的表情很嚴肅，但圓臉與短腿讓威嚴打了折扣。',
-    dropTable: ['張濟玉甲', '寒玉鉤槍刃', '平行兵符・青', '特殊怪殘頁'],
+    dropTable: [],
+    uniqueDrops: ['張濟玉甲｜特殊胸甲｜需求等級 80｜全職業可穿戴｜張濟將軍獨立掉落率 5%｜物理防禦 +174｜魔法防禦 +158｜敏捷 +24、體質 +42、精神 +18'],
     zone: ZONE, threatTier: 'parallel-three-kingdoms-special'
   };
   const monsters = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
@@ -26413,6 +26416,56 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 </script>
 
 
+<script id="parallel-three-kingdoms-special-armor-drops-v1">
+(() => {
+  'use strict';
+  const CLASS_KEYS = ['knight', 'warrior', 'elf', 'mage', 'monk'];
+  const DEFINITIONS = {
+    '張濟將軍': {
+      id: 'parallel_zhang_ji_jade_armor_v1', name: '張濟玉甲', icon: '🛡️',
+      physicalDefenseBonus: 174, magicDefenseBonus: 158,
+      statBonuses: { dex: 24, con: 42, wis: 18 },
+      property: '張濟將軍專屬特殊胸甲｜獨立掉落率 5%'
+    },
+    '樊稠將軍': {
+      id: 'parallel_fan_chou_dark_armor_v1', name: '樊稠暗鎧', icon: '🛡️',
+      physicalDefenseBonus: 212, magicDefenseBonus: 128,
+      statBonuses: { str: 30, con: 48, wis: 14 },
+      property: '樊稠將軍專屬特殊胸甲｜獨立掉落率 5%'
+    }
+  };
+  window.awardParallelThreeKingdomsChestArmorDrop = function(monster) {
+    const player = typeof currentPlayer !== 'undefined' ? currentPlayer : window.currentPlayer;
+    if (!player || !monster || monster.type !== 'special') return false;
+    const def = DEFINITIONS[String(monster.name || '')];
+    if (!def || Math.random() >= 0.05) return false;
+    player.items ||= {};
+    player.items.armors ||= [];
+    const item = {
+      instanceId: `${def.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      id: def.id, templateId: def.id, kind: 'armor', name: def.name,
+      slot: 'chest', slotLabel: '胸甲', armorType: 'physical',
+      classKeys: [...CLASS_KEYS],
+      level: 80, requiredLevel: 80, rarity: '特殊', quality: '特殊',
+      qualityColor: '#ff4545', icon: def.icon,
+      physicalDefenseBonus: def.physicalDefenseBonus,
+      basePhysicalDefenseBonus: def.physicalDefenseBonus,
+      magicDefenseBonus: def.magicDefenseBonus,
+      baseMagicDefenseBonus: def.magicDefenseBonus,
+      statBonuses: { ...def.statBonuses }, properties: [def.property],
+      enhancementLevel: 0, sourceMonster: monster.name,
+      uniqueDropType: 'parallel_three_kingdoms_chest_armor', obtainedAt: Date.now()
+    };
+    player.items.armors.push(item);
+    if (typeof addBattleLog === 'function') {
+      addBattleLog(`🛡️ <strong style="color:#ff6b6b">${monster.name}掉落【特殊 ${def.name}】！</strong>（胸甲｜需求等級 80｜全職業可穿戴｜獨立掉落率 5%）`);
+    }
+    if (typeof renderInventory === 'function' && document.getElementById('inventory-float')?.style.display === 'flex') renderInventory();
+    if (typeof saveGame === 'function') saveGame();
+    return true;
+  };
+})();
+</script>
 <script id="parallel-three-kingdoms-archer-v1">
 (() => {
   'use strict';
@@ -26819,10 +26872,83 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   const dongZhuoAttackFrameImages = dongZhuoAttackFrameSources.map(src=>{const image=new Image();image.decoding='async';image.src=src;return image;});
   const dongZhuoAttackFrameDurations = [110,90,100,75,60,130,100,110];
   let dongZhuoAttackRunId=0,dongZhuoAttackTimer=0;
+  let dongZhuoWaveCanvas=null,dongZhuoWaveContext=null,dongZhuoWaveRaf=0,dongZhuoWaveRunId=0;
+  function ensureDongZhuoWaveCanvas(stage){
+    if(!dongZhuoWaveCanvas||dongZhuoWaveCanvas.parentElement!==stage){
+      dongZhuoWaveCanvas?.remove();
+      dongZhuoWaveCanvas=document.createElement('canvas');
+      dongZhuoWaveCanvas.id='dong-zhuo-sword-wave-canvas';
+      dongZhuoWaveCanvas.setAttribute('aria-hidden','true');
+      dongZhuoWaveCanvas.style.cssText='position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:90;overflow:visible';
+      if(getComputedStyle(stage).position==='static')stage.style.position='relative';
+      stage.appendChild(dongZhuoWaveCanvas);
+      dongZhuoWaveContext=dongZhuoWaveCanvas.getContext('2d');
+    }
+    return dongZhuoWaveContext;
+  }
+  function drawDongZhuoSwordWave(){
+    const stage=document.getElementById('battle-stage');
+    const player=document.getElementById('player-icon');
+    const monsterSprite=document.querySelector('#monster-icon .monster-sprite[alt="董卓"]');
+    if(!stage||!player||!monsterSprite)return false;
+    const ctx=ensureDongZhuoWaveCanvas(stage);
+    if(!ctx)return false;
+    if(dongZhuoWaveRaf)cancelAnimationFrame(dongZhuoWaveRaf);
+    const runId=++dongZhuoWaveRunId,start=performance.now(),duration=900;
+    const stageRect=stage.getBoundingClientRect(),mr=monsterSprite.getBoundingClientRect(),pr=player.getBoundingClientRect();
+    const from={x:mr.left-stageRect.left+mr.width*.23,y:mr.top-stageRect.top+mr.height*.48};
+    const to={x:pr.left-stageRect.left+pr.width*.52,y:pr.top-stageRect.top+pr.height*.52};
+    const dx=to.x-from.x,dy=to.y-from.y,angle=Math.atan2(dy,dx),distance=Math.hypot(dx,dy);
+    function draw(now){
+      if(runId!==dongZhuoWaveRunId||!dongZhuoWaveCanvas?.isConnected)return;
+      const rect=stage.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);
+      const cw=Math.max(1,Math.round(rect.width*dpr)),ch=Math.max(1,Math.round(rect.height*dpr));
+      if(dongZhuoWaveCanvas.width!==cw||dongZhuoWaveCanvas.height!==ch){dongZhuoWaveCanvas.width=cw;dongZhuoWaveCanvas.height=ch;}
+      ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,rect.width,rect.height);
+      const t=Math.min(1,Math.max(0,(now-start)/duration));
+      // 蓄力於刀鋒，再將赤金刀氣沿直線斬向玩家；全程由 Canvas 繪製，不使用 CSS 動畫。
+      if(t<.22){
+        const q=t/.22,x=from.x,y=from.y;
+        const radius=8+q*27;
+        const g=ctx.createRadialGradient(x,y,0,x,y,radius);g.addColorStop(0,'rgba(255,250,210,.95)');g.addColorStop(.28,'rgba(255,130,45,.72)');g.addColorStop(1,'rgba(255,60,25,0)');
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();
+        ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+        for(let i=0;i<3;i++){ctx.globalAlpha=.8-i*.17;ctx.strokeStyle=i===0?'#fff6cf':i===1?'#ffc24b':'#ff5432';ctx.lineWidth=4-i;ctx.beginPath();ctx.arc(0,0,10+q*(14+i*6),-.95,.95);ctx.stroke();}
+        ctx.restore();ctx.globalAlpha=1;
+      }
+      if(t>=.15&&t<.83){
+        const q=Math.min(1,(t-.15)/.68),ease=1-Math.pow(1-q,2.2),x=from.x+dx*ease,y=from.y+dy*ease;
+        const len=Math.max(40,Math.min(74,rect.width*.065)),width=Math.max(15,Math.min(28,rect.height*.045));
+        const fade=q<.85?1:Math.max(0,(1-q)/.15);
+        ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.globalAlpha=fade;
+        // 赤焰尾流
+        const trail=ctx.createLinearGradient(-len*2,0,8,0);trail.addColorStop(0,'rgba(255,48,25,0)');trail.addColorStop(.55,'rgba(255,86,30,.20)');trail.addColorStop(1,'rgba(255,190,62,.9)');
+        ctx.fillStyle=trail;ctx.beginPath();ctx.moveTo(-len*2,-width*.45);ctx.quadraticCurveTo(-len*.65,-width*1.35,12,-width*.52);ctx.lineTo(len,0);ctx.lineTo(12,width*.52);ctx.quadraticCurveTo(-len*.65,width*1.35,-len*2,width*.45);ctx.closePath();ctx.fill();
+        // 偃月刀氣：向前收尖、向後拖出雙弧赤金月牙
+        ctx.shadowColor='#ff5b24';ctx.shadowBlur=24;ctx.fillStyle='rgba(255,111,36,.72)';ctx.beginPath();ctx.moveTo(-len*.9,-width*.10);ctx.quadraticCurveTo(-len*.1,-width*1.5,len*.86,-width*.34);ctx.quadraticCurveTo(len*1.05,0,len*.86,width*.34);ctx.quadraticCurveTo(-len*.1,width*.78,-len*.9,-width*.10);ctx.closePath();ctx.fill();
+        ctx.shadowBlur=0;ctx.strokeStyle='#fff0a8';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-len*.76,-width*.08);ctx.quadraticCurveTo(-len*.02,-width*.85,len*.88,-width*.29);ctx.stroke();
+        ctx.fillStyle='#fff7d0';ctx.beginPath();ctx.arc(len*.70,0,3.5,0,Math.PI*2);ctx.fill();ctx.restore();
+        // 刀氣沿途散出的短促赤金火星
+        ctx.save();ctx.globalAlpha=fade*.85;for(let i=0;i<7;i++){const f=(i/7+q*1.6)%1,px=x-dx*.17*f,py=y-dy*.17*f+Math.sin(now*.025+i*2.4)*5;ctx.strokeStyle=i%2?'#ffcb55':'#fff1b0';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(px-5-dx/distance*4,py-2+(i%3)*2);ctx.stroke();}ctx.restore();
+      }
+      if(t>=.76){
+        const q=Math.min(1,(t-.76)/.24),x=to.x,y=to.y,alpha=1-q;
+        // 刀氣斬中角色時的金紅閃光與向外擴散的衝擊環
+        const flash=ctx.createRadialGradient(x,y,0,x,y,22+q*54);flash.addColorStop(0,`rgba(255,255,235,${.95*alpha})`);flash.addColorStop(.22,`rgba(255,176,54,${.76*alpha})`);flash.addColorStop(1,'rgba(255,67,35,0)');ctx.fillStyle=flash;ctx.beginPath();ctx.arc(x,y,22+q*54,0,Math.PI*2);ctx.fill();
+        ctx.save();ctx.globalAlpha=alpha;ctx.lineWidth=4;ctx.strokeStyle='#fff0a8';ctx.shadowColor='#ff4e24';ctx.shadowBlur=17;ctx.beginPath();ctx.ellipse(x,y,12+q*42,8+q*27,angle,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.lineWidth=2;ctx.strokeStyle='#ff6c32';ctx.beginPath();ctx.ellipse(x,y,19+q*51,12+q*34,angle,0,Math.PI*2);ctx.stroke();
+        for(let i=0;i<12;i++){const a=i*Math.PI*2/12+angle,inner=10+q*8,outer=28+q*42+(i%3)*6;ctx.strokeStyle=i%2?'#ff9838':'#fff0b0';ctx.lineWidth=i%3===0?3:2;ctx.beginPath();ctx.moveTo(x+Math.cos(a)*inner,y+Math.sin(a)*inner);ctx.lineTo(x+Math.cos(a)*outer,y+Math.sin(a)*outer);ctx.stroke();}
+        ctx.restore();
+      }
+      if(t<1)dongZhuoWaveRaf=requestAnimationFrame(draw);else{ctx.clearRect(0,0,rect.width,rect.height);dongZhuoWaveRaf=0;}
+    }
+    dongZhuoWaveRaf=requestAnimationFrame(draw);
+    return true;
+  }
   function playDongZhuoAttackStoryboard(){
     if(typeof currentMonster==='undefined'||currentMonster?.name!==monster.name)return false;
     const sprite=document.querySelector('#monster-icon .monster-sprite[alt="董卓"]');
     if(!sprite)return false;
+    drawDongZhuoSwordWave();
     const idleSrc=sprite.dataset.dongZhuoIdleSrc||sprite.getAttribute('src')||sprite.src;
     sprite.dataset.dongZhuoIdleSrc=idleSrc;
     const runId=++dongZhuoAttackRunId;
