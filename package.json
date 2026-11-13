@@ -28,6 +28,7 @@
       "version.json",
       "assets/**/*",
       "electron/**/*",
+      "scripts/**/*",
       "package.json"
     ],
     "asar": true,
