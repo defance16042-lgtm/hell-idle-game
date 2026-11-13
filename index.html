@@ -26303,6 +26303,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     if(title) title.style.display='flex';
     const message=document.getElementById('rpg-title-message');
     if(message) message.textContent='';
+    window.syncGameUpdateStatus?.();
   };
   window.rpgTitleToggleSettings=function(){
     const box=document.getElementById('rpg-title-settings');
@@ -26334,11 +26335,39 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       .catch(() => {});
   }
   const titleMessage = () => document.getElementById('rpg-title-message');
+  const titleScreen = () => document.getElementById('rpg-title-screen');
+  const isTitleScreenVisible = () => {
+    const node = titleScreen();
+    if (!node) return false;
+    const style = getComputedStyle(node);
+    return style.display !== 'none' && style.visibility !== 'hidden';
+  };
+  let pendingUpdateStatus = null;
+  function renderUpdateAction() {
+    const node = titleMessage();
+    if (!node) return;
+    node.querySelector('[data-update-install]')?.remove();
+    if (!isTitleScreenVisible() || pendingUpdateStatus?.event !== 'downloaded') return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.updateInstall = 'true';
+    button.className = 'rpg-title-btn update';
+    button.style.cssText = 'display:block;margin:10px auto 0;min-height:36px;font-size:13px;padding:7px 14px;';
+    button.textContent = '↻ 立即重新啟動並安裝更新';
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      button.textContent = '正在重新啟動……';
+      try { await window.electronSave.installUpdate(); }
+      catch (_) { button.disabled = false; button.textContent = '↻ 立即重新啟動並安裝更新'; }
+    });
+    node.appendChild(button);
+  }
   function showUpdateMessage(text, tone = 'normal') {
     const node = titleMessage();
     if (!node) return;
     node.textContent = text;
     node.style.color = tone === 'error' ? '#ffaaa0' : tone === 'success' ? '#a9e6b4' : '#c9e8f2';
+    renderUpdateAction();
   }
   function isElectronApp() { return !!window.electronSave?.isElectron && typeof window.electronSave.updateCheck === 'function'; }
   function openReleasesPage() { window.open(RELEASES_URL, '_blank', 'noopener,noreferrer'); }
@@ -26373,13 +26402,20 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     }
   }
   window.checkGameUpdate = checkGameUpdate;
+  window.syncGameUpdateStatus = function() {
+    if (!isTitleScreenVisible() || !pendingUpdateStatus) return;
+    const status = pendingUpdateStatus;
+    if (status.event === 'checking') showUpdateMessage('正在檢查更新……');
+    if (status.event === 'available') showUpdateMessage('發現 v' + (status.version || '新') + '，正在下載更新。');
+    if (status.event === 'not-available') showUpdateMessage('目前已是最新版本 v' + GAME_VERSION + '。', 'success');
+    if (status.event === 'download-progress') showUpdateMessage('更新下載中 ' + Math.round(status.percent || 0) + '%……');
+    if (status.event === 'downloaded') showUpdateMessage('更新已下載完成，可在此重新啟動安裝。', 'success');
+    if (status.event === 'error') showUpdateMessage('更新失敗：' + (status.message || '請稍後再試。'), 'error');
+  };
   if (window.electronSave?.onUpdateStatus) window.electronSave.onUpdateStatus(status => {
-    if (status?.event === 'checking') showUpdateMessage('正在檢查更新……');
-    if (status?.event === 'available') showUpdateMessage('發現 v' + (status.version || '新') + '，正在下載更新。');
-    if (status?.event === 'not-available') showUpdateMessage('目前已是最新版本 v' + GAME_VERSION + '。', 'success');
-    if (status?.event === 'download-progress') showUpdateMessage('更新下載中 ' + Math.round(status.percent || 0) + '%……');
-    if (status?.event === 'downloaded') showUpdateMessage('更新已下載完成，請依提示重新啟動遊戲。', 'success');
-    if (status?.event === 'error') showUpdateMessage('更新失敗：' + (status.message || '請稍後再試。'), 'error');
+    pendingUpdateStatus = status;
+    // 遊戲進行中只記錄狀態，不顯示文字、不建立 modal，也不觸發 Windows 對話框。
+    window.syncGameUpdateStatus();
   });
   checkGameUpdate(false);
   window.setInterval(function(){ checkGameUpdate(false); }, 5 * 60 * 1000);

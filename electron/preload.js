@@ -8,5 +8,6 @@ contextBridge.exposeInMainWorld('electronSave', {
   path: () => ipcRenderer.sendSync('save-path'),
   chooseDirectory: () => ipcRenderer.sendSync('save-choose-directory'),
   updateCheck: () => ipcRenderer.invoke('update-check'),
+  installUpdate: () => ipcRenderer.invoke('update-install'),
   onUpdateStatus: callback => ipcRenderer.on('update-status', (_event, status) => callback(status))
 });

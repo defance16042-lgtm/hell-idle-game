@@ -106,6 +106,11 @@ function registerSaveIpc() {
       updateCheckInProgress = false;
     }
   });
+  ipcMain.handle('update-install', () => {
+    if (!app.isPackaged) return { ok: false, code: 'not-packaged' };
+    autoUpdater.quitAndInstall();
+    return { ok: true };
+  });
 }
 
 function createWindow() {
@@ -133,18 +138,9 @@ function checkForUpdates() {
   autoUpdater.on('update-not-available', info => sendUpdateStatus('not-available', { version: info.version }));
   autoUpdater.on('download-progress', progress => sendUpdateStatus('download-progress', { percent: progress.percent }));
   autoUpdater.on('error', error => sendUpdateStatus('error', { message: error.message }));
-  autoUpdater.on('update-downloaded', () => {
-    sendUpdateStatus('downloaded');
-    dialog.showMessageBox(mainWindow, {
-      type: 'info',
-      buttons: ['立即重新啟動', '稍後再說'],
-      defaultId: 0,
-      cancelId: 1,
-      title: '遊戲更新完成',
-      message: '新版本已下載完成，要現在重新啟動並安裝嗎？'
-    }).then(result => {
-      if (result.response === 0) autoUpdater.quitAndInstall();
-    });
+  autoUpdater.on('update-downloaded', info => {
+    // 不在 Windows 系統層跳出重新啟動對話框；由遊戲開始畫面提供安裝按鈕。
+    sendUpdateStatus('downloaded', { version: info?.version || null });
   });
   autoUpdater.checkForUpdates().catch(error => {
     sendUpdateStatus('error', { message: error.message });
