@@ -6081,8 +6081,9 @@ function getEquipmentTooltipText(item, kind = 'weapon') {
     const requiredLevel = getEquipmentRequiredLevel(item, kind);
     const isRing = kind === 'armor' && item.templateId === 'inverse_ring_v1';
     const isDivineDragonUnique = item.isDivineDragonUnique === true || item.uniqueDropType === 'divine_dragon_unique';
+    const isLiRuStaff = item.templateId === 'li_ru_poison_wine_staff_v1';
     const isNecklace = kind === 'armor' && item.slot === 'necklace';
-    const isUnenhanceable = !isDivineDragonUnique && (isNecklace || Boolean(item.cannotEnhance));
+    const isUnenhanceable = !isDivineDragonUnique && !isLiRuStaff && (isNecklace || Boolean(item.cannotEnhance));
     const equipmentPartLabel = isRing ? '戒指' : isNecklace ? '項鍊' : item?.slot === 'shield' ? '盾牌' : '裝備';
     const rows = [`${getEquipmentQualityIcon(item)} ${rarity}品質｜${getEquipmentDisplayName(item)}`, `${equipmentPartLabel}等級：LV ${requiredLevel}`];
     if (isUnenhanceable) rows.push(isRing ? '強化限制：逆神之戒不可強化｜強化等級固定 +0' : isNecklace ? '強化限制：項鍊不可強化｜強化等級固定 +0' : '強化限制：此裝備不可強化｜強化等級固定 +0');
@@ -7109,6 +7110,19 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             return `<div class="bestiary-drop-panel"><div class="bestiary-drop-title">🎁 掉落物品與機率</div><div class="bestiary-drop-grid">${dropCards}</div><small style="display:block;margin-top:8px;color:#9f907e;font-size:11px;">各項掉落依機率判定；裝備品質會在裝備掉落後另行判定。</small></div>`;
         }
 
+        function syncLiRuStaffEnhancementProperties(weapon) {
+            if (!weapon || weapon.templateId !== 'li_ru_poison_wine_staff_v1') return;
+            const properties = Array.isArray(weapon.properties) ? weapon.properties : [];
+            weapon.properties = properties.filter(property =>
+                !/^魔法攻擊力\s*\+\d+/.test(String(property)) &&
+                !/不可強化|固定\s*\+0/.test(String(property)) &&
+                !/^強化規則：/.test(String(property))
+            );
+            const attack = Math.max(0, Math.floor(Number(weapon.attackBonus) || 0));
+            weapon.properties.splice(Math.min(2, weapon.properties.length), 0, `魔法攻擊力 +${attack}`);
+            weapon.properties.push('強化規則：每次成功魔法攻擊 +4、攻速 +0.03（攻速加成上限 +0.60）');
+        }
+
         function ensurePlayerWeapon(player) {
             if (!player) return null;
             player.equipment ||= {};
@@ -7170,14 +7184,18 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                 if (weapon.templateId === 'li_ru_poison_wine_staff_v1') {
                     weapon.name = '鴆酒策士杖';
                     weapon.requiredMonsterLevel = 80;
-                    weapon.attackBonus = Math.max(0, Number(weapon.baseAttackBonus) || 250) + enhancementLevel * 2 + qualityAttackBonus;
-                    weapon.attackSpeedBonus = Math.max(-0.24, Math.min(4.5, Number(weapon.baseAttackSpeedBonus) || 0));
+                    weapon.baseAttackBonus = Math.max(0, Number(weapon.baseAttackBonus) || 250);
+                    weapon.attackBonus = weapon.baseAttackBonus + enhancementLevel * 4 + qualityAttackBonus;
+                    weapon.baseAttackSpeedBonus = Math.max(-0.24, Math.min(4.5, Number(weapon.baseAttackSpeedBonus) || 0));
+                    weapon.attackSpeedBonus = weapon.baseAttackSpeedBonus + Math.min(0.60, enhancementLevel * 0.03);
+                    weapon.cannotEnhance = false;
                     weapon.enhancementLevel = enhancementLevel;
                     weapon.image = weapon.image || '';
                     delete weapon.strengthRequirement;
                     if (!weapon.statBonuses || typeof weapon.statBonuses !== 'object' || Array.isArray(weapon.statBonuses) || !['普通', '稀有', '黃金', '特殊', '傳說', '史詩', '神話'].includes(weapon.rarity)) {
                         rollWeaponProperties(weapon);
                     }
+                    syncLiRuStaffEnhancementProperties(weapon);
                     return;
                 }
                 const oldBaseAttack = (Number(weapon.attackBonus) || 0) - enhancementLevel * 2 - qualityAttackBonus;
@@ -8468,11 +8486,22 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                     const newLevel = cap;
                     if (kind === 'weapon') {
                         const family = weaponFamilies[player.key] || weaponFamilies.knight;
-                        // 舊版每級強化固定增加攻擊 +2；先還原基礎攻擊，再套用新上限。
-                        const baseAttack = Math.max(0, (Number(item.attackBonus) || 0) - oldLevel * 2);
+                        const isLiRuStaff = item.templateId === 'li_ru_poison_wine_staff_v1';
+                        const attackPerLevel = isLiRuStaff ? 4 : 2;
+                        const qualityAttackBonus = Math.max(0, Number(item.qualityAttackBonus) || 0);
+                        // 一般舊版武器每級 +2；李儒專武採新規格每級 +4，再套用人物等級上限。
+                        const baseAttack = isLiRuStaff && Number.isFinite(Number(item.baseAttackBonus))
+                            ? Number(item.baseAttackBonus)
+                            : Math.max(0, (Number(item.attackBonus) || 0) - oldLevel * attackPerLevel - (isLiRuStaff ? qualityAttackBonus : 0));
                         item.enhancementLevel = newLevel;
-                        item.attackBonus = baseAttack + newLevel * 2;
-                        item.attackSpeedBonus = (Number(family.speed) || 0) + Math.min(0.60, newLevel * 0.03);
+                        item.attackBonus = baseAttack + newLevel * attackPerLevel + (isLiRuStaff ? qualityAttackBonus : 0);
+                        item.attackSpeedBonus = (Number(item.baseAttackSpeedBonus) || Number(family.speed) || 0) + Math.min(0.60, newLevel * 0.03);
+                        if (isLiRuStaff) {
+                            item.baseAttackBonus = baseAttack;
+                            item.baseAttackSpeedBonus = Number(item.baseAttackSpeedBonus) || 0;
+                            item.cannotEnhance = false;
+                            syncLiRuStaffEnhancementProperties(item);
+                        }
                     } else if (kind === 'armor') {
                         const removed = oldLevel - newLevel;
                         // 舊版每級防具強化固定增加物防 +4、魔防 +2。
@@ -11416,9 +11445,17 @@ function getCombatVisualCycleDuration(actionPath) {
         }
         function applyWeaponUpgrade(weapon = ensurePlayerWeapon(currentPlayer)) {
             if (!weapon) return false;
-            weapon.attackBonus = (Number(weapon.attackBonus) || 0) + 4;
+            const isLiRuStaff = weapon.templateId === 'li_ru_poison_wine_staff_v1';
+            if (!isLiRuStaff) weapon.attackBonus = (Number(weapon.attackBonus) || 0) + 4;
             weapon.enhancementLevel += 1;
             const previousBonus = Number(weapon.attackSpeedBonus) || 0;
+            if (isLiRuStaff) {
+                weapon.cannotEnhance = false;
+                weapon.attackBonus = (Number(weapon.baseAttackBonus) || 250) + weapon.enhancementLevel * 4 + Math.max(0, Number(weapon.qualityAttackBonus) || 0);
+                weapon.attackSpeedBonus = (Number(weapon.baseAttackSpeedBonus) || 0) + Math.min(0.60, weapon.enhancementLevel * 0.03);
+                syncLiRuStaffEnhancementProperties(weapon);
+                return weapon.attackSpeedBonus > previousBonus;
+            }
             if (weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique') {
                 const baseSpeed = Number(weapon.baseAttackSpeedBonus) || 0;
                 weapon.attackSpeedBonus = baseSpeed + Math.min(0.60, weapon.enhancementLevel * 0.03);
@@ -11446,7 +11483,8 @@ function getCombatVisualCycleDuration(actionPath) {
         function attemptWeaponEnhancement(weapon = ensurePlayerWeapon(currentPlayer), bonus = 0, scrollName = '普通武器強化卷軸') {
             if (!weapon) return '請先裝備武器。';
             const isDivineDragonUnique = weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique';
-            if (weapon.cannotEnhance && !isDivineDragonUnique) return `【${weapon.name}】不可強化；不消耗強化卷軸。`;
+            const isLiRuStaff = weapon.templateId === 'li_ru_poison_wine_staff_v1';
+            if (weapon.cannotEnhance && !isDivineDragonUnique && !isLiRuStaff) return `【${weapon.name}】不可強化；不消耗強化卷軸。`;
             const level = Number(weapon.enhancementLevel) || 0;
             const maxLevel = getEquipmentEnhancementCap();
             if (level >= maxLevel) return `已達人物等級 +20 的強化上限（+${maxLevel}），無法繼續強化。`;
@@ -11470,6 +11508,7 @@ function getCombatVisualCycleDuration(actionPath) {
                     weapon.attackBonus = Math.max((Number(weapon.attackBonus) || 0) - 4, 1);
                     weapon.attackSpeedBonus = Math.max((weapon.attackSpeedBonus || 0) - 0.03, (weaponFamilies[currentPlayer.key] || weaponFamilies.knight).speed);
                 }
+                syncLiRuStaffEnhancementProperties(weapon);
                 return `強化失敗（成功率 ${chance}%），武器退化至 +${weapon.enhancementLevel}；每 +10 級階段保護，不會降破階段。`;
             }
             return `強化失敗（成功率 ${chance}%），武器沒有退化，維持 +${level}。`;
@@ -14476,6 +14515,15 @@ function getCombatVisualCycleDuration(actionPath) {
                 ? (currentPlayer.items.weapons || []).find(entry => entry.instanceId === instanceId)
                 : (currentPlayer.items.armors || []).find(entry => entry.instanceId === instanceId);
             if (!item) return;
+            if (isWeapon && item.templateId === 'li_ru_poison_wine_staff_v1') {
+                item.enhancementLevel = Math.max(0, Math.floor(Number(item.enhancementLevel) || 0));
+                item.baseAttackBonus = Math.max(0, Number(item.baseAttackBonus) || 250);
+                item.baseAttackSpeedBonus = Number(item.baseAttackSpeedBonus) || 0;
+                item.attackBonus = item.baseAttackBonus + item.enhancementLevel * 4 + Math.max(0, Number(item.qualityAttackBonus) || 0);
+                item.attackSpeedBonus = item.baseAttackSpeedBonus + Math.min(0.60, item.enhancementLevel * 0.03);
+                item.cannotEnhance = false;
+                syncLiRuStaffEnhancementProperties(item);
+            }
             const equipped = isWeapon
                 ? currentPlayer.equipment.weaponId === item.instanceId
                 : isArmorItemEquipped(item, currentPlayer);
@@ -14486,9 +14534,10 @@ function getCombatVisualCycleDuration(actionPath) {
             const isDivineDragonUnique = typeof window.isDivineDragonUniqueEquipment === 'function'
                 ? window.isDivineDragonUniqueEquipment(item)
                 : item.isDivineDragonUnique === true || item.uniqueDropType === 'divine_dragon_unique';
+            const isLiRuStaff = isWeapon && item.templateId === 'li_ru_poison_wine_staff_v1';
             const successChance = Math.min(100, getEnhancementSuccessChance(level, isWeapon ? 6 : 4) + (bestScroll?.bonus || 0));
             const scrollCount = ['weaponScroll','armorScroll','weaponScrollAdvanced','armorScrollAdvanced','weaponScrollHigh','armorScrollHigh'].reduce((sum,key) => sum + ((isWeapon ? key.startsWith('weaponScroll') : key.startsWith('armorScroll')) ? Math.max(0,Number(currentPlayer.items[key])||0) : 0),0);
-            const canEnhance = (isDivineDragonUnique || (!item.cannotEnhance && item.slot !== 'necklace')) && !!bestScroll && level < maxEnhancementLevel;
+            const canEnhance = (isDivineDragonUnique || isLiRuStaff || (!item.cannotEnhance && item.slot !== 'necklace')) && !!bestScroll && level < maxEnhancementLevel;
             const equipmentLevelText = `LV ${getEquipmentRequiredLevel(item, kind)}`;
             const isShadowVoidSixLumenItem = item.templateId === 'shadow_void_six_lumen_pendant' || item.id === 'shadow_void_six_lumen_pendant' || item.name === '影虛・六曜冥星墜';
             const enhancementText = isDivineDragonUnique
@@ -14499,6 +14548,8 @@ function getCombatVisualCycleDuration(actionPath) {
                 ? `${equipmentLevelText}｜${item.material || '六曜冥星晶'}｜項鍊｜不可強化｜六項能力各 +50（可突破上限）`
                 : item.slot === 'necklace'
                 ? `${equipmentLevelText}｜${item.material || '項鍊材料'}｜項鍊｜不可強化｜${(item.properties || []).filter(property => !String(property).includes('六項能力各 +50')).join('｜') || '依物品能力加成為準'}`
+                : isWeapon && isLiRuStaff
+                ? `${equipmentLevelText}｜魔法攻擊力 ${formatEquipmentStatValue('attackBonus', item.attackBonus)}｜攻速 ${formatEquipmentNumber(item.attackSpeedBonus || 0, 2)} 次/秒｜每次成功強化：魔攻 +4、攻速 +0.03（攻速加成上限 +0.60）｜強化 +${level}／上限 +${maxEnhancementLevel}`
                 : isWeapon
                 ? `${equipmentLevelText}｜${getWeaponAttackTypeLabel(item)} ${formatEquipmentStatValue('attackBonus', item.attackBonus)}｜攻速 ${formatEquipmentNumber(item.attackSpeedBonus || 0, 2)} 次/秒｜命中加成 ${formatEquipmentStatValue('hitChanceBonus', (item.meleeHitBonus || 0) + (item.rangedHitBonus || 0) + (item.magicHitBonus || 0) + (item.hitChanceBonus || 0))}｜強化 +${level}／上限 +${maxEnhancementLevel}`
                 : item.spellbook ? `${equipmentLevelText}｜${item.material}｜${item.slotLabel}｜魔法攻擊力 ${formatEquipmentStatValue('magicAttackBonus', item.magicAttackBonus)}｜魔法防禦力 ${formatEquipmentStatValue('magicDefenseBonus', item.magicDefenseBonus)}｜每次強化：魔攻 +1、魔防 +2｜強化 +${level}／上限 +${maxEnhancementLevel}`
@@ -16257,7 +16308,8 @@ function getCombatVisualCycleDuration(actionPath) {
         function enhanceWeapon(instanceId, from = 'inventory') {
             const weapon = (currentPlayer.items.weapons || []).find(item => item.instanceId === instanceId);
             if (!weapon) { addBattleLog('⚠️ 找不到這件武器，請重新開啟背包。'); return; }
-            if (weapon.cannotEnhance && !(weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique')) { addBattleLog(`⚠️【${weapon.name}】不可強化；未消耗強化卷軸。`); return; }
+            const isLiRuStaff = weapon.templateId === 'li_ru_poison_wine_staff_v1';
+            if (weapon.cannotEnhance && !(weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique' || isLiRuStaff)) { addBattleLog(`⚠️【${weapon.name}】不可強化；未消耗強化卷軸。`); return; }
             if ((Number(weapon.enhancementLevel) || 0) >= getEquipmentEnhancementCap()) { addBattleLog(`⚠️ 這件武器已達人物等級 +20 的強化上限（+${getEquipmentEnhancementCap()}）。`); return; }
             const scroll = consumeBestEnhancementScroll('weapon');
             if (scroll) {
@@ -17048,7 +17100,8 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
   if(!item){addBattleLog('⚠️ 找不到要強化的裝備，請重新開啟裝備介面。');return;}
   if(kind==='armor'&&item.templateId==='inverse_ring_v1'){item.enhancementLevel=0;addBattleLog('💍 逆神之戒不可批次強化；強化等級固定 +0，未消耗強化卷軸。');return;}
   const isDivineDragonUnique=item.isDivineDragonUnique===true||item.uniqueDropType==='divine_dragon_unique';
-  if(kind==='weapon'&&item.cannotEnhance&&!isDivineDragonUnique){addBattleLog(`⚠️【${item.name}】不可強化，不消耗強化卷軸。`);return;}
+  const isLiRuStaff=kind==='weapon'&&item.templateId==='li_ru_poison_wine_staff_v1';
+  if(kind==='weapon'&&item.cannotEnhance&&!isDivineDragonUnique&&!isLiRuStaff){addBattleLog(`⚠️【${item.name}】不可強化，不消耗強化卷軸。`);return;}
   if(kind==='armor'&&!isDivineDragonUnique&&(item.slot==='necklace'||item.cannotEnhance)){addBattleLog('🌑 此項鍊／防具不可強化；不消耗強化卷軸。');return;}
   const selector=buttonElement?.closest('.enhance-batch-control')?.querySelector('.enhance-batch-count')
     || document.querySelector('.enhance-batch-count');
@@ -18413,6 +18466,8 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
     // 套裝能力是固定能力，不因一般強化轉移改寫；只更新轉移紀錄的強化等級。
     sourceItem.enhancementLevel=0;
     targetItem.enhancementLevel=amount;
+    syncLiRuStaffEnhancementProperties(sourceItem);
+    syncLiRuStaffEnhancementProperties(targetItem);
     saveGame();
     updateGameUI();
     renderInventory();
@@ -27028,7 +27083,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     ],
     description: '平行三國的李儒，身披暗紅策士長袍，手持毒瓶煉製紫燼魘霧。看似冷酷陰沉，卻以圓滾滾的 Q 版臉和小小獠牙散發詭異反差感。',
     dropTable: ['李儒專屬法杖：鴆酒策士杖（Lv.80、僅魔導師可裝備、5%掉落）', '武器技能：鴆酒飲杯（命中時5%機率觸發；每秒造成魔法攻擊力20%的魔法傷害，持續5秒，共5次）'],
-    uniqueDrops: ['鴆酒策士杖｜魔導師專屬法杖｜需求等級 80｜李儒獨立掉落率 5%｜魔法攻擊 +250｜智力 +48、精神 +35、體質 +28｜魔法命中 +3%｜魔法暴擊 +3%｜鴆酒飲杯：魔法命中時 5% 機率觸發，每秒造成魔法攻擊力 20% 的魔法傷害，持續 5 秒（共 5 次）｜不可強化（固定 +0）'],
+    uniqueDrops: ['鴆酒策士杖｜魔導師專屬法杖｜需求等級 80｜李儒獨立掉落率 5%｜魔法攻擊 +250｜智力 +48、精神 +35、體質 +28｜魔法命中 +3%｜魔法暴擊 +3%｜鴆酒飲杯：魔法命中時 5% 機率觸發，每秒造成魔法攻擊力 20% 的魔法傷害，持續 5 秒（共 5 次）｜可強化：每次成功魔攻 +4、攻速 +0.03（上限 +0.60）'],
     zone: ZONE, threatTier: 'parallel-three-kingdoms-special'
   };
   const monsters = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
@@ -27292,17 +27347,17 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       attackSpeedBonus: 0, baseAttackSpeedBonus: 0, magicHitBonus: 0.03,
       rarity: '神話', quality: '神話', qualityColor: '#bd7aff', statBonuses,
       weaponSkill: { ...SKILL }, sourceMonster: '李儒', sourceDropChance: 0.05,
-      uniqueDropType: 'li_ru_exclusive', cannotEnhance: true, enhancementLevel: 0,
+      uniqueDropType: 'li_ru_exclusive', cannotEnhance: false, enhancementLevel: 0,
       properties: [
         '李儒專屬掉落｜獨立掉落率 5%', '需求等級 80｜僅魔導師可裝備',
         '魔法攻擊力 +250', ...Object.entries(statBonuses).filter(([key]) => statLabels[key]).map(([key, value]) => `${statLabels[key]} +${value}`),
         '魔法命中率 +3%', '魔法暴擊率 +3%',
         '鴆酒飲杯：魔法命中時 5% 機率發動；每秒造成魔法攻擊力 20% 的魔法傷害，持續 5 秒（共 5 次）。',
-        '不可強化｜固定 +0'
+        '強化規則：每次成功魔法攻擊 +4、攻速 +0.03（攻速加成上限 +0.60）'
       ], obtainedAt: Date.now()
     };
     player.items.weapons.push(item);
-    if (typeof addBattleLog === 'function') addBattleLog('🪄 <strong style="color:#d9a6ff">李儒掉落【鴆酒策士杖】！</strong>（魔導師專屬法杖｜掉落率 5%）');
+    if (typeof addBattleLog === 'function') addBattleLog('🪄 <strong style="color:#d9a6ff">李儒掉落【鴆酒策士杖】！</strong>（魔導師專屬可強化法杖｜掉落率 5%）');
     if (typeof saveGame === 'function') saveGame();
     if (document.getElementById('inventory-float')?.style.display === 'flex' && typeof renderInventory === 'function') renderInventory();
     return 1;
