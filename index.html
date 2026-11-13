@@ -6697,6 +6697,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             player.items ||= {};
             player.items.armors = Array.isArray(player.items.armors) ? player.items.armors : [];
             player.items.armors.forEach(armor => {
+                if (armor && (armor.templateId === 'redhare_mount_v1' || armor.id === 'redhare_mount_v1' || armor.name === '赤兔馬')) { armor.icon = ''; armor.iconAsset = 'assets/items/redhare-mount-icon.png'; armor.image = 'assets/items/redhare-mount-icon.png'; }
                 if (armor && (armor.slot === 'bowArmor' || /^elf_bow_armor_/.test(String(armor.templateId || '')))) { armor.iconAsset = 'hell_elf_bow_vambrace'; armor.slot = 'bowArmor'; armor.slotLabel = '副武・弓之甲'; }
                 if (armor && (armor.slot === 'spellbook' || /^mage_spellbook_/.test(String(armor.templateId || '')))) { armor.iconAsset = 'hell_mage_spellbook'; armor.slot = 'spellbook'; armor.slotLabel = '副武・魔法書'; }
                 const isShadowVoidSixLumen = armor && (armor.templateId === 'shadow_void_six_lumen_pendant' || armor.id === 'shadow_void_six_lumen_pendant' || armor.name === '影虛・六曜冥星墜');
@@ -27558,7 +27559,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   const TREASURES = Object.freeze({
     redhare_mount_v1: {
       id: 'redhare_mount_v1', name: '赤兔馬', kind: 'armor', slot: 'mount', slotLabel: '座騎',
-      icon: '🐎', armorType: 'mount',
+      icon: '', iconAsset: 'assets/items/redhare-mount-icon.png', armorType: 'mount',
       level: 100, requiredLevel: 100, rarity: '神話', quality: '神話', qualityColor: '#ff526d',
       classKeys: ALL_CLASSES, classKey: 'shared', dropChance: 0.03, sourceMonster: '呂布',
       physicalDefenseBonus: 220, magicDefenseBonus: 220,
@@ -27597,7 +27598,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   const treasureList = Object.values(TREASURES);
   const addMountSlot = () => {
     if (Array.isArray(armorSlots) && !armorSlots.some(slot => slot.key === 'mount')) {
-      armorSlots.push({ key: 'mount', label: '座騎', equipmentKey: 'mountId', icon: '🐎', classKeys: ALL_CLASSES });
+      armorSlots.push({ key: 'mount', label: '座騎', equipmentKey: 'mountId', icon: '', iconAsset: 'assets/items/redhare-mount-icon.png', classKeys: ALL_CLASSES });
     }
   };
   addMountSlot();
