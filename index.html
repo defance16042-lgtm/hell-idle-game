@@ -7149,11 +7149,30 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             }
 
             const isDivineDragonUniqueWeapon = weapon => !!(weapon && (weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique'));
-            player.items.weapons = player.items.weapons.filter(weapon => weapon && weapon.instanceId && (weapon.classKey === player.key || weapon.templateId === 'li_ru_poison_wine_staff_v1' || isDivineDragonUniqueWeapon(weapon)));
+            const isLuBuHalberd = weapon => !!(weapon && (weapon.templateId === 'fangtian_halberd_v1' || weapon.id === 'fangtian_halberd_v1' || weapon.name === '方天畫載'));
+            player.items.weapons = player.items.weapons.filter(weapon => weapon && weapon.instanceId && (weapon.classKey === player.key || weapon.templateId === 'li_ru_poison_wine_staff_v1' || isDivineDragonUniqueWeapon(weapon) || (isLuBuHalberd(weapon) && ['knight', 'warrior'].includes(player.key))));
             const family = weaponFamilies[player.key] || weaponFamilies.knight;
             player.items.weapons.forEach(weapon => {
                 const enhancementLevel = Number(weapon.enhancementLevel) || 0;
                 const qualityAttackBonus = Math.max(0, Number(weapon.qualityAttackBonus) || 0);
+                if (isLuBuHalberd(weapon)) {
+                    weapon.name = '方天畫戟';
+                    weapon.templateId = 'fangtian_halberd_v1';
+                    weapon.id = 'fangtian_halberd_v1';
+                    weapon.classKey = ['knight', 'warrior'].includes(player.key) ? player.key : (weapon.classKey || 'knight');
+                    weapon.classKeys = ['knight', 'warrior'];
+                    weapon.cannotEnhance = false;
+                    if (Array.isArray(weapon.properties)) {
+                        weapon.properties = weapon.properties.filter(entry => !/不可強化|固定\s*\+0|方天畫載|方天畫戟專屬強化提示/.test(String(entry)));
+                        weapon.properties.push('方天畫戟專屬強化提示｜可強化，成功時攻擊力 +4');
+                    }
+                    weapon.baseAttackBonus = Number.isFinite(Number(weapon.baseAttackBonus)) ? Number(weapon.baseAttackBonus) : (Number(weapon.attackBonus) || 520) - enhancementLevel * 4;
+                    weapon.attackBonus = weapon.baseAttackBonus + enhancementLevel * 4;
+                    weapon.baseAttackSpeedBonus = Number.isFinite(Number(weapon.baseAttackSpeedBonus)) ? Number(weapon.baseAttackSpeedBonus) : (Number(weapon.attackSpeedBonus) || 0);
+                    weapon.attackSpeedBonus = weapon.baseAttackSpeedBonus + Math.min(0.60, enhancementLevel * 0.03);
+                    weapon.enhancementLevel = enhancementLevel;
+                    return;
+                }
                 if (isDivineDragonUniqueWeapon(weapon)) {
                     const savedBaseAttack = Number.isFinite(Number(weapon.baseAttackBonus))
                         ? Number(weapon.baseAttackBonus)
@@ -7198,7 +7217,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                     rollWeaponProperties(weapon);
                 }
             });
-            const usableWeapons = player.items.weapons.filter(weapon => weapon.classKey === player.key || isDivineDragonUniqueWeapon(weapon));
+            const usableWeapons = player.items.weapons.filter(weapon => weapon.classKey === player.key || isDivineDragonUniqueWeapon(weapon) || (isLuBuHalberd(weapon) && ['knight', 'warrior'].includes(player.key)));
             if (player.equipment.weaponId === undefined) {
                 if (!usableWeapons.length) {
                     const starter = rollWeaponProperties(createWeaponItem(player.key, 0, { attackSpeedBonus: (weaponFamilies[player.key] || weaponFamilies.knight).speed + player.equipment.weaponAttackSpeedBonus }));
@@ -11711,7 +11730,7 @@ function getCombatVisualCycleDuration(actionPath) {
                 currentPlayer.items.armors ||= []; currentPlayer.items.armors.push(ring);
                 addBattleLog(`💍 <strong style="color:#ffe58a">逆神熾天墮龍掉落【逆神之戒】！</strong>（獨立掉落率 1%；${skill==='light'?'光明聖盾':'黑暗魔盾'}）`);
             }
-            if (!isTrainingDummy && currentMonster?.type === 'boss' && Number(currentMonster.level) === 100 && String(currentMonster.name || '') === '克卜勒・黑星萌王' && Math.random() < 0.18) {
+            if (!isTrainingDummy && currentMonster?.zone === '克卜勒-452b' && currentMonster?.type === 'boss' && Number(currentMonster.level) === 100 && String(currentMonster.name || '') === '克卜勒・黑星萌王' && Math.random() < 0.18) {
                 const ring = { instanceId:`kepler_blackstar_ring_${Date.now()}_${Math.random().toString(36).slice(2,8)}`, templateId:'kepler_blackstar_ring_v1', name:'黑星萌王核心', slot:'ringLeft', slotLabel:'戒指', icon:'🌑', rarity:'神話', qualityColor:'#ff5fbd', quality:'神話', level:100, requiredLevel:100, classKeys:['knight','warrior','elf','mage','monk'], attackBonus:180, physicalDefenseBonus:160, magicDefenseBonus:220, cannotEnhance:true, enhancementLevel:0, shieldSkill:'blackstar', properties:['戒指部位','全職業可用','攻擊力 +180','防禦力 +160','魔法防禦力 +220','黑星護盾：受傷時 8% 機率減傷 25%，持續 4 秒'] };
                 currentPlayer.items.armors ||= []; currentPlayer.items.armors.push(ring);
                 addBattleLog(`🌑 <strong style="color:#ff9bd8">克卜勒・黑星萌王掉落【黑星萌王核心】！</strong>（戒指｜全職業可用｜獨立掉落率 18%）`);
@@ -24574,7 +24593,7 @@ const roster=[{"name":"暗芯偵察豆","image":"assets/monsters/kepler_452b/kep
 const list=Array.isArray(zoneMonsters[ZONE])?zoneMonsters[ZONE]:(zoneMonsters[ZONE]=[]);
 for(const m of roster) if(!list.some(x=>x&&x.name===m.name)) list.push(m);
 const dropOld=window.getMonsterDropDisplay;
-if(typeof dropOld==='function'&&!dropOld.__keplerDrop91_100){const wrapped=function(monster,...args){let html=dropOld.call(this,monster,...args);if(monster&&monster.level>=91&&monster.level<=100){const rows=[...(monster.dropTable||[]),...(monster.uniqueDrops||[])].map(x=>`<div class="bestiary-drop-item wide"><span class="bestiary-drop-icon">✧</span><div class="bestiary-drop-text"><strong>克卜勒專屬掉落</strong>${x}</div></div>`).join('');html+=`<div class="bestiary-drop-panel kepler-drop-panel"><div class="bestiary-drop-title">🌑 克卜勒 ${monster.level}LV 掉落清單</div><div class="bestiary-drop-grid">${rows}</div></div>`;}return html};wrapped.__keplerDrop91_100=true;window.getMonsterDropDisplay=wrapped;}
+if(typeof dropOld==='function'&&!dropOld.__keplerDrop91_100){const wrapped=function(monster,...args){let html=dropOld.call(this,monster,...args);if(monster&&monster.zone==='克卜勒-452b'&&monster.level>=91&&monster.level<=100){const rows=[...(monster.dropTable||[]),...(monster.uniqueDrops||[])].map(x=>`<div class="bestiary-drop-item wide"><span class="bestiary-drop-icon">✧</span><div class="bestiary-drop-text"><strong>克卜勒專屬掉落</strong>${x}</div></div>`).join('');html+=`<div class="bestiary-drop-panel kepler-drop-panel"><div class="bestiary-drop-title">🌑 克卜勒 ${monster.level}LV 掉落清單</div><div class="bestiary-drop-grid">${rows}</div></div>`;}return html};wrapped.__keplerDrop91_100=true;window.getMonsterDropDisplay=wrapped;}
 })();
 </script>
 <style id="bestiary-equipment-drop-color-v1">
@@ -27551,14 +27570,14 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       properties: ['座騎部位｜全職業可用｜需求等級 100', '攻擊力 +280', '生命上限 +24,000', '魔力上限 +3,000', '物理防禦 +220', '魔法防禦 +220', '力量 +50｜敏捷 +50｜體質 +50｜精神 +50｜智力 +50｜魅力 +30', '攻擊速度 +0.10｜命中率 +3%｜閃避率 +3%｜全屬性抗性 +3%', '赤兔奔雷：攻擊時 8% 機率使本次傷害提高 25%。', '戰場疾馳：生命低於 35% 時，受到傷害降低 8%，攻擊速度額外提高 0.05。', '呂布專屬掉落｜獨立掉落率 3%', '不可強化｜強化等級固定 +0']
     },
     fangtian_halberd_v1: {
-      id: 'fangtian_halberd_v1', name: '方天畫戟', kind: 'weapon', slot: 'weapon', slotLabel: '武器',
+      id: 'fangtian_halberd_v1', name: '方天畫戟', kind: 'weapon', slot: 'weapon', slotLabel: '武器', cannotEnhance: false,
       icon: '🔱', weaponType: 'melee',
       level: 100, requiredLevel: 100, rarity: '神話', quality: '神話', qualityColor: '#c879ff',
       classKeys: ['knight', 'warrior'], classKey: 'knight', dropChance: 0.02, sourceMonster: '呂布',
       attackBonus: 520, baseAttackBonus: 520, attackSpeedBonus: 0, baseAttackSpeedBonus: 0,
       statBonuses: { str: 85, con: 45, physicalDefense: 120, meleeHitBonus: 0.05, meleeCritRate: 0.06, meleeCritDamage: 0.12 },
       passiveSkills: [{ id: 'ghost_god_breaker', name: '鬼神破陣', trigger: 'meleeHit', chance: 0.10, damageMultiplier: 1.35, bossDamageMultiplier: 1.10 }],
-      properties: ['武器部位｜騎士、修羅戰士可用｜需求等級 100', '攻擊力 +520', '力量 +85｜體質 +45｜物理防禦 +120', '近戰命中率 +5%｜近戰暴擊率 +6%｜近戰暴擊傷害 +12%', '鬼神破陣：近戰攻擊命中時 10% 機率觸發，本次傷害提高 35%，對 BOSS 額外提高 10%。', '呂布專屬掉落｜獨立掉落率 2%', '不可強化｜強化等級固定 +0']
+      properties: ['武器部位｜騎士、修羅戰士可用｜需求等級 100', '攻擊力 +520', '力量 +85｜體質 +45｜物理防禦 +120', '近戰命中率 +5%｜近戰暴擊率 +6%｜近戰暴擊傷害 +12%', '鬼神破陣：近戰攻擊命中時 10% 機率觸發，本次傷害提高 35%，對 BOSS 額外提高 10%。', '呂布專屬掉落｜獨立掉落率 2%', '可強化｜強化成功時攻擊力 +4']
     },
     golden_armor_v1: {
       id: 'golden_armor_v1', name: '黃金鎧甲', kind: 'armor', slot: 'chest', slotLabel: '胸甲',
@@ -27586,7 +27605,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   // 讓圖鑑與既有掉落顯示讀到完整三寶資料；實際戰鬥被動保留在 passiveSkills 供戰鬥模組消費。
   const luBu = window.parallelThreeKingdomsLuBu;
   if (luBu) {
-    luBu.uniqueDrops = treasureList.map(item => `${item.name}｜${item.slotLabel}｜神話｜需求等級 ${item.requiredLevel}｜獨立掉落率 ${(item.dropChance * 100).toFixed(0)}%｜${item.properties.slice(1, -2).join('；')}｜不可強化（固定 +0）`);
+    luBu.uniqueDrops = treasureList.map(item => `${item.name}｜${item.slotLabel}｜神話｜需求等級 ${item.requiredLevel}｜獨立掉落率 ${(item.dropChance * 100).toFixed(0)}%｜${item.properties.slice(1, -2).join('；')}｜${item.cannotEnhance === false ? '可強化' : '不可強化（固定 +0）'}`);
   }
 
   const statLabels = { attack: '攻擊力', maxHp: '生命上限', maxMp: '魔力上限', str: '力量', dex: '敏捷', con: '體質', wis: '精神', int: '智力', cha: '魅力', physicalDefense: '物理防禦', magicDefense: '魔法防禦', attackSpeedBonus: '攻擊速度', hitRate: '命中率', evasion: '閃避率', allResistance: '全屬性抗性', meleeHitBonus: '近戰命中率', meleeCritRate: '近戰暴擊率', meleeCritDamage: '近戰暴擊傷害' };
@@ -27603,7 +27622,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       classKeys: def.classKeys.slice(),
       dropChance: def.dropChance, sourceMonster: def.sourceMonster, sourceDropChance: def.dropChance,
       statBonuses: { ...def.statBonuses }, stats: { ...def.statBonuses }, passiveSkills: def.passiveSkills.map(skill => ({ ...skill })),
-      properties, enhancementLevel: 0, cannotEnhance: true, uniqueDropType: 'lu_bu_divine_treasure', isLuBuDivineTreasure: true, obtainedAt: Date.now()
+      properties, enhancementLevel: 0, cannotEnhance: def.cannotEnhance !== false, uniqueDropType: 'lu_bu_divine_treasure', isLuBuDivineTreasure: true, obtainedAt: Date.now()
     };
     if (isWeapon) { item.attackBonus = def.attackBonus; item.baseAttackBonus = def.baseAttackBonus; item.attackSpeedBonus = 0; item.baseAttackSpeedBonus = 0; }
     if (def.physicalDefenseBonus) { item.physicalDefenseBonus = def.physicalDefenseBonus; item.basePhysicalDefenseBonus = def.physicalDefenseBonus; }
@@ -27623,7 +27642,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       const item = createItem(def, player);
       (def.kind === 'weapon' ? player.items.weapons : player.items.armors).push(item);
       count++;
-      if (typeof addBattleLog === 'function') addBattleLog(`🔱 <strong style="color:${def.qualityColor}">呂布掉落【${def.rarity} ${def.name}】</strong>（${def.slotLabel}｜獨立掉落率 ${(def.dropChance * 100).toFixed(0)}%｜不可強化）！`);
+      if (typeof addBattleLog === 'function') addBattleLog(`🔱 <strong style="color:${def.qualityColor}">呂布掉落【${def.rarity} ${def.name}】</strong>（${def.slotLabel}｜獨立掉落率 ${(def.dropChance * 100).toFixed(0)}%｜${def.cannotEnhance === false ? '可強化' : '不可強化'}）！`);
     });
     if (count) { if (typeof saveGame === 'function') saveGame(); if (typeof renderInventory === 'function' && document.getElementById('inventory-float')?.style.display === 'flex') renderInventory(); }
     return count;
