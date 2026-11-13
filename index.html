@@ -6083,8 +6083,9 @@ function getEquipmentTooltipText(item, kind = 'weapon') {
     const isDivineDragonUnique = item.isDivineDragonUnique === true || item.uniqueDropType === 'divine_dragon_unique';
     const isLiRuStaff = item.templateId === 'li_ru_poison_wine_staff_v1';
     const isLuBuHalberd = item.templateId === 'fangtian_halberd_v1';
+    const isLuBuGoldenArmor = item.templateId === 'golden_armor_v1';
     const isNecklace = kind === 'armor' && item.slot === 'necklace';
-    const isUnenhanceable = !isDivineDragonUnique && !isLiRuStaff && !isLuBuHalberd && (isNecklace || Boolean(item.cannotEnhance));
+    const isUnenhanceable = !isDivineDragonUnique && !isLiRuStaff && !isLuBuHalberd && !isLuBuGoldenArmor && (isNecklace || Boolean(item.cannotEnhance));
     const equipmentPartLabel = isRing ? '戒指' : isNecklace ? '項鍊' : item?.slot === 'shield' ? '盾牌' : '裝備';
     const rows = [`${getEquipmentQualityIcon(item)} ${rarity}品質｜${getEquipmentDisplayName(item)}`, `${equipmentPartLabel}等級：LV ${requiredLevel}`];
     if (isUnenhanceable) rows.push(isRing ? '強化限制：逆神之戒不可強化｜強化等級固定 +0' : isNecklace ? '強化限制：項鍊不可強化｜強化等級固定 +0' : '強化限制：此裝備不可強化｜強化等級固定 +0');
@@ -6701,6 +6702,19 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             player.items.armors.forEach(armor => {
                 if (armor && (armor.slot === 'bowArmor' || /^elf_bow_armor_/.test(String(armor.templateId || '')))) { armor.iconAsset = 'hell_elf_bow_vambrace'; armor.slot = 'bowArmor'; armor.slotLabel = '副武・弓之甲'; }
                 if (armor && (armor.slot === 'spellbook' || /^mage_spellbook_/.test(String(armor.templateId || '')))) { armor.iconAsset = 'hell_mage_spellbook'; armor.slot = 'spellbook'; armor.slotLabel = '副武・魔法書'; }
+                const isLuBuGoldenArmor = armor?.templateId === 'golden_armor_v1';
+                if (isLuBuGoldenArmor) {
+                    armor.name = '黃金鎧甲';
+                    armor.enhancementLevel = Math.max(0, Math.floor(Number(armor.enhancementLevel) || 0));
+                    armor.basePhysicalDefenseBonus = Number.isFinite(Number(armor.basePhysicalDefenseBonus)) ? Number(armor.basePhysicalDefenseBonus) : Math.max(0, Number(armor.physicalDefenseBonus) || 420);
+                    armor.baseMagicDefenseBonus = Number.isFinite(Number(armor.baseMagicDefenseBonus)) ? Number(armor.baseMagicDefenseBonus) : Math.max(0, Number(armor.magicDefenseBonus) || 320);
+                    armor.physicalDefenseBonus = armor.basePhysicalDefenseBonus + armor.enhancementLevel * 4;
+                    armor.magicDefenseBonus = armor.baseMagicDefenseBonus + armor.enhancementLevel * 2;
+                    armor.cannotEnhance = false;
+                    armor.uniqueDropType = 'lu_bu_divine_treasure';
+                    armor.isLuBuDivineTreasure = true;
+                    syncLuBuGoldenArmorEnhancementProperties(armor);
+                }
                 const isShadowVoidSixLumen = armor && (armor.templateId === 'shadow_void_six_lumen_pendant' || armor.id === 'shadow_void_six_lumen_pendant' || armor.name === '影虛・六曜冥星墜');
                 const isDivineDragonUnique = armor && (armor.isDivineDragonUnique === true || armor.uniqueDropType === 'divine_dragon_unique');
                 if (armor && (armor.slot === 'necklace' || isShadowVoidSixLumen)) {
@@ -7136,6 +7150,24 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             const levelIndex = weapon.properties.findIndex(property => String(property).includes('需求等級'));
             weapon.properties.splice(levelIndex >= 0 ? levelIndex + 1 : Math.min(1, weapon.properties.length), 0, `攻擊力 +${attack}`);
             weapon.properties.push('強化規則：每次成功強化攻擊力 +4、攻速 +0.03（攻速加成上限 +0.60）');
+        }
+
+        function syncLuBuGoldenArmorEnhancementProperties(armor) {
+            if (!armor || armor.templateId !== 'golden_armor_v1') return;
+            let properties = Array.isArray(armor.properties) ? armor.properties.slice() : [];
+            properties = properties.filter(property => !/不可強化|強化等級固定\s*\+0|^強化規則：/.test(String(property)));
+            let hasDefenseRow = false;
+            properties = properties.map(property => {
+                const text = String(property);
+                if (!/物理防禦|魔法防禦/.test(text)) return property;
+                hasDefenseRow = true;
+                return text
+                    .replace(/物理防禦\s*\+\d+/g, `物理防禦 +${Math.max(0, Math.floor(Number(armor.physicalDefenseBonus) || 0))}`)
+                    .replace(/魔法防禦\s*\+\d+/g, `魔法防禦 +${Math.max(0, Math.floor(Number(armor.magicDefenseBonus) || 0))}`);
+            });
+            if (!hasDefenseRow) properties.splice(Math.min(2, properties.length), 0, `物理防禦 +${Math.max(0, Math.floor(Number(armor.physicalDefenseBonus) || 0))}｜魔法防禦 +${Math.max(0, Math.floor(Number(armor.magicDefenseBonus) || 0))}`);
+            properties.push('強化規則：每次成功強化物理防禦 +4、魔法防禦 +2');
+            armor.properties = properties;
         }
 
         function ensurePlayerWeapon(player) {
@@ -11569,8 +11601,9 @@ function getCombatVisualCycleDuration(actionPath) {
         function attemptArmorEnhancement(armor, bonus = 0, scrollName = '普通防具強化卷軸') {
             if (!armor) return '請先選擇一件防具。';
             if (armor.templateId === 'inverse_ring_v1') return '逆神之戒不可強化；強化等級固定 +0，不消耗強化卷軸。';
+            const isLuBuGoldenArmor = armor.templateId === 'golden_armor_v1';
             const isDivineDragonUnique = armor.isDivineDragonUnique === true || armor.uniqueDropType === 'divine_dragon_unique';
-            if (!isDivineDragonUnique && (armor.slot === 'necklace' || armor.cannotEnhance)) {
+            if (!isDivineDragonUnique && !isLuBuGoldenArmor && (armor.slot === 'necklace' || armor.cannotEnhance)) {
                 return armor.slot === 'necklace'
                     ? '項鍊部位不可強化；六項能力固定，不消耗強化卷軸。'
                     : `【${armor.name}】不可強化；能力固定，強化等級維持 +0，不消耗強化卷軸。`;
@@ -11589,6 +11622,7 @@ function getCombatVisualCycleDuration(actionPath) {
                 else if (wristUpgrade) armor.attackBonus = (Number(armor.attackBonus) || 0) + 4;
                 else if (bowUpgrade) armor.attackBonus = (Number(armor.attackBonus) || 0) + 1;
                 if (!bowUpgrade && !bookUpgrade) { armor.physicalDefenseBonus = (Number(armor.physicalDefenseBonus) || 0) + 4; armor.magicDefenseBonus = (Number(armor.magicDefenseBonus) || 0) + 2; }
+                if (isLuBuGoldenArmor) { armor.cannotEnhance = false; syncLuBuGoldenArmorEnhancementProperties(armor); }
                 refreshSubweaponProperties(armor);
                 return `使用${scrollName}強化成功（成功率 ${chance}%）！${bookUpgrade ? '魔法攻擊力 +1、魔法防禦力 +2；' : bowUpgrade ? '攻擊力 +1；命中與三項隨機能力不變；' : wristUpgrade ? '攻擊力 +4、物理防禦 +4、魔法防禦 +2；' : '物理防禦 +4、魔法防禦 +2；'}目前【${armor.name}】強化 +${armor.enhancementLevel}。`;
             }
@@ -11607,6 +11641,7 @@ function getCombatVisualCycleDuration(actionPath) {
                 else if (bowUpgrade) armor.attackBonus = Math.max(0, (Number(armor.attackBonus) || 0) - 1);
                 if (bookUpgrade) { armor.magicAttackBonus = Math.max(0,(Number(armor.magicAttackBonus)||0)-1); armor.magicDefenseBonus = Math.max(0,(Number(armor.magicDefenseBonus)||0)-2); }
                 else if (!bowUpgrade) { armor.physicalDefenseBonus = Math.max(0,(Number(armor.physicalDefenseBonus)||0)-4); armor.magicDefenseBonus = Math.max(0,(Number(armor.magicDefenseBonus)||0)-2); }
+                if (isLuBuGoldenArmor) syncLuBuGoldenArmorEnhancementProperties(armor);
                 refreshSubweaponProperties(armor);
                 const rollbackText = bowUpgrade ? '攻擊力 -4（隨機命中與能力詞條保留）' : bookUpgrade ? '魔法攻擊力 -4、魔法防禦力 -2（隨機能力詞條保留）' : wristUpgrade ? '攻擊力、物防與魔防同步退化' : '物防與魔防同步退化';
                 return `強化失敗（成功率 ${chance}%），【${armor.name}】退化至 +${armor.enhancementLevel}；${rollbackText}；每 +10 級階段保護，不會降破階段。`;
@@ -14575,6 +14610,17 @@ function getCombatVisualCycleDuration(actionPath) {
                 item.isLuBuDivineTreasure = true;
                 syncLuBuHalberdEnhancementProperties(item);
             }
+            if (!isWeapon && item.templateId === 'golden_armor_v1') {
+                item.enhancementLevel = Math.max(0, Math.floor(Number(item.enhancementLevel) || 0));
+                item.basePhysicalDefenseBonus = Number.isFinite(Number(item.basePhysicalDefenseBonus)) ? Number(item.basePhysicalDefenseBonus) : Math.max(0, Number(item.physicalDefenseBonus) || 420);
+                item.baseMagicDefenseBonus = Number.isFinite(Number(item.baseMagicDefenseBonus)) ? Number(item.baseMagicDefenseBonus) : Math.max(0, Number(item.magicDefenseBonus) || 320);
+                item.physicalDefenseBonus = item.basePhysicalDefenseBonus + item.enhancementLevel * 4;
+                item.magicDefenseBonus = item.baseMagicDefenseBonus + item.enhancementLevel * 2;
+                item.cannotEnhance = false;
+                item.uniqueDropType = 'lu_bu_divine_treasure';
+                item.isLuBuDivineTreasure = true;
+                syncLuBuGoldenArmorEnhancementProperties(item);
+            }
             const equipped = isWeapon
                 ? currentPlayer.equipment.weaponId === item.instanceId
                 : isArmorItemEquipped(item, currentPlayer);
@@ -14587,9 +14633,10 @@ function getCombatVisualCycleDuration(actionPath) {
                 : item.isDivineDragonUnique === true || item.uniqueDropType === 'divine_dragon_unique';
             const isLiRuStaff = isWeapon && item.templateId === 'li_ru_poison_wine_staff_v1';
             const isLuBuHalberd = isWeapon && item.templateId === 'fangtian_halberd_v1';
+            const isLuBuGoldenArmor = !isWeapon && item.templateId === 'golden_armor_v1';
             const successChance = Math.min(100, getEnhancementSuccessChance(level, isWeapon ? 6 : 4) + (bestScroll?.bonus || 0));
             const scrollCount = ['weaponScroll','armorScroll','weaponScrollAdvanced','armorScrollAdvanced','weaponScrollHigh','armorScrollHigh'].reduce((sum,key) => sum + ((isWeapon ? key.startsWith('weaponScroll') : key.startsWith('armorScroll')) ? Math.max(0,Number(currentPlayer.items[key])||0) : 0),0);
-            const canEnhance = (isDivineDragonUnique || isLiRuStaff || isLuBuHalberd || (!item.cannotEnhance && item.slot !== 'necklace')) && !!bestScroll && level < maxEnhancementLevel;
+            const canEnhance = (isDivineDragonUnique || isLiRuStaff || isLuBuHalberd || isLuBuGoldenArmor || (!item.cannotEnhance && item.slot !== 'necklace')) && !!bestScroll && level < maxEnhancementLevel;
             const equipmentLevelText = `LV ${getEquipmentRequiredLevel(item, kind)}`;
             const isShadowVoidSixLumenItem = item.templateId === 'shadow_void_six_lumen_pendant' || item.id === 'shadow_void_six_lumen_pendant' || item.name === '影虛・六曜冥星墜';
             const enhancementText = isDivineDragonUnique
@@ -14602,6 +14649,8 @@ function getCombatVisualCycleDuration(actionPath) {
                 ? `${equipmentLevelText}｜${item.material || '項鍊材料'}｜項鍊｜不可強化｜${(item.properties || []).filter(property => !String(property).includes('六項能力各 +50')).join('｜') || '依物品能力加成為準'}`
                 : isWeapon && isLuBuHalberd
                 ? `${equipmentLevelText}｜攻擊力 ${formatEquipmentStatValue('attackBonus', item.attackBonus)}｜攻速 ${formatEquipmentNumber(item.attackSpeedBonus || 0, 2)} 次/秒｜每次成功強化：攻擊 +4、攻速 +0.03（攻速加成上限 +0.60）｜強化 +${level}／上限 +${maxEnhancementLevel}`
+                : isLuBuGoldenArmor
+                ? `${equipmentLevelText}｜${item.slotLabel || '胸甲'}｜物理防禦 ${formatEquipmentStatValue('physicalDefenseBonus', item.physicalDefenseBonus)}｜魔法防禦 ${formatEquipmentStatValue('magicDefenseBonus', item.magicDefenseBonus)}｜每次成功強化：物防 +4、魔防 +2｜強化 +${level}／上限 +${maxEnhancementLevel}`
                 : isWeapon && isLiRuStaff
                 ? `${equipmentLevelText}｜魔法攻擊力 ${formatEquipmentStatValue('attackBonus', item.attackBonus)}｜攻速 ${formatEquipmentNumber(item.attackSpeedBonus || 0, 2)} 次/秒｜每次成功強化：魔攻 +4、攻速 +0.03（攻速加成上限 +0.60）｜強化 +${level}／上限 +${maxEnhancementLevel}`
                 : isWeapon
@@ -14678,11 +14727,12 @@ function getCombatVisualCycleDuration(actionPath) {
                 : (currentPlayer.items.armors || []).find(entry => entry.instanceId === instanceId && isArmorItemEquipped(entry, currentPlayer));
             if (!item) return;
             const isInverseRing = !isWeapon && item.templateId === 'inverse_ring_v1';
+            const isLuBuGoldenArmor = !isWeapon && item.templateId === 'golden_armor_v1';
             const isDivineDragonUnique = typeof window.isDivineDragonUniqueEquipment === 'function'
                 ? window.isDivineDragonUniqueEquipment(item)
                 : item.isDivineDragonUnique === true || item.uniqueDropType === 'divine_dragon_unique';
             const isNecklace = !isWeapon && item.slot === 'necklace';
-            const isUnenhanceable = !isWeapon && !isDivineDragonUnique && (isNecklace || Boolean(item.cannotEnhance));
+            const isUnenhanceable = !isWeapon && !isDivineDragonUnique && !isLuBuGoldenArmor && (isNecklace || Boolean(item.cannotEnhance));
             const requiredLevel = getEquipmentRequiredLevel(item, isWeapon ? 'weapon' : 'armor');
             const bonuses = isWeapon
                 ? [[getWeaponAttackTypeLabel(item), formatEquipmentStatValue('attackBonus', item.attackBonus)].join(' '), `攻速 ${formatEquipmentNumber(item.attackSpeedBonus || 0, 2)} 次/秒`, `近戰命中 ${formatEquipmentStatValue('meleeHitBonus', item.meleeHitBonus)}`, `遠距命中 ${formatEquipmentStatValue('rangedHitBonus', item.rangedHitBonus)}`, `魔法命中 ${formatEquipmentStatValue('magicHitBonus', item.magicHitBonus)}`]
@@ -16380,7 +16430,8 @@ function getCombatVisualCycleDuration(actionPath) {
             if (!armor) { addBattleLog('⚠️ 找不到這件防具，請重新開啟背包。'); return; }
             if (armor.templateId === 'inverse_ring_v1') { armor.enhancementLevel = 0; addBattleLog('💍 逆神之戒不可強化；強化等級固定 +0，未消耗強化卷軸。'); return; }
             const isDivineDragonUnique = armor.isDivineDragonUnique === true || armor.uniqueDropType === 'divine_dragon_unique';
-            if (!isDivineDragonUnique && (armor.slot === 'necklace' || armor.cannotEnhance)) {
+            const isLuBuGoldenArmor = armor.templateId === 'golden_armor_v1';
+            if (!isDivineDragonUnique && !isLuBuGoldenArmor && (armor.slot === 'necklace' || armor.cannotEnhance)) {
                 const message = armor.slot === 'necklace'
                     ? '項鍊部位不可強化；影虛・六曜冥星墜的六項能力固定。'
                     : `【${armor.name}】不可強化；能力固定，強化等級維持 +0。`;
@@ -17155,10 +17206,11 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
   if(!item){addBattleLog('⚠️ 找不到要強化的裝備，請重新開啟裝備介面。');return;}
   if(kind==='armor'&&item.templateId==='inverse_ring_v1'){item.enhancementLevel=0;addBattleLog('💍 逆神之戒不可批次強化；強化等級固定 +0，未消耗強化卷軸。');return;}
   const isDivineDragonUnique=item.isDivineDragonUnique===true||item.uniqueDropType==='divine_dragon_unique';
+  const isLuBuGoldenArmor=kind==='armor'&&item.templateId==='golden_armor_v1';
   const isLiRuStaff=kind==='weapon'&&item.templateId==='li_ru_poison_wine_staff_v1';
   const isLuBuHalberd=kind==='weapon'&&item.templateId==='fangtian_halberd_v1';
   if(kind==='weapon'&&item.cannotEnhance&&!isDivineDragonUnique&&!isLiRuStaff&&!isLuBuHalberd){addBattleLog(`⚠️【${item.name}】不可強化，不消耗強化卷軸。`);return;}
-  if(kind==='armor'&&!isDivineDragonUnique&&(item.slot==='necklace'||item.cannotEnhance)){addBattleLog('🌑 此項鍊／防具不可強化；不消耗強化卷軸。');return;}
+  if(kind==='armor'&&!isDivineDragonUnique&&!isLuBuGoldenArmor&&(item.slot==='necklace'||item.cannotEnhance)){addBattleLog('🌑 此項鍊／防具不可強化；不消耗強化卷軸。');return;}
   const selector=buttonElement?.closest('.enhance-batch-control')?.querySelector('.enhance-batch-count')
     || document.querySelector('.enhance-batch-count');
   const rawRequested=Number(selector?.value);
@@ -18528,6 +18580,8 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
       sourceItem.magicDefenseBonus = sourceBaseMagic;
       targetItem.physicalDefenseBonus = targetBasePhysical + amount * 4;
       targetItem.magicDefenseBonus = targetBaseMagic + amount * 2;
+      if (sourceItem.templateId === 'golden_armor_v1') sourceItem.cannotEnhance = false;
+      if (targetItem.templateId === 'golden_armor_v1') targetItem.cannotEnhance = false;
     }
     // 套裝能力是固定能力，不因一般強化轉移改寫；只更新轉移紀錄的強化等級。
     sourceItem.enhancementLevel=0;
@@ -18536,6 +18590,8 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
     syncLiRuStaffEnhancementProperties(targetItem);
     syncLuBuHalberdEnhancementProperties(sourceItem);
     syncLuBuHalberdEnhancementProperties(targetItem);
+    syncLuBuGoldenArmorEnhancementProperties(sourceItem);
+    syncLuBuGoldenArmorEnhancementProperties(targetItem);
     saveGame();
     updateGameUI();
     renderInventory();
@@ -27734,7 +27790,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
         { id: 'golden_guard', name: '金甲護身', trigger: 'bossDamageTaken', chance: 0.08, damageReductionPct: 35, cooldownMs: 6000 },
         { id: 'unyielding_gold', name: '不屈金身', trigger: 'lowHp', threshold: 0.30, damageReductionPct: 8, controlResistPct: 10, healthRegenPct: 2, intervalMs: 5000 }
       ],
-      properties: ['胸甲部位｜全職業可用｜需求等級 100', '生命上限 +28,000', '物理防禦 +420｜魔法防禦 +320', '力量 +30｜敏捷 +30｜體質 +75｜精神 +30｜智力 +30', '金甲護身：受到 BOSS 傷害時 8% 機率觸發，該次傷害降低 35%，冷卻 6 秒。', '不屈金身：生命低於 30% 時，受到傷害降低 8%，控制抵抗提高 10%，每 5 秒恢復最大生命值 2%。', '呂布專屬掉落｜獨立掉落率 2%', '不可強化｜強化等級固定 +0']
+      properties: ['胸甲部位｜全職業可用｜需求等級 100', '生命上限 +28,000', '物理防禦 +420｜魔法防禦 +320', '力量 +30｜敏捷 +30｜體質 +75｜精神 +30｜智力 +30', '金甲護身：受到 BOSS 傷害時 8% 機率觸發，該次傷害降低 35%，冷卻 6 秒。', '不屈金身：生命低於 30% 時，受到傷害降低 8%，控制抵抗提高 10%，每 5 秒恢復最大生命值 2%。', '呂布專屬掉落｜獨立掉落率 2%', '強化規則：每次成功強化物理防禦 +4、魔法防禦 +2']
     }
   });
 
@@ -27752,7 +27808,9 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     luBu.uniqueDrops = treasureList.map(item => {
       const enhancementText = item.id === 'fangtian_halberd_v1'
         ? '可強化：每次成功攻擊 +4、攻速 +0.03（攻速加成上限 +0.60）'
-        : '不可強化（固定 +0）';
+        : item.id === 'golden_armor_v1'
+          ? '可強化：每次成功物理防禦 +4、魔法防禦 +2'
+          : '不可強化（固定 +0）';
       return `${item.name}｜${item.slotLabel}｜神話｜需求等級 ${item.requiredLevel}｜獨立掉落率 ${(item.dropChance * 100).toFixed(0)}%｜${item.properties.slice(1, -2).join('；')}｜${enhancementText}`;
     });
   }
@@ -27771,7 +27829,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       classKeys: def.classKeys.slice(),
       dropChance: def.dropChance, sourceMonster: def.sourceMonster, sourceDropChance: def.dropChance,
       statBonuses: { ...def.statBonuses }, stats: { ...def.statBonuses }, passiveSkills: def.passiveSkills.map(skill => ({ ...skill })),
-      properties, enhancementLevel: 0, cannotEnhance: !(isWeapon && def.id === 'fangtian_halberd_v1'), uniqueDropType: 'lu_bu_divine_treasure', isLuBuDivineTreasure: true, obtainedAt: Date.now()
+      properties, enhancementLevel: 0, cannotEnhance: !(['fangtian_halberd_v1', 'golden_armor_v1'].includes(def.id)), uniqueDropType: 'lu_bu_divine_treasure', isLuBuDivineTreasure: true, obtainedAt: Date.now()
     };
     if (isWeapon) { item.attackBonus = def.attackBonus; item.baseAttackBonus = def.baseAttackBonus; item.attackSpeedBonus = 0; item.baseAttackSpeedBonus = 0; }
     if (def.physicalDefenseBonus) { item.physicalDefenseBonus = def.physicalDefenseBonus; item.basePhysicalDefenseBonus = def.physicalDefenseBonus; }
@@ -27791,7 +27849,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       const item = createItem(def, player);
       (def.kind === 'weapon' ? player.items.weapons : player.items.armors).push(item);
       count++;
-      if (typeof addBattleLog === 'function') addBattleLog(`🔱 <strong style="color:${def.qualityColor}">呂布掉落【${def.rarity} ${def.name}】</strong>（${def.slotLabel}｜獨立掉落率 ${(def.dropChance * 100).toFixed(0)}%｜${def.id === 'fangtian_halberd_v1' ? '可強化' : '不可強化'}）！`);
+      if (typeof addBattleLog === 'function') addBattleLog(`🔱 <strong style="color:${def.qualityColor}">呂布掉落【${def.rarity} ${def.name}】</strong>（${def.slotLabel}｜獨立掉落率 ${(def.dropChance * 100).toFixed(0)}%｜${['fangtian_halberd_v1', 'golden_armor_v1'].includes(def.id) ? '可強化' : '不可強化'}）！`);
     });
     if (count) { if (typeof saveGame === 'function') saveGame(); if (typeof renderInventory === 'function' && document.getElementById('inventory-float')?.style.display === 'flex') renderInventory(); }
     return count;
