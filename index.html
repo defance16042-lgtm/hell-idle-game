@@ -6769,6 +6769,8 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             player.equipment ||= {};
             armorSlots.forEach(slot => { if (player.equipment[slot.equipmentKey] === undefined) player.equipment[slot.equipmentKey] = null; });
             const warehouse = getSharedWarehouse();
+            const repairedWarehouseHalberd = warehouse.items.some(entry => entry?.kind === 'weapon' && normalizeLuBuHalberdItem(entry.item));
+            if (repairedWarehouseHalberd) gameHasUnsavedChanges = true;
             // 同一件裝備不應同時存在背包與倉庫；若舊存檔留下同 ID 的倉庫副本，以角色背包中的實體資料為準，避免重複顯示或重複取出。
             const bagInstanceIds = new Set([
                 ...(player.items.weapons || []),
@@ -7152,6 +7154,66 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             weapon.properties.push('強化規則：每次成功強化攻擊力 +4、攻速 +0.03（攻速加成上限 +0.60）');
         }
 
+        function normalizeLuBuHalberdItem(weapon) {
+            if (!weapon || typeof weapon !== 'object') return false;
+            const legacyName = ['方天畫戟', '方天畫載'].includes(String(weapon.name || '').trim());
+            const legacyLuBuWeapon = weapon.uniqueDropType === 'lu_bu_divine_treasure'
+                && (weapon.kind === 'weapon' || weapon.slot === 'weapon' || weapon.attackBonus !== undefined)
+                && (weapon.sourceMonster === '呂布' || weapon.isLuBuDivineTreasure === true || legacyName);
+            const isHalberd = weapon.templateId === 'fangtian_halberd_v1'
+                || weapon.id === 'fangtian_halberd_v1'
+                || legacyName
+                || legacyLuBuWeapon;
+            if (!isHalberd) return false;
+            const level = Math.max(0, Math.floor(Number(weapon.enhancementLevel ?? weapon.enhanceLevel ?? weapon.upgradeLevel) || 0));
+            const expectedAttack = 520 + level * 4;
+            const alreadyNormalized = weapon.templateId === 'fangtian_halberd_v1'
+                && weapon.id === 'fangtian_halberd_v1'
+                && weapon.name === '方天畫戟'
+                && weapon.cannotEnhance === false
+                && Number(weapon.attackBonus) === expectedAttack
+                && Array.isArray(weapon.properties)
+                && weapon.properties.some(property => String(property) === `攻擊力 +${expectedAttack}`)
+                && weapon.properties.some(property => String(property).startsWith('強化規則：'));
+            weapon.templateId = 'fangtian_halberd_v1';
+            weapon.id = 'fangtian_halberd_v1';
+            weapon.name = '方天畫戟';
+            weapon.kind = 'weapon';
+            weapon.slot = 'weapon';
+            weapon.slotLabel = '武器';
+            weapon.level = 100;
+            weapon.requiredLevel = 100;
+            weapon.requiredMonsterLevel = 100;
+            weapon.rarity = '神話';
+            weapon.quality = '神話';
+            weapon.qualityColor = '#c879ff';
+            weapon.classKeys = ['knight', 'warrior'];
+            const activeClass = typeof currentPlayer !== 'undefined' ? currentPlayer?.key : '';
+            weapon.classKey = ['knight', 'warrior'].includes(activeClass) ? activeClass : (weapon.classKey || 'knight');
+            weapon.weaponType = 'melee';
+            weapon.baseAttackBonus = 520;
+            weapon.attackBonus = expectedAttack;
+            weapon.baseAttackSpeedBonus = Number.isFinite(Number(weapon.baseAttackSpeedBonus)) ? Number(weapon.baseAttackSpeedBonus) : 0;
+            weapon.attackSpeedBonus = weapon.baseAttackSpeedBonus + Math.min(0.60, level * 0.03);
+            weapon.enhancementLevel = level;
+            weapon.cannotEnhance = false;
+            weapon.uniqueDropType = 'lu_bu_divine_treasure';
+            weapon.isLuBuDivineTreasure = true;
+            weapon.statBonuses = { str: 85, con: 45, physicalDefense: 120, meleeHitBonus: 0.05, meleeCritRate: 0.06, meleeCritDamage: 0.12 };
+            weapon.stats = { ...weapon.statBonuses };
+            weapon.passiveSkills = [{ id: 'ghost_god_breaker', name: '鬼神破陣', trigger: 'meleeHit', chance: 0.10, damageMultiplier: 1.35, bossDamageMultiplier: 1.10 }];
+            weapon.properties = [
+                '武器部位｜騎士、修羅戰士可用｜需求等級 100',
+                `攻擊力 +${weapon.attackBonus}`,
+                '力量 +85｜體質 +45｜物理防禦 +120',
+                '近戰命中率 +5%｜近戰暴擊率 +6%｜近戰暴擊傷害 +12%',
+                '鬼神破陣：近戰攻擊命中時 10% 機率觸發，本次傷害提高 35%，對 BOSS 額外提高 10%。',
+                '呂布專屬掉落｜獨立掉落率 2%'
+            ];
+            syncLuBuHalberdEnhancementProperties(weapon);
+            return !alreadyNormalized;
+        }
+
         function syncLuBuGoldenArmorEnhancementProperties(armor) {
             if (!armor || armor.templateId !== 'golden_armor_v1') return;
             let properties = Array.isArray(armor.properties) ? armor.properties.slice() : [];
@@ -7209,6 +7271,8 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                 delete player.equipment.weapon;
             }
 
+            const repairedHalberd = player.items.weapons.some(normalizeLuBuHalberdItem);
+            if (repairedHalberd) gameHasUnsavedChanges = true;
             const isDivineDragonUniqueWeapon = weapon => !!(weapon && (weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique'));
             player.items.weapons = player.items.weapons.filter(weapon => weapon && weapon.instanceId && (weapon.classKey === player.key || weapon.templateId === 'li_ru_poison_wine_staff_v1' || weapon.templateId === 'fangtian_halberd_v1' || isDivineDragonUniqueWeapon(weapon)));
             const family = weaponFamilies[player.key] || weaponFamilies.knight;
