@@ -27283,5 +27283,62 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 })();
 </script>
 
+<script id="parallel-three-kingdoms-generals-attack-v1">
+(() => {
+  'use strict';
+  if (window.__parallelThreeKingdomsGeneralsAttackV1) return;
+  window.__parallelThreeKingdomsGeneralsAttackV1 = true;
+  const roles = {
+    '李儒': { className: 'li-ru', color: '#a75cff', accent: '#ddbbff', motion: 'cast' },
+    '張濟將軍': { className: 'zhang-ji', color: '#4dc9ff', accent: '#d7f6ff', motion: 'thrust' },
+    '樊稠將軍': { className: 'fan-chou', color: '#ff8b42', accent: '#ffe0a6', motion: 'heavy' }
+  };
+  function installStyle() {
+    if (document.getElementById('parallel-generals-storyboard-style')) return;
+    const style = document.createElement('style');
+    style.id = 'parallel-generals-storyboard-style';
+    style.textContent = `
+      @keyframes parallelGeneralBody { 0%{transform:translate3d(0,0,0) scale(1)} 32%{transform:translate3d(-12px,-2px,0) scale(1.04)} 58%{transform:translate3d(22px,0,0) scale(1.08)} 100%{transform:translate3d(0,0,0) scale(1)} }
+      @keyframes parallelGeneralCast { 0%,28%{opacity:0;transform:translate(-50%,-50%) scale(.2)} 52%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.45)} }
+      @keyframes parallelGeneralSlash { 0%,34%{opacity:0;transform:translate(-15%,-50%) rotate(-18deg) scaleX(.1)} 55%{opacity:1;transform:translate(-50%,-50%) rotate(-18deg) scaleX(1)} 100%{opacity:0;transform:translate(-90%,-50%) rotate(-18deg) scaleX(1.2)} }
+      @keyframes parallelGeneralThrust { 0%,35%{opacity:0;transform:translate(-10%,-50%) rotate(-8deg) scaleX(.1)} 55%{opacity:1;transform:translate(-45%,-50%) rotate(-8deg) scaleX(1)} 100%{opacity:0;transform:translate(-85%,-50%) rotate(-8deg) scaleX(1.15)} }
+      #monster-icon.parallel-general-storyboard-attack .monster-sprite { animation:parallelGeneralBody 760ms cubic-bezier(.18,.72,.2,1) both; filter:drop-shadow(0 0 10px var(--general-color)); }
+      #monster-icon.parallel-general-storyboard-attack::before { content:"";position:absolute;left:6%;top:50%;width:145%;height:12px;z-index:5;pointer-events:none;border-radius:999px;background:linear-gradient(90deg,transparent,var(--general-color),var(--general-accent),transparent);box-shadow:0 0 15px var(--general-color);animation:parallelGeneralSlash 760ms ease-out both; }
+      #monster-icon.parallel-general-storyboard-attack::after { content:"";position:absolute;left:55%;top:50%;width:84px;height:84px;z-index:4;pointer-events:none;border:2px solid var(--general-accent);border-radius:50%;box-shadow:0 0 18px var(--general-color),inset 0 0 14px var(--general-color);animation:parallelGeneralCast 760ms ease-out both; }
+      #monster-icon.parallel-general-storyboard-attack.li-ru::before { animation-name:parallelGeneralCast; }
+      #monster-icon.parallel-general-storyboard-attack.zhang-ji::before { animation-name:parallelGeneralThrust; }
+      #monster-icon.parallel-general-storyboard-attack.fan-chou::before { animation-name:parallelGeneralSlash; }
+    `;
+    (document.head || document.documentElement).appendChild(style);
+  }
+  let runId = 0;
+  let timer = 0;
+  function playParallelGeneralStoryboard() {
+    const name = typeof currentMonster === 'undefined' ? '' : currentMonster?.name;
+    const role = roles[name];
+    if (!role) return false;
+    const icon = document.getElementById('monster-icon');
+    const sprite = icon?.querySelector('.monster-sprite');
+    const stage = document.getElementById('battle-stage');
+    if (!icon || !sprite || !stage) return false;
+    installStyle();
+    const token = ++runId;
+    clearTimeout(timer);
+    icon.classList.remove('parallel-general-storyboard-attack', 'li-ru', 'zhang-ji', 'fan-chou');
+    void icon.offsetWidth;
+    icon.style.setProperty('--general-color', role.color);
+    icon.style.setProperty('--general-accent', role.accent);
+    icon.classList.add('parallel-general-storyboard-attack', role.className);
+    timer = setTimeout(() => {
+      if (token !== runId) return;
+      icon.classList.remove('parallel-general-storyboard-attack', role.className);
+    }, 800);
+    return true;
+  }
+  const previous = window.playParallelThreeKingdomsBossAttackStoryboard;
+  window.playParallelThreeKingdomsBossAttackStoryboard = name => previous?.(name) || playParallelGeneralStoryboard();
+})();
+</script>
+
 </body>
 </html>
