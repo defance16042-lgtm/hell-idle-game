@@ -59,9 +59,11 @@
     const zones = zoneList();
     const cards = zones.map(({ zone, list }) => {
       const levels = list.map(m => Number(m.level)).filter(Number.isFinite);
-      const zoneIcon = typeof window.getBestiaryZoneIcon === 'function'
-        ? window.getBestiaryZoneIcon(zone)
-        : (zone.includes('克卜勒') ? '🪐' : zone.includes('三國') ? '⚔️' : zone.includes('首領窟') ? '🏰' : '🗺️');
+      const zoneIcon = zone === '平行三國'
+        ? '<img class="parallel-three-kingdoms-bestiary-icon" src="assets/regions/parallel-three-kingdoms-bestiary-icon.png" alt="平行三國怪物圖鑑原始圖示" loading="eager">'
+        : (typeof window.getBestiaryZoneIcon === 'function'
+          ? window.getBestiaryZoneIcon(zone)
+          : (zone.includes('克卜勒') ? '🪐' : zone.includes('三國') ? '⚔️' : zone.includes('首領窟') ? '🏰' : '🗺️'));
       const isCave = zone === CAVE;
       return `<button type="button" class="b3-zone-card" data-b3-zone="${esc(zone)}"><span class="b3-zone-icon">${zoneIcon}</span><strong>${esc(zone)}</strong><span>${isCave ? '第一層・第二層・第三層' : `${list.length} 筆怪物資料`}</span><small>${isCave ? '進入後選擇樓層' : (levels.length ? `等級 ${Math.min(...levels)}–${Math.max(...levels)}` : '尚無等級資料')}</small></button>`;
     }).join('');

@@ -92,3 +92,13 @@
   height:auto!important;
   align-self:start;
 }
+
+/* 平行三國沿用原始圖鑑小圖示；新版 b3 卡片使用自己的容器選擇器。 */
+#modal-body.bestiary-v3 .b3-zone-icon .parallel-three-kingdoms-bestiary-icon{
+  display:block;
+  width:48px;
+  height:48px;
+  max-width:100%;
+  object-fit:contain;
+  filter:drop-shadow(0 0 7px rgba(190,92,255,.7));
+}
