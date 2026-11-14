@@ -102,3 +102,40 @@
   object-fit:contain;
   filter:drop-shadow(0 0 7px rgba(190,92,255,.7));
 }
+
+/* 呂布專屬雙階段圖鑑：兩種形態並列展示，清楚標出血條、武器與變身條件。 */
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-intro{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin:0 0 10px;padding:10px 12px;
+  border:1px solid rgba(255,194,94,.45);border-left:4px solid #e7a84f;border-radius:8px;background:linear-gradient(135deg,rgba(82,47,24,.6),rgba(29,20,31,.8));color:#eadfcf;line-height:1.55;
+}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-intro strong{color:#ffd47a;white-space:nowrap}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-intro span{color:#d5c8bb;text-align:right}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:stretch}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-card{display:grid;grid-template-columns:minmax(150px,38%) minmax(0,1fr);gap:12px;min-width:0;padding:11px;border:1px solid #59405f;border-radius:10px;background:linear-gradient(145deg,#241a31,#13101b);box-shadow:inset 0 0 18px rgba(127,86,163,.08)}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-card.phase-one{border-color:#9b5663;background:linear-gradient(145deg,rgba(74,29,43,.9),#171019)}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-card.phase-two{border-color:#c49450;background:linear-gradient(145deg,rgba(76,52,25,.9),#17131a)}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-art{position:relative;display:flex;align-items:center;justify-content:center;min-height:190px;border:1px solid rgba(206,166,111,.35);border-radius:8px;background:radial-gradient(circle at 50% 45%,rgba(115,73,120,.38),rgba(10,8,16,.92) 75%);overflow:hidden}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-art img{display:block;width:100%;height:100%;max-height:250px;object-fit:contain}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-badge{position:absolute;left:7px;top:7px;padding:3px 7px;border-radius:999px;background:rgba(18,12,20,.9);border:1px solid rgba(255,218,142,.65);color:#ffe0a0;font-size:11px;font-weight:900}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-content{min-width:0;display:flex;flex-direction:column;gap:7px}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-content h5{margin:0;color:#ffe1a0;font-size:18px;line-height:1.35}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-trigger{margin:0;padding:7px 8px;border-radius:6px;background:rgba(0,0,0,.22);color:#d8cbd8;font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-trigger b{display:block;color:#ffcb75;margin-bottom:2px}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-facts{display:grid;grid-template-columns:1fr;gap:5px}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-facts span{display:flex;flex-direction:column;gap:1px;padding:5px 7px;border:1px solid rgba(158,132,177,.25);border-radius:5px;color:#e9e0eb;font-size:12px;line-height:1.45}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-facts b{color:#a9e3ff;font-size:11px}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-description{margin:0;color:#c8bdce;font-size:12px;line-height:1.65;overflow-wrap:anywhere}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-rule{display:flex;gap:8px;align-items:flex-start;margin-top:10px;padding:9px 11px;border:1px dashed rgba(255,201,106,.5);border-radius:7px;background:rgba(67,43,18,.35);color:#dfd1bd;font-size:12px;line-height:1.6}
+#modal-body.all-regions-bestiary-detail .ptk-lubu-phase-rule b{color:#ffd47a;white-space:nowrap}
+@media(max-width:850px){
+  #modal-body.all-regions-bestiary-detail .ptk-lubu-phase-grid{grid-template-columns:1fr}
+  #modal-body.all-regions-bestiary-detail .ptk-lubu-phase-card{grid-template-columns:130px minmax(0,1fr)}
+}
+@media(max-width:560px){
+  #modal-body.all-regions-bestiary-detail .ptk-lubu-phase-intro{display:block}
+  #modal-body.all-regions-bestiary-detail .ptk-lubu-phase-intro span{display:block;margin-top:4px;text-align:left}
+  #modal-body.all-regions-bestiary-detail .ptk-lubu-phase-card{grid-template-columns:1fr}
+  #modal-body.all-regions-bestiary-detail .ptk-lubu-phase-art{min-height:210px}
+  #modal-body.all-regions-bestiary-detail .ptk-lubu-phase-rule{display:block}
+  #modal-body.all-regions-bestiary-detail .ptk-lubu-phase-rule span{display:block;margin-top:3px}
+}

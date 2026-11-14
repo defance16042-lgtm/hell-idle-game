@@ -27687,6 +27687,10 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     attackRange: 'melee', damageType: 'physical',
     phase2AttackType: '轅門射戟', phase2BasicAttackName: '轅門射戟',
     phase2AttackRange: 'ranged', phase2DamageType: 'physical',
+    phase1Title: '赤紫鬼神', phase1Weapon: '方天畫戟', phase1HpLabel: '2,480,000 HP',
+    phase1AttackLabel: '赤紫方天裂空斬／鬼神踏陣',
+    phase2Title: '轅門弓將', phase2Weapon: '寶雕弓', phase2HpLabel: '2,480,000 HP',
+    phase2AttackLabel: '遠距離攻擊／轅門射戟',
     exp: 280000, gold: 128000, type: 'boss', encounterChance: 0.5,
     facing: 'left-full-body', orientation: 'strict-left-profile',
     visualNote: '可愛黑暗Q版紅紫呂布騎乘赤兔馬，全身與馬匹完整入鏡；呂布、赤兔馬、馬尾、四蹄、披風與方天畫戟全部嚴格朝左，禁止正面、右朝與鏡像。',
@@ -28353,11 +28357,16 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     return `<div class="ptk-detail-card"><strong>${esc(label)}</strong><span class="ptk-detail-value">${parts}</span>${note ? `<small>${esc(note)}</small>` : ''}</div>`;
   };
   const cards = list => list.filter(Boolean).join('') || '<div class="ptk-detail-empty">這個分類目前沒有額外資料。</div>';
+  const luBuPhaseCard = (phase, image, title, weapon, hp, trigger, attacks, description, tone) => `<article class="ptk-lubu-phase-card ${tone}">
+    <div class="ptk-lubu-phase-art"><img src="${esc(image)}" alt="呂布｜${esc(title)}" loading="eager"><span class="ptk-lubu-phase-badge">${esc(phase)}</span></div>
+    <div class="ptk-lubu-phase-content"><h5>${esc(title)}</h5><p class="ptk-lubu-phase-trigger"><b>進入條件</b>${esc(trigger)}</p><div class="ptk-lubu-phase-facts"><span><b>獨立血條</b>${esc(hp)}</span><span><b>武器型態</b>${esc(weapon)}</span><span><b>攻擊方式</b>${esc(attacks)}</span></div><p class="ptk-lubu-phase-description">${esc(description)}</p></div>
+  </article>`;
   const render = index => {
     const entry = typeof getBestiaryEntries === 'function' ? getBestiaryEntries()[index] : null;
     if (!entry) return typeof previousDetail === 'function' ? previousDetail.call(window, index) : undefined;
     const m = entry.monster || {};
     const zone = String(entry.zone || m.zone || '未知區域');
+    const isLuBu = m.name === '呂布' && zone === '平行三國';
     const body = document.getElementById('modal-body'), modal = document.getElementById('modal-window');
     if (!body || !modal) return;
     const image = m.image ? resolveEmbeddedAsset(m.image) : '';
@@ -28371,6 +28380,10 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     const categoryDrops = uniqueDrops.length ? uniqueDrops : customDropTable.filter(drop => categoryDropPattern.test(drop));
     const defenseSkills = asList(m.defenseSkills);
     const bossPhases = Array.isArray(m.bossPhases) ? m.bossPhases : [];
+    const luBuPhases = isLuBu ? `<div class="ptk-lubu-phase-intro"><strong>⚔️ 呂布雙階段戰鬥流程</strong><span>第一階段血條歸零後才會變身；第二階段重新開始一條完整血條，兩段不共用血量。</span></div><div class="ptk-lubu-phase-grid">
+      ${luBuPhaseCard('第一階段', m.image, m.phase1Title || '赤紫鬼神', m.phase1Weapon || '方天畫戟', m.phase1HpLabel || `${fmt(m.phase1Hp)} HP`, '戰鬥開始時進入；必須先將第一條血打到 0。', m.phase1AttackLabel || m.attackType || '近戰攻擊', '騎乘赤兔馬揮動方天畫戟，施放赤紫刃光與震地攻擊。', 'phase-one')}
+      ${luBuPhaseCard('第二階段', m.phase2Image, m.phase2Title || '轅門弓將', m.phase2Weapon || '寶雕弓', m.phase2HpLabel || `${fmt(m.phase2Hp)} HP`, '第一階段 2,480,000 HP 歸零後觸發變身，重新建立第二條血。', m.phase2AttackLabel || m.phase2AttackType || '遠距離攻擊', '卸下方天畫戟、取出寶雕弓，以唯一大招「轅門射戟」射出金色箭矢與紅紫戟影。', 'phase-two')}
+    </div><div class="ptk-lubu-phase-rule"><b>📌 重要規則</b><span>第一段打完才變身，不會在第一條血剩一半時變身；第二段是獨立的 2,480,000 HP 血條。</span></div>` : '';
     const level = m.levelRange || m.level || '—';
     const back = `openBestiaryZone(${esc(JSON.stringify(zone))})`;
     const abilityValue = key => stats[key] == null ? '—' : fmt(stats[key]);
@@ -28412,9 +28425,10 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       weapon: `<h4>⚔️ 武器</h4><div class="ptk-detail-grid">${cards(weaponDrops.map(drop => card('專屬／相關武器', esc(drop))))}</div>`,
       armor: `<h4>🛡️ 防具與飾品</h4><div class="ptk-detail-grid">${cards([...armorDrops.map(drop => card('專屬防具／飾品', esc(drop))), ...jadeSealRingCards])}</div>`,
       special: `<h4>🌟 特殊資料與坐騎</h4><div class="ptk-detail-grid">${cards([m.specialTier ? card('特殊階級', esc(m.specialTier)) : '', m.visualNote ? card('圖像備註', esc(m.visualNote)) : '', ...specialDrops.map(drop => card('專屬特殊裝備／坐騎', esc(drop))), bossPhases.map(phase => card(`BOSS 階段｜${esc(phase.name)}`, esc(phase.description), phase.trigger)).join('')])}</div>`,
+      phases: luBuPhases || '<div class="ptk-detail-empty">這個怪物沒有多階段戰鬥資料。</div>',
       drops: `<h4>📜 掉落規則</h4>${typeof getMonsterDropDisplay === 'function' ? `<div class="ptk-detail-drop-panel">${getMonsterDropDisplay(dropRulesMonster, zone)}</div>` : `<div class="ptk-detail-empty">目前沒有掉落規則資料。</div>`}`
     };
-    const tabs = [['overview','📋 概要'],['battle','⚔️ 戰鬥'],['ability','📊 能力'],['defense','🛡️ 防禦'],['skills','✨ 技能'],['rewards','🎁 獎勵'],['weapon','⚔️ 武器'],['armor','🛡️ 防具／飾品'],['special','🌟 特殊／座騎'],['drops','📜 掉落規則']];
+    const tabs = [['overview','📋 概要'],['battle','⚔️ 戰鬥'],...(isLuBu ? [['phases','🏹 雙階段']] : []),['ability','📊 能力'],['defense','🛡️ 防禦'],['skills','✨ 技能'],['rewards','🎁 獎勵'],['weapon','⚔️ 武器'],['armor','🛡️ 防具／飾品'],['special','🌟 特殊／座騎'],['drops','📜 掉落規則']];
     body.innerHTML = `<div class="ptk-detail-shell"><div class="ptk-detail-toolbar"><button class="modal-btn" onclick="${back}">← 返回 ${esc(zone)}</button><h3>⚔️ ${esc(m.name)}｜${typeName(m)}</h3><button class="modal-btn" onclick="closeModal()">關閉</button></div><div class="ptk-detail-hero"><div class="ptk-detail-art">${image ? `<img src="${esc(image)}" alt="${esc(m.name)}">` : esc(m.icon || '⚔️')}</div><div class="ptk-detail-summary"><div class="ptk-detail-badges"><span class="ptk-detail-badge">Lv. ${esc(level)}</span><span class="ptk-detail-badge ${kindClass}">${typeName(m)}</span><span class="ptk-detail-badge">${esc(m.attackType || '一般攻擊')}</span></div><p>${esc(m.description || '目前沒有額外說明。')}</p></div></div><div id="ptk-detail-tabs-root"><div class="ptk-detail-tabs" role="tablist">${tabs.map(([key,label], i) => `<button type="button" data-ptk-tab="${key}" aria-selected="${i === 0 ? 'true' : 'false'}" onclick="switchParallelBestiaryTab('${key}')">${label}</button>`).join('')}</div>${tabs.map(([key]) => `<section class="ptk-detail-page" data-ptk-page="${key}"${key === 'overview' ? '' : ' hidden'}>${pages[key]}</section>`).join('')}</div></div>`;
     body.className = 'parallel-three-kingdoms-bestiary-detail all-regions-bestiary-detail';
     body.dataset.modalType = 'all-regions-bestiary-detail';
