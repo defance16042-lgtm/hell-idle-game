@@ -33,6 +33,13 @@
       frameMs: [150, 130, 110, 95, 145, 195],
       waveStops: [0.01, 0.06, 0.28, 0.60, 0.88, 1],
       waveAlpha: [.30, .62, .98, 1, .96, .38]
+    },
+    {
+      names: ['高順將軍', '高順'], bodyDir: 'gao_shun_attack', waveDir: 'gao_shun_attack_wave',
+      waveScale: .44, waveCurve: -.012, waveLift: -.02, spriteScale: 1.18,
+      frameMs: [140, 120, 105, 92, 125, 185],
+      waveStops: [0.01, 0.06, 0.30, 0.64, 0.90, 1],
+      waveAlpha: [.24, .55, .94, 1, .90, .30]
     }
   ];
 
