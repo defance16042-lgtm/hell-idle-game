@@ -14869,13 +14869,14 @@ function getCombatVisualCycleDuration(actionPath) {
             let equipmentKeys = slot?.equipmentKey ? [slot.equipmentKey] : [];
             if (isRingKey) {
                 const ringKeys = slot?.equipmentKey ? [slot.equipmentKey] : ['leftRingId', 'rightRingId'];
-                equipmentKeys = ringKeys.filter(key => {
-                    const equippedId = currentPlayer.equipment?.[key];
-                    return !instanceId || String(equippedId ?? '') === String(instanceId);
-                });
+                const targetId = String(instanceId ?? '');
+                const matchedKey = targetId
+                    ? ringKeys.find(key => String(currentPlayer.equipment?.[key] ?? '') === targetId)
+                    : slot?.equipmentKey;
+                equipmentKeys = matchedKey ? [matchedKey] : [];
             }
             if (!equipmentKeys.length) return;
-            equipmentKeys.forEach(key => { currentPlayer.equipment[key] = null; });
+            currentPlayer.equipment[equipmentKeys[0]] = null;
             clampPlayerResourcesToEffectiveMax(currentPlayer);
             addBattleLog(`🛡️ 已卸下${isRingKey ? '戒指' : slot.label}防具。`);
             updateGameUI(); saveGame(); renderInventory();
