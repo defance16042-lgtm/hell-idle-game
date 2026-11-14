@@ -13237,7 +13237,7 @@ function getCombatVisualCycleDuration(actionPath) {
             const skillNames = [...(monster?.skills || []), ...(monster?.magicSkills || [])].filter(skill => skill?.name).map(skill => `${skill.name}（${Math.round(getMonsterSkillMultiplier(monster, skill) * 100)}%傷害）`);
             const skillText = skillNames.length ? `其特殊招式包含：${skillNames.join('、')}。` : '目前沒有額外登錄的特殊招式，主要依基本攻擊與怪物屬性作戰。';
             const threat = monster?.type === 'boss' ? '具備較高的戰鬥威脅，並可能掉落高階裝備、職業技能書或套裝。' : monster?.type === 'special' ? '比一般魔物更危險，有機會掉落稀有裝備、職業技能書或套裝。' : monster?.type === 'training' ? '用於測試角色傷害、命中、閃避與防禦表現，不代表一般戰鬥遭遇。' : '適合依角色等級與裝備狀況選擇挑戰，擊敗後可獲得經驗、魂幣及符合條件的物品掉落。';
-            return `${kind}，出沒於${zoneName || monster?.zone || '未知區域'}。等級 等級 ${monster?.levelRange || level}，主要使用「${attack}」作戰。${skillText}${threat}`;
+            return `${kind}，出沒於${zoneName || monster?.zone || '未知區域'}。等級 ${monster?.levelRange || level}，主要使用「${attack}」作戰。${skillText}${threat}`;
         }
 
         function getMonsterSkillSummary(monster, skill) {
@@ -25911,6 +25911,310 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 <style id="bestiary-redesign-v2-style">
 #modal-body.bestiary-v2{max-width:min(1120px,96vw)!important;width:100%!important;box-sizing:border-box!important;padding:18px!important;background:linear-gradient(145deg,#171225,#0d0b14)!important;color:#eee8ff!important}
 .bv2-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:12px;border-bottom:1px solid #49375f}.bv2-head h3{margin:0;color:#f7d58a;font-size:22px}.bv2-sub{margin:5px 0 0;color:#a99fbd;font-size:12px}.bv2-zone-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-top:14px}.bv2-zone-card{position:relative;padding:13px;border:1px solid #493b63;border-radius:12px;background:linear-gradient(150deg,#211a32,#11101c);color:#f5efff;text-align:left;cursor:pointer;transition:.16s;box-shadow:0 5px 14px #0005}.bv2-zone-card:hover{transform:translateY(-2px);border-color:#d6a95b;box-shadow:0 8px 20px #0008}.bv2-zone-card h4{margin:0 0 6px;color:#ffd98a;font-size:16px}.bv2-zone-card p{margin:3px 0;color:#bdb3cf;font-size:12px;line-height:1.5}.bv2-zone-icon{float:right;font-size:32px;filter:drop-shadow(0 0 5px #b06bff)}.bv2-zone-card.abyss{border-color:#386c9a;background:linear-gradient(145deg,#142b45,#151126)}.bv2-zone-card.abyss h4{color:#82eaff}.bv2-toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}.bv2-toolbar h3{margin:0;color:#f7d58a}.bv2-back{font-size:12px!important;padding:6px 10px!important}.bv2-monster-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(225px,1fr));gap:11px}.bv2-monster-card{min-width:0;overflow:hidden;border:1px solid #493b63;border-radius:12px;background:#151321;box-shadow:0 5px 15px #0006;cursor:pointer;transition:.16s}.bv2-monster-card:hover{transform:translateY(-2px);border-color:#d6a95b}.bv2-monster-art{height:145px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,#32224d,#100d18 72%);overflow:hidden}.bv2-monster-art img{width:100%;height:100%;object-fit:contain}.bv2-monster-art .bv2-emoji{font-size:70px}.bv2-monster-info{padding:10px 11px}.bv2-monster-info h4{margin:0 0 7px;font-size:16px;color:#fff}.bv2-badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:7px}.bv2-badge{padding:3px 7px;border-radius:999px;background:#342946;color:#d9c9ef;font-size:10px}.bv2-badge.level{background:#263b4d;color:#8fe8ff}.bv2-badge.boss{background:#5c2d38;color:#ffd08a}.bv2-badge.special{background:#4a2c62;color:#ebb5ff}.bv2-mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:4px;color:#bdb3cf;font-size:11px}.bv2-mini-stats b{color:#f4e6bd}.bv2-drop-hint{margin-top:8px;padding:6px 7px;border-left:3px solid #62d9ff;background:#14293a;color:#a8efff;font-size:11px;line-height:1.45}.bv2-detail{max-height:calc(90vh - 70px);overflow:auto}.bv2-detail-top{display:grid;grid-template-columns:220px minmax(0,1fr);gap:15px;align-items:start}.bv2-detail-art{min-height:230px;border:1px solid #4a3b62;border-radius:12px;background:radial-gradient(circle,#352451,#100d18 72%);display:flex;align-items:center;justify-content:center;overflow:hidden}.bv2-detail-art img{width:100%;height:100%;object-fit:contain;max-height:310px}.bv2-section{margin-top:14px;padding:12px;border:1px solid #3e3453;border-radius:10px;background:#13111d}.bv2-section h4{margin:0 0 9px;color:#f5d88d;font-size:15px;border-bottom:1px solid #332946;padding-bottom:7px}.bv2-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:7px}.bv2-stat{padding:8px;border-radius:7px;background:#211b2c;color:#bdb3cf;font-size:11px}.bv2-stat b{display:block;color:#fff2c6;font-size:14px;margin-top:3px}.bv2-skill-grid,.bv2-drop-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px}.bv2-skill,.bv2-drop{padding:10px;border-radius:8px;background:#211b2c;color:#d8cde5;font-size:12px;line-height:1.55}.bv2-skill strong,.bv2-drop strong{display:block;color:#fff0b4;font-size:14px;margin-bottom:3px}.bv2-drop.wing{border:1px solid #3b9bc4;background:linear-gradient(145deg,#142e43,#1d1630)}.bv2-drop.wing strong{color:#8feaff}.bv2-note{color:#aaa0b7;font-size:11px;line-height:1.6</style>
+<script id="bestiary-completeness-audit-v1">
+(function () {
+  'use strict';
+  if (window.__BESTIARY_COMPLETENESS_AUDIT_V1 || typeof zoneMonsters === 'undefined') return;
+  window.__BESTIARY_COMPLETENESS_AUDIT_V1 = true;
+
+  // 補齊舊區域原本只有通用預設文字的怪物介紹；不改動任何戰鬥數值與掉落機率。
+  const descriptions = {
+    '綠色史萊姆': '棲息在幽暗森林入口的低階黏液魔物，會以身體彈跳撞擊敵人，受到重創時還會噴濺腐蝕酸液。',
+    '森林野狼': '在林間成群巡遊的野狼，擅長快速撲擊與追咬；若獵物露出破綻，便會連續追擊。',
+    '哥布林': '躲在森林灌木與舊營地間的哥布林，使用短刀與簡陋盾牌作戰，生命危急時會趁隙偷襲。',
+    '骷髏戰士': '被森林怨氣喚醒的骷髏戰士，手持鏽蝕骨刃守在古道旁，擅長以盾擊打亂敵人，再以骨刃反斬。',
+    '火焰元素': '由森林深處的火脈凝聚而成，身體燃燒著不熄的火焰，能以火焰彈遠攻並在瀕危時引發烈焰迸發。',
+    '荒野野豬': '在森林外圍覓食的暴躁野豬，會低頭蓄力後以獠牙正面衝撞，受到威脅時攻勢更加猛烈。',
+    '湛藍軟泥怪': '帶有藍色光澤的黏液魔物，會噴出帶腐蝕性的酸液，受傷後更會集中酸液發動強化噴濺。',
+    '哥布林斥候': '負責替哥布林部族探路的斥候，動作敏捷且擅長短刀突刺，會趁敵人分神時發動強化偷襲。',
+    '赤紋毒蛛': '幽暗森林中罕見的赤紋巨蛛，毒牙帶有麻痺性毒素，生命降低時會釋放濃縮蛛毒，是森林裡的特殊威脅。',
+    '骷髏劍兵': '盤踞在森林古戰場的骷髏劍兵首領，鏽劍斬擊沉重且毫不退讓；牠的骨甲比一般骷髏堅硬，是新手區的重要首領。',
+    '石巨人': '由深淵岩層甦醒的巨大石像，厚重身軀能承受大量打擊，並以巨石重拳與碎石震地壓制闖入者。',
+    '暗影法師': '受深淵暗影侵蝕的法師，擅長從遠處射出暗影箭，生命受到威脅時會引爆聚集的幽冥能量。',
+    '毒蛛女王': '統御深淵蛛群的毒蛛女王，能以劇毒撕咬侵蝕敵人，並在危急時吐出蛛網限制對手行動。',
+    '冰霜飛龍': '棲息於深淵寒霧中的飛龍，吐息帶有刺骨寒氣，進入危急狀態後會召起冰晶風暴覆蓋戰場。',
+    '魔王龍': '痛苦深淵深處的古老魔王龍，胸腔蓄積著深淵龍焰，能以灼熱吐息焚燒敵人；牠是此區域的最終首領。',
+    '烈焰蜥蜴': '生活在熔熱岩縫間的烈焰蜥蜴，能從口中噴出熾焰，受傷後會將火焰集中成更猛烈的吐息。',
+    '霜牙雪狼': '被深淵寒氣強化的雪狼，霜白獠牙能撕裂獵物，攻擊時還會附帶寒霜侵蝕。',
+    '古木樹精': '在深淵邊緣扎根數百年的古木樹精，能操縱荊棘與藤蔓纏住敵人，生命降低後會以更猛烈的根系反擊。',
+    '暗影翼蝠': '盤旋於深淵上空的暗影翼蝠，會從高處俯衝並以暗影裂爪突襲，瀕危時更會借助夜幕發動高速俯衝。',
+    '熔岩巨像': '由熔岩與黑石構成的巨像，拳臂持續散發高熱，能以熔岩重拳震擊地面，受創後會讓攻勢更加沉重。',
+    '洞穴魔狼': '黑暗洞穴的巡獵者，身披幽暗毛皮並以幽火撕咬獵物，目標受傷後會沿著氣味發動暗焰追擊。',
+    '幽影魔球': '在洞穴深處漂浮的幽影能量體，會凝聚暗色魔彈攻擊入侵者，能量不穩時會釋放混沌脈衝。',
+    '洞穴死神': '手持巨大鐮刀的洞穴亡靈，能收割闖入者的生命氣息，瀕危時會召來死神之影施展致命一擊。',
+    '深淵蝙蝠魔': '棲息在洞穴頂端的巨大蝙蝠魔物，擅長俯衝利爪與群體襲擊，黑暗中極難預測其行動。',
+    '多眼暗蛇': '擁有多枚暗色眼睛的深淵毒蛇，能從遠處噴射毒液，生命降低時會散布毒霧擴大攻擊範圍。',
+    '深淵魔騎士': '被紫晶力量支配的洞穴騎士，身穿沉重鎧甲並揮舞巨劍，瀕危時會使出騎士終結斬。',
+    '紫晶洞穴蜘蛛': '以紫晶礦脈為巢的洞穴蜘蛛，毒牙帶有魔力侵蝕效果，還能吐出晶網束縛獵物。',
+    '黑根惡魔樹': '盤根於洞穴深處的惡魔樹，黑色根鬚能穿透岩地攻擊敵人，生命降低時會引爆地下根脈。',
+    '幽冥裂紋狼': '身上布滿幽冥裂紋的異變狼，能以裂隙突襲迅速接近目標，瀕危時會發出震懾心神的幽冥狂嚎。',
+    '深淵幽魂女妖': '盤踞黑暗洞穴最深處的幽魂女妖首領，能以靈魂震擊撼動敵人心神，並在生命危急時釋放絕望深淵。',
+    '藍鷹魔鳥': '盤旋在空城島高空的藍羽魔鳥，能以銳利羽刃遠距切割敵人，俯視戰場後會尋找破綻發動突襲。',
+    '骸骨飛龍': '由古戰場骸骨重組而成的飛龍，骨翼掀起強風並以骨刺龍息攻擊，低生命時會釋放更猛烈的骨龍秘技。',
+    '石像鬼': '守護空城遺跡的石像鬼，平時偽裝成殘破雕像，甦醒後以沉重石像重擊與震地攻勢驅逐入侵者。',
+    '煉炎鳳凰': '在空城島火脈中重生的煉炎鳳凰，羽翼燃燒著赤紅火焰，能掀起烈焰羽暴並以火焰秘技反擊。',
+    '深淵蝙蝠': '受空城島深淵能量強化的巨大蝙蝠，會以暗影爪裂撲擊敵人，受創後能凝聚黑暗能量再次突襲。',
+    '紫翼魔族': '擁有紫色魔翼的空城島魔族，擅長近身連斬與暗焰魔法，生命降低時會施展更強烈的紫翼秘技。',
+    '綠岩魔': '由島上古老綠岩凝聚而成的岩魔，厚實岩拳能震動地面，受到攻擊後會以強化岩拳反制。',
+    '幽影小惡魔': '在空城遺跡間穿梭的小型惡魔，會投擲幽影魔彈並利用黑暗遮蔽身形，趁敵人鬆懈時再次出手。',
+    '殺人蜂': '棲息於空城島荒廢花叢的劇毒魔蜂，能以尾針高速刺擊，瀕危時會凝聚毒素發動強化攻勢。',
+    '幽靈狼': '被島上寒霧侵染的幽靈狼，身形若隱若現，會以冰魂衝擊撲向獵物並釋放寒冷魔力。',
+    '變異螳螂': '受到空城魔力異變的巨型螳螂，雙刃前肢能高速旋斬，生命降低後會將毒性魔力注入連續斬擊。',
+    '光之妖精': '在空城遺跡中守護光脈的妖精，能以星光束縛限制敵人，危急時會聚集更強的光之魔力。',
+    '聖光法師': '守護空城古代聖壇的法師，精通聖光爆裂與遠距魔法，受到壓迫時會引動聖光秘技反擊。',
+    '斑紋魔蛾': '翅膀帶有詭異斑紋的魔蛾，會散播帶毒粉塵干擾敵人，生命降低時粉塵中的幻毒會變得更加濃烈。',
+    '修練石像': '新手村修練場使用的訓練石像，會依角色等級調整修練強度；不會死亡、不掉落道具，專供測試傷害、命中、閃避與防禦。'
+  };
+
+  Object.entries(zoneMonsters).forEach(function (entry) {
+    const zone = entry[0];
+    const list = Array.isArray(entry[1]) ? entry[1] : [];
+    list.forEach(function (monster) {
+      if (!monster || typeof monster !== 'object') return;
+      if (!monster.zone) monster.zone = zone;
+      if (!Array.isArray(monster.skills)) monster.skills = [];
+      if (!monster.baseStats && typeof monsterAttributes === 'function') monster.baseStats = monsterAttributes(monster);
+      if (!monster.bonusStats) monster.bonusStats = {};
+      if (!monster.description || !String(monster.description).trim()) {
+        monster.description = descriptions[monster.name] || (typeof getMonsterBestiaryDescription === 'function'
+          ? getMonsterBestiaryDescription(monster, zone)
+          : '此魔物已收錄於本區圖鑑，戰鬥與掉落資料依遊戲實際設定為準。');
+      }
+    });
+  });
+})();
+</script>
+
+<script id="bestiary-v2-complete-detail-v1">
+(function () {
+  'use strict';
+  if (window.__BESTIARY_V2_COMPLETE_DETAIL_V1) return;
+  window.__BESTIARY_V2_COMPLETE_DETAIL_V1 = true;
+
+  const esc = function (value) {
+    return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch];
+    });
+  };
+  const fmt = function (value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.floor(number).toLocaleString('zh-TW') : '—';
+  };
+  const kind = function (monster) {
+    if (monster && monster.type === 'training') return '修練目標';
+    if (monster && monster.type === 'boss') return 'BOSS';
+    if (monster && monster.type === 'special') return '特殊怪';
+    return '一般怪';
+  };
+  const safeImage = function (monster) {
+    const path = monster && (monster.battleImage || monster.image);
+    return path && typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(path) : (path || '');
+  };
+  const showBody = function (html, type) {
+    const body = document.getElementById('modal-body');
+    const modal = document.getElementById('modal-window');
+    if (!body || !modal) return;
+    body.className = 'bestiary-v2';
+    body.dataset.modalType = type || 'bestiary-v2';
+    body.innerHTML = html;
+    modal.style.display = 'flex';
+  };
+  const typeOrder = {normal:0, special:1, boss:2, training:3};
+
+  function openHome() {
+    const zones = typeof getBestiaryZones === 'function'
+      ? getBestiaryZones()
+      : Object.entries(typeof zoneMonsters !== 'undefined' ? zoneMonsters : {});
+    const cards = zones.map(function (entry) {
+      const zone = entry[0];
+      const list = Array.isArray(entry[1]) ? entry[1] : [];
+      const field = list.filter(function (monster) { return monster && monster.type !== 'training'; });
+      const training = list.filter(function (monster) { return monster && monster.type === 'training'; });
+      const levels = field.map(function (monster) { return Number(monster.level) || 1; });
+      const summary = field.length
+        ? field.length + ' 種怪物｜一般 ' + field.filter(function (m) { return !m.type || m.type === 'normal'; }).length +
+          '｜特殊 ' + field.filter(function (m) { return m.type === 'special'; }).length +
+          '｜BOSS ' + field.filter(function (m) { return m.type === 'boss'; }).length +
+          (training.length ? '｜修練目標 ' + training.length : '') +
+          '｜等級 ' + Math.min.apply(null, levels) + '–' + Math.max.apply(null, levels)
+        : '修練目標 ' + training.length + ' 個｜不掉落道具';
+      const icon = zone === '深淵龍穴' ? '🐉' : zone.indexOf('首領窟') >= 0 ? '🏰' : '🗺️';
+      return '<button class="bv2-zone-card ' + (zone === '深淵龍穴' ? 'abyss' : '') +
+        '" type="button" onclick="openBestiaryZoneV2(&quot;' + esc(zone) + '&quot;)">' +
+        '<span class="bv2-zone-icon">' + icon + '</span><h4>' + esc(zone) + '</h4>' +
+        '<p>' + esc(summary) + '</p><p>點擊查看完整怪物能力、技能與掉落資料</p></button>';
+    }).join('');
+    showBody('<div class="bv2-head"><div><h3>📖 地獄怪物全圖鑑</h3>' +
+      '<p class="bv2-sub">完整收錄各區一般怪、特殊怪、BOSS 與修練目標；點擊怪物查看完整資料。</p></div>' +
+      '<button class="modal-btn" type="button" onclick="closeModal()">關閉圖鑑</button></div>' +
+      '<div class="bv2-zone-grid">' + cards + '</div>', 'bestiary-v2');
+  }
+
+  function openZone(zone) {
+    const source = typeof zoneMonsters !== 'undefined' ? zoneMonsters : {};
+    const list = Array.isArray(source[zone]) ? source[zone].filter(function (monster) { return !!monster; }) : [];
+    if (!list.length) return openHome();
+    const sorted = list.slice().sort(function (a, b) {
+      return (typeOrder[a.type || 'normal'] == null ? 0 : typeOrder[a.type || 'normal']) -
+        (typeOrder[b.type || 'normal'] == null ? 0 : typeOrder[b.type || 'normal']) ||
+        (Number(a.level) || 0) - (Number(b.level) || 0) ||
+        String(a.name || '').localeCompare(String(b.name || ''), 'zh-Hant');
+    });
+    const cards = sorted.map(function (monster) {
+      const image = safeImage(monster);
+      const art = image
+        ? '<img src="' + esc(image) + '" alt="' + esc(monster.name) + '" loading="lazy">'
+        : '<span class="bv2-emoji">' + esc(monster.icon || (monster.type === 'training' ? '🎯' : '👹')) + '</span>';
+      const defense = typeof getMonsterDefenseValues === 'function' ? getMonsterDefenseValues(monster, 1) : {};
+      const hp = monster.type === 'training' ? '不會死亡' : fmt(monster.hp || monster.maxHp);
+      const magicDefense = defense.magic == null ? monster.magicDefense : defense.magic;
+      const typeClass = monster.type === 'boss' ? 'boss' : monster.type === 'special' ? 'special' : 'level';
+      return '<article class="bv2-monster-card" role="button" tabindex="0" onclick="openBestiaryDetailV2(&quot;' +
+        esc(zone) + '&quot;,&quot;' + esc(monster.name) + '&quot;)">' +
+        '<div class="bv2-monster-art">' + art + '</div><div class="bv2-monster-info">' +
+        '<h4>' + esc(monster.name) + '</h4><div class="bv2-badges">' +
+        '<span class="bv2-badge level">' + (monster.type === 'training' ? '修練目標' : 'Lv.' + esc(monster.levelRange || monster.level || '—')) + '</span>' +
+        '<span class="bv2-badge ' + typeClass + '">' + kind(monster) + '</span></div>' +
+        '<div class="bv2-mini-stats"><span>生命 <b>' + hp + '</b></span><span>攻擊 <b>' + (monster.type === 'training' ? '依角色等級' : fmt(monster.atk)) +
+        '</b></span><span>物防 <b>' + fmt(defense.melee == null ? monster.def : defense.melee) +
+        '</b></span><span>魔防 <b>' + fmt(magicDefense) + '</b></span></div></div></article>';
+    }).join('');
+    showBody('<div class="bv2-toolbar"><button class="modal-btn bv2-back" type="button" onclick="openBestiaryV2()">← 區域列表</button>' +
+      '<h3>🗺️ ' + esc(zone) + '</h3><button class="modal-btn bv2-back" type="button" onclick="closeModal()">關閉</button></div>' +
+      '<p class="bv2-note">本區共收錄 ' + sorted.length + ' 筆資料，依一般怪、特殊怪、BOSS 與修練目標分類及等級排序。</p>' +
+      '<div class="bv2-monster-grid">' + cards + '</div>', 'bestiary-v2');
+  }
+
+  function openDetail(zone, name) {
+    const source = typeof zoneMonsters !== 'undefined' ? zoneMonsters : {};
+    const monster = (Array.isArray(source[zone]) ? source[zone] : []).find(function (item) { return item && item.name === name; });
+    if (!monster) return openZone(zone);
+    const training = monster.type === 'training';
+    const template = training && typeof getTrainingDummyTemplate === 'function' ? getTrainingDummyTemplate(monster) : monster;
+    const image = safeImage(monster);
+    const art = image
+      ? '<img src="' + esc(image) + '" alt="' + esc(monster.name) + '">'
+      : '<span class="bv2-emoji">' + esc(monster.icon || (training ? '🎯' : '👹')) + '</span>';
+    const defenses = typeof getMonsterDefenseValues === 'function' ? getMonsterDefenseValues(template, 1) : {};
+    const attributes = typeof monsterAttributes === 'function' ? monsterAttributes(template) : (template.baseStats || {});
+    const bonuses = typeof monsterBonuses === 'function' ? monsterBonuses(template) : (template.bonusStats || {});
+    const speed = typeof getMonsterAttackSpeed === 'function' ? getMonsterAttackSpeed(template) : Number(template.attackSpeed || 0);
+    const encounter = training ? '修練場固定遭遇' :
+      (typeof getMonsterActualEncounterChancePercent === 'function'
+        ? getMonsterActualEncounterChancePercent(monster, zone).toFixed(2) + '%／每次判定'
+        : (Number.isFinite(Number(monster.encounterChance)) ? monster.encounterChance + '% 權重' : '依區域規則'));
+    const description = monster.description ||
+      (typeof getMonsterBestiaryDescription === 'function' ? getMonsterBestiaryDescription(monster, zone) :
+        ('出沒於' + zone + '，主要使用' + (monster.attackType || '一般攻擊') + '作戰。'));
+
+    const stats = [
+      ['生命值', training ? '不會死亡' : fmt(monster.hp || monster.maxHp)],
+      ['攻擊力', training ? '依角色等級模擬' : fmt(monster.atk)],
+      ['近戰防禦', fmt(defenses.melee == null ? monster.def : defenses.melee)],
+      ['遠距防禦', fmt(defenses.ranged == null ? monster.rangedDefense : defenses.ranged)],
+      ['魔法防禦', fmt(defenses.magic == null ? monster.magicDefense : defenses.magic)],
+      ['攻擊速度', speed > 0 ? speed.toFixed(2) + ' 次／秒' : '—'],
+      ['經驗值', training ? fmt(monster.exp) + '／次攻擊' : fmt(typeof getMonsterExperienceReward === 'function' ? getMonsterExperienceReward(monster) : monster.exp)],
+      ['魂幣', training ? '不掉落' : fmt(monster.gold)],
+      ['遭遇機率', encounter],
+      ['攻擊方式', monster.attackType || '一般攻擊'],
+      ['攻擊距離', monster.attackRange === 'ranged' ? '遠距離' : monster.attackRange === 'melee' ? '近戰' : '依招式設定'],
+      ['傷害類型', monster.damageType === 'magic' ? '魔法' : monster.damageType === 'physical' ? '物理' : '依招式設定']
+    ];
+    const statHtml = stats.map(function (item) {
+      return '<div class="bv2-stat">' + esc(item[0]) + '<b>' + esc(item[1]) + '</b></div>';
+    }).join('');
+
+    const attributeLabels = [['力量','str'],['敏捷','dex'],['體質','con'],['精神','wis'],['智力','int'],['魅力','cha']];
+    const attributeHtml = attributeLabels.map(function (item) {
+      return '<div class="bv2-stat">' + item[0] + '<b>' + fmt(attributes[item[1]]) + '</b></div>';
+    }).join('');
+    const rawBonus = monster.bonusStats || {};
+    const bonusRows = [
+      ['攻擊加成', bonuses.attack],
+      ['近戰防禦加成', bonuses.defense],
+      ['遠距防禦加成', rawBonus.rangedDefense],
+      ['魔法防禦加成', bonuses.magicDefense],
+      ['暴擊率', Number(bonuses.critical || 0) * 100],
+      ['閃避率', Number(rawBonus.evasion || monster.evasionBonus || 0) * 100]
+    ];
+    const bonusHtml = bonusRows.map(function (item, index) {
+      const value = item[1] == null ? 0 : Number(item[1]);
+      return '<div class="bv2-stat">' + item[0] + '<b>' +
+        (index >= 4 ? value.toFixed(1) + '%' : fmt(value)) + '</b></div>';
+    }).join('');
+
+    const skills = (Array.isArray(monster.skills) ? monster.skills : [])
+      .concat(Array.isArray(monster.magicSkills) ? monster.magicSkills : []);
+    const skillHtml = skills.map(function (skill) {
+      const phase = skill.phase === 'lowHp' ? '生命低於 50% 後' : skill.phase === 'defense' ? '防禦觸發' : '一般狀態';
+      const chance = Number.isFinite(Number(skill.chance)) ? Math.round(Number(skill.chance) * 100) + '% 機率' : '觸發率依技能規則';
+      const multiplier = typeof getMonsterSkillMultiplier === 'function'
+        ? Math.round(getMonsterSkillMultiplier(monster, skill) * 100) + '% 傷害'
+        : (skill.powerMultiplier ? Math.round(Number(skill.powerMultiplier) * 100) + '% 傷害' : '');
+      const damage = skill.damageType === 'magic' ? '魔法傷害' : skill.damageType === 'physical' ? '物理傷害' : '特殊效果';
+      const range = skill.attackRange === 'ranged' ? '遠距離' : skill.attackRange === 'melee' ? '近戰' : '';
+      const effect = skill.effect ? '效果：' + skill.effect : '';
+      return '<div class="bv2-skill"><strong>' + esc(skill.name || '未命名技能') + '</strong><span>' +
+        esc([phase, chance, multiplier, damage, range, effect, skill.description || ''].filter(Boolean).join('｜')) +
+        '</span></div>';
+    }).join('') || '<p class="bv2-note">目前沒有額外登錄技能，主要使用基本攻擊。</p>';
+
+    const defenseSkills = Array.isArray(monster.defenseSkills) ? monster.defenseSkills : [];
+    const defenseSkillHtml = defenseSkills.length
+      ? '<section class="bv2-section"><h4>🛡️ 防禦技能</h4><div class="bv2-skill-grid">' +
+        defenseSkills.map(function (skill) {
+          return '<div class="bv2-skill"><strong>' + esc(skill.name || '防禦能力') + '</strong><span>' +
+            esc([skill.trigger || '觸發時', skill.effect || '', skill.description || ''].filter(Boolean).join('｜')) +
+            '</span></div>';
+        }).join('') + '</div></section>'
+      : '';
+    const phases = Array.isArray(monster.bossPhases) ? monster.bossPhases : [];
+    const phaseHtml = phases.length
+      ? '<section class="bv2-section"><h4>👑 首領階段</h4><div class="bv2-skill-grid">' +
+        phases.map(function (phase) {
+          return '<div class="bv2-skill"><strong>' + esc(phase.name || '階段') + '</strong><span>' +
+            esc([phase.trigger || '', phase.description || ''].filter(Boolean).join('｜')) +
+            '</span></div>';
+        }).join('') + '</div></section>'
+      : '';
+    const elementText = monster.element
+      ? '固定元素：' + String(monster.element)
+      : (training ? '修練目標不配置元素。' : '每次遭遇依地、風、火、金、木、水、光、暗八種元素規則判定。');
+    const dropHtml = typeof getMonsterDropDisplay === 'function'
+      ? getMonsterDropDisplay(monster, zone)
+      : '<div class="bv2-drop">魂幣 ' + fmt(monster.gold) + '｜經驗 ' + fmt(monster.exp) +
+        '<br>' + esc((monster.dropTable || []).join('、')) + '</div>';
+    const setDropHtml = monster.setDropDescription
+      ? '<div class="bv2-drop wing"><strong>套裝掉落補充</strong>' + esc(monster.setDropDescription) + '</div>'
+      : '';
+
+    showBody('<div class="bv2-detail"><div class="bv2-toolbar">' +
+      '<button class="modal-btn bv2-back" type="button" onclick="openBestiaryZoneV2(&quot;' + esc(zone) + '&quot;)">← ' + esc(zone) + '</button>' +
+      '<span class="bv2-badges"><span class="bv2-badge level">' + (training ? '修練目標' : 'Lv.' + esc(monster.levelRange || monster.level || '—')) +
+      '</span><span class="bv2-badge ' + (monster.type === 'boss' ? 'boss' : monster.type === 'special' ? 'special' : '') + '">' + kind(monster) +
+      '</span></span><button class="modal-btn bv2-back" type="button" onclick="closeModal()">關閉</button></div>' +
+      '<div class="bv2-detail-top"><div class="bv2-detail-art">' + art + '</div><div>' +
+      '<h3 style="margin:4px 0 8px;color:#f7d58a">' + esc(monster.name) + '</h3>' +
+      '<p class="bv2-note">' + esc(description) + '</p>' +
+      '<p class="bv2-note">所屬區域：' + esc(monster.originZone || zone) + '｜元素規則：' + esc(elementText) + '</p>' +
+      '<div class="bv2-stat-grid">' + statHtml + '</div></div></div>' +
+      '<section class="bv2-section"><h4>📊 六大基礎能力</h4><div class="bv2-stat-grid">' + attributeHtml + '</div></section>' +
+      '<section class="bv2-section"><h4>⚡ 戰鬥能力加成</h4><div class="bv2-stat-grid">' + bonusHtml + '</div></section>' +
+      '<section class="bv2-section"><h4>⚔️ 戰鬥技能</h4><div class="bv2-skill-grid">' + skillHtml + '</div></section>' +
+      defenseSkillHtml + phaseHtml +
+      '<section class="bv2-section"><h4>🎁 完整掉落資料</h4>' + dropHtml + setDropHtml +
+      '<p class="bv2-note" style="margin:9px 0 0">此處整合怪物專屬掉落、一般裝備、技能書、職業套裝、強化卷軸與遊戲共用掉落規則；各項機率依實際戰鬥判定。</p></section>' +
+      '</div>', 'bestiary-v2-detail');
+  }
+
+  window.openBestiaryV2 = openHome;
+  window.openBestiary = openHome;
+  window.openBestiaryZoneV2 = openZone;
+  window.openBestiaryDetailV2 = openDetail;
+})();
+</script>
+
 <script id="BESTIARY_REDESIGN_V2">
 (function(){'use strict';if(window.BESTIARY_REDESIGN_V2)return;window.BESTIARY_REDESIGN_V2=true;
  const wingMap={'暗曜幼翼龍':['暗曜星蝕翼','🌑'],'燼心煤球龍':['燼心熔火翼','🔥'],'霜鈴月翼龍':['霜鈴寒月翼','❄️'],'苔毒泡泡龍':['苔毒孢子翼','🌿'],'琥珀星晶龍':['琥珀星晶翼','🔶'],'深潮夜鱗龍':['深潮夜鱗翼','🌊']};
