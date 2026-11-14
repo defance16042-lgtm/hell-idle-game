@@ -17379,15 +17379,11 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
 <script id="warehouse-resize-and-tooltip-fix">
 (function(){
   const body = () => document.getElementById('modal-body');
-  let warehouseGridZoom=1;
   let resizeObserver=null;
   let windowResizeBound=false;
-  const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
   function updateWarehouseGridSize(){
     const panel=body();
     if(!panel?.classList.contains('warehouse-horizontal-modal'))return;
-    const zoomValue=panel.querySelector('[data-warehouse-zoom-value]');
-    if(zoomValue)zoomValue.textContent=`${Math.round(warehouseGridZoom*100)}%`;
     panel.querySelectorAll('.warehouse-pane').forEach(pane=>{
       const grid=pane.querySelector('.warehouse-source-grid,.warehouse-storage-grid');
       if(!grid)return;
@@ -17398,24 +17394,13 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
       const paddingY=(parseFloat(style.paddingTop)||0)+(parseFloat(style.paddingBottom)||0);
       const availableWidth=Math.max(140,pane.clientWidth-paddingX-16);
       const availableHeight=Math.max(140,pane.clientHeight-(title?.offsetHeight||0)-(pager?.offsetHeight||0)-paddingY-34);
-      const size=Math.max(120,Math.round(Math.min(availableWidth,availableHeight)*warehouseGridZoom));
+      const size=Math.max(120,Math.round(Math.min(availableWidth,availableHeight)));
       grid.style.setProperty('--warehouse-grid-size',`${size}px`);
     });
   }
-  window.adjustWarehouseGridZoom=function(delta){warehouseGridZoom=clamp(warehouseGridZoom+(Number(delta)||0),.65,1.45);updateWarehouseGridSize();};
-  window.resetWarehouseGridZoom=function(){warehouseGridZoom=1;updateWarehouseGridSize();};
   window.setupWarehouseResizeHandle = function(){
     const panel=body();
     if(!panel?.classList.contains('warehouse-horizontal-modal'))return;
-    const actionBar=panel.querySelector(':scope > div:first-child > div:last-child');
-    if(actionBar&&!actionBar.querySelector('.warehouse-zoom-controls')){
-      const zoom=document.createElement('div');
-      zoom.className='warehouse-zoom-controls';
-      zoom.setAttribute('role','group');
-      zoom.setAttribute('aria-label','調整倉庫格子大小');
-      zoom.innerHTML='<span>格子</span><button type="button" aria-label="縮小格子" onclick="adjustWarehouseGridZoom(-0.1)">A−</button><output data-warehouse-zoom-value>100%</output><button type="button" aria-label="放大格子" onclick="adjustWarehouseGridZoom(0.1)">A＋</button><button type="button" aria-label="重設格子大小" onclick="resetWarehouseGridZoom()">重設</button>';
-      actionBar.prepend(zoom);
-    }
     let grip=panel.querySelector('#warehouse-resize-grip');
     if(!grip){
       grip=document.createElement('button');
@@ -27586,10 +27571,6 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   border-radius:0 0 7px 7px; background:linear-gradient(180deg,rgba(18,14,17,.88),rgba(18,14,17,.98));
 }
 #modal-body.warehouse-horizontal-modal .grid-page-controls strong { white-space:nowrap; font-variant-numeric:tabular-nums; }
-.warehouse-zoom-controls { display:inline-flex; align-items:center; justify-content:center; gap:4px; flex-wrap:nowrap; color:#ead7b6; font-size:11px; white-space:nowrap; }
-.warehouse-zoom-controls button { min-width:30px; min-height:28px; padding:3px 6px; border:1px solid #8e6e43; border-radius:6px; background:#2a2020; color:#ffe4ae; font:inherit; cursor:pointer; }
-.warehouse-zoom-controls button:hover { border-color:#ffcf74; background:#493323; }
-.warehouse-zoom-controls output { min-width:38px; color:#ffe4ae; text-align:center; font-variant-numeric:tabular-nums; }
 .warehouse-resize-grip { position:absolute!important; right:3px!important; bottom:3px!important; z-index:12!important; display:grid!important; place-items:center!important; width:25px!important; height:25px!important; padding:0!important; border:1px solid #bd955b!important; border-radius:6px 2px 8px 2px!important; background:linear-gradient(145deg,#493427,#211a1b)!important; color:#ffe0a3!important; box-shadow:0 2px 8px #0008!important; cursor:nwse-resize!important; touch-action:none!important; }
 .warehouse-resize-grip:hover { border-color:#ffe0a3!important; filter:brightness(1.18); }
 /* 攻擊飛斬橫越戰場，VS 標籤固定顯示在特效覆層上方。 */
@@ -27601,7 +27582,6 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   }
   #modal-body.warehouse-horizontal-modal .warehouse-pane { min-height:280px!important; }
   #modal-body.warehouse-horizontal-modal > div:first-child { padding-right:25px!important; }
-  .warehouse-zoom-controls { gap:2px; }
 }
 
 /* 寵物面板：容量摘要去重後，以四個固定出戰位置呈現隊伍；卡片在窄螢幕自動改排。 */
