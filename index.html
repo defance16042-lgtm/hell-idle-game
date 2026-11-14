@@ -27859,7 +27859,10 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     const stats = m.baseStats || {};
     const bonuses = m.bonusStats || {};
     const skills = [...asList(m.skills), ...asList(m.magicSkills)].filter(skill => skill?.name);
-    const customDrops = [...asList(m.uniqueDrops), ...asList(m.dropTable)].map(dropText).filter(Boolean);
+    const uniqueDrops = asList(m.uniqueDrops).map(dropText).filter(Boolean);
+    const customDropTable = asList(m.dropTable).map(dropText).filter(Boolean);
+    const categoryDropPattern = /｜|專屬|需求等級|獨立掉落|裝備|法杖|胸甲|座騎|坐騎|戒指|飾品|項鍊|项链|武器|防具/;
+    const categoryDrops = uniqueDrops.length ? uniqueDrops : customDropTable.filter(drop => categoryDropPattern.test(drop));
     const defenseSkills = asList(m.defenseSkills);
     const bossPhases = Array.isArray(m.bossPhases) ? m.bossPhases : [];
     const level = m.levelRange || m.level || '—';
@@ -27874,6 +27877,25 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       card('能力屬性加成', Object.entries(ring.statBonuses || {}).map(([key, value]) => `${statLabels[key] || key} +${fmt(value)}`).join('｜') || '無額外能力加成'),
       card('強化限制', ring.cannotEnhance ? '不可強化｜強化等級固定 +0' : `可強化｜目前強化 +${fmt(ring.enhancementLevel)}`)
     ] : [];
+    const weaponDropPattern = /武器|刀|槍|弓|斧|杖|戟|刃/;
+    const armorDropPattern = /防具|胸甲|鎧|甲|盾|護腕|套裝|翅膀|背部|戒指|飾品|項鍊|项链/;
+    const weaponDrops = categoryDrops.filter(drop => weaponDropPattern.test(drop));
+    const armorDrops = categoryDrops.filter(drop => armorDropPattern.test(drop) && (!ring || !drop.includes(ring.name)));
+    const specialDrops = [...new Set([
+      ...categoryDrops.filter(drop => /座騎|坐騎/.test(drop)),
+      ...categoryDrops.filter(drop => !weaponDropPattern.test(drop) && !armorDropPattern.test(drop) && (!ring || !drop.includes(ring.name)))
+    ])];
+    const categorizedDropNames = [...weaponDrops, ...armorDrops, ...specialDrops, ...(ring ? [ring.name] : [])]
+      .map(drop => String(drop).split('｜')[0].trim()).filter(Boolean);
+    const uniqueDropEffectNames = uniqueDrops.flatMap(drop => [...drop.matchAll(/(?:^|[｜；;。])\s*([^｜；;。:：]{2,20})[:：]/g)].map(match => match[1].trim()));
+    const dropRulesTable = customDropTable.filter(drop => {
+      if (/^(魂幣|金幣|錢幣|經驗|EXP\b|補血藥水|補魔藥水)/i.test(drop)) return false;
+      if (categorizedDropNames.some(name => drop.includes(name))) return false;
+      if (uniqueDropEffectNames.some(name => name.length >= 4 && drop.includes(name))) return false;
+      return true;
+    });
+    // 專屬裝備已在分類頁整理；規則頁僅保留未分類的材料等資料，並避免重複顯示基本獎勵。
+    const dropRulesMonster = { ...m, uniqueDrops: [], dropTable: dropRulesTable };
     const pages = {
       overview: `<h4>📋 怪物概要</h4><div class="ptk-detail-grid">${cards([card('區域', esc(zone)), card('等級／類型', `${m.type === 'training' ? '修練目標' : `Lv. ${esc(level)}`}｜${typeName(m)}`), card('怪物說明', esc(m.description || `出沒於${zone}，使用${m.attackType || '一般攻擊'}作戰。`)), card('攻擊方式', esc(m.attackType || '一般攻擊'), `${esc(m.attackRange || 'melee')}｜${esc(m.damageType || 'physical')}`)])}</div>`,
       battle: `<h4>⚔️ 戰鬥資料</h4><div class="ptk-detail-grid">${cards([card('生命值', `${fmt(m.hp || m.maxHp)} / ${fmt(m.maxHp || m.hp)}`), card('攻擊力／攻速', `${fmt(m.atk)}｜${esc(m.attackSpeed || '—')} 次／秒`), card('經驗／魂幣', `${fmt(m.exp)}｜${fmt(m.gold)}`), card('遭遇權重', `${esc(m.encounterChance ?? '—')}%`), card('戰鬥加成', `攻擊 +${fmt(bonuses.attack)}｜物防 +${fmt(bonuses.defense)}｜魔防 +${fmt(bonuses.magicDefense)}`), card('暴擊／迴避', `${Math.round(Number(bonuses.critical || 0) * 100)}%｜${Math.round(Number(bonuses.evasion || m.evasion || 0) * 100)}%`)])}</div>`,
@@ -27881,12 +27903,12 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       defense: `<h4>🛡️ 防禦資料</h4><div class="ptk-detail-grid">${cards([card('物理防禦', m.def == null ? '—' : fmt(m.def)), card('魔法防禦', m.magicDefense == null ? '—' : fmt(m.magicDefense)), card('防禦原型', esc(typeof getMonsterDefenseArchetype === 'function' ? getMonsterDefenseArchetype(m).label : '依戰鬥規則判定')), card('防禦技能', defenseSkills.map(skill => esc(skill.name || skill)).join('、') || '沒有額外防禦技能')])}</div>`,
       skills: `<h4>✨ 技能與招式</h4><div class="ptk-detail-grid">${cards(skills.map(skill => card(skill.name, `${esc(skill.phase || 'normal')}｜${esc(skill.damageType || 'physical')}｜發動 ${Math.round(Number(skill.chance || 0) * 100)}%`, skill.description || skill.effect || `倍率 ${skill.powerMultiplier || 1}`)))}</div>`,
       rewards: `<h4>🎁 獎勵</h4><div class="ptk-detail-grid">${cards([card('擊敗獎勵', `經驗 ${fmt(m.exp)}｜魂幣 ${fmt(m.gold)}`), card('一般補給', '補血藥水｜8%'), card('品質規則', typeName(m) === 'BOSS' ? 'BOSS 裝備與套裝依獨立機率判定。' : typeName(m) === '特殊怪' ? '特殊怪裝備與套裝依獨立機率判定。' : '一般怪依一般掉落規則判定。')])}</div>`,
-      weapon: `<h4>⚔️ 武器</h4><div class="ptk-detail-grid">${cards(customDrops.filter(drop => /武器|刀|槍|弓|斧|杖|戟|刃/.test(drop)).map(drop => card('專屬／相關武器', esc(drop))))}</div>`,
-      armor: `<h4>🛡️ 防具、飾品與座騎</h4><div class="ptk-detail-grid">${cards(customDrops.filter(drop => /防具|胸甲|鎧|甲|盾|護腕|套裝|翅膀|背部|座騎|坐騎|戒指|飾品/.test(drop)).map(drop => card('專屬裝備／飾品／座騎', esc(drop))))}</div>`,
-      special: `<h4>🌟 特殊資料</h4><div class="ptk-detail-grid">${cards([m.specialTier ? card('特殊階級', esc(m.specialTier)) : '', m.visualNote ? card('圖像備註', esc(m.visualNote)) : '', ...jadeSealRingCards, bossPhases.map(phase => card(`BOSS 階段｜${esc(phase.name)}`, esc(phase.description), phase.trigger)).join('')])}</div>`,
-      drops: `<h4>📜 掉落規則</h4>${typeof getMonsterDropDisplay === 'function' ? `<div class="ptk-detail-drop-panel">${getMonsterDropDisplay(m, zone)}</div>` : `<div class="ptk-detail-empty">目前沒有掉落規則資料。</div>`}`
+      weapon: `<h4>⚔️ 武器</h4><div class="ptk-detail-grid">${cards(weaponDrops.map(drop => card('專屬／相關武器', esc(drop))))}</div>`,
+      armor: `<h4>🛡️ 防具與飾品</h4><div class="ptk-detail-grid">${cards([...armorDrops.map(drop => card('專屬防具／飾品', esc(drop))), ...jadeSealRingCards])}</div>`,
+      special: `<h4>🌟 特殊資料與坐騎</h4><div class="ptk-detail-grid">${cards([m.specialTier ? card('特殊階級', esc(m.specialTier)) : '', m.visualNote ? card('圖像備註', esc(m.visualNote)) : '', ...specialDrops.map(drop => card('專屬特殊裝備／坐騎', esc(drop))), bossPhases.map(phase => card(`BOSS 階段｜${esc(phase.name)}`, esc(phase.description), phase.trigger)).join('')])}</div>`,
+      drops: `<h4>📜 掉落規則</h4>${typeof getMonsterDropDisplay === 'function' ? `<div class="ptk-detail-drop-panel">${getMonsterDropDisplay(dropRulesMonster, zone)}</div>` : `<div class="ptk-detail-empty">目前沒有掉落規則資料。</div>`}`
     };
-    const tabs = [['overview','📋 概要'],['battle','⚔️ 戰鬥'],['ability','📊 能力'],['defense','🛡️ 防禦'],['skills','✨ 技能'],['rewards','🎁 獎勵'],['weapon','⚔️ 武器'],['armor','🛡️ 防具／飾品／座騎'],['special','🌟 特殊'],['drops','📜 掉落規則']];
+    const tabs = [['overview','📋 概要'],['battle','⚔️ 戰鬥'],['ability','📊 能力'],['defense','🛡️ 防禦'],['skills','✨ 技能'],['rewards','🎁 獎勵'],['weapon','⚔️ 武器'],['armor','🛡️ 防具／飾品'],['special','🌟 特殊／座騎'],['drops','📜 掉落規則']];
     body.innerHTML = `<div class="ptk-detail-shell"><div class="ptk-detail-toolbar"><button class="modal-btn" onclick="${back}">← 返回 ${esc(zone)}</button><h3>⚔️ ${esc(m.name)}｜${typeName(m)}</h3><button class="modal-btn" onclick="closeModal()">關閉</button></div><div class="ptk-detail-hero"><div class="ptk-detail-art">${image ? `<img src="${esc(image)}" alt="${esc(m.name)}">` : esc(m.icon || '⚔️')}</div><div class="ptk-detail-summary"><div class="ptk-detail-badges"><span class="ptk-detail-badge">Lv. ${esc(level)}</span><span class="ptk-detail-badge ${kindClass}">${typeName(m)}</span><span class="ptk-detail-badge">${esc(m.attackType || '一般攻擊')}</span></div><p>${esc(m.description || '目前沒有額外說明。')}</p></div></div><div id="ptk-detail-tabs-root"><div class="ptk-detail-tabs" role="tablist">${tabs.map(([key,label], i) => `<button type="button" data-ptk-tab="${key}" aria-selected="${i === 0 ? 'true' : 'false'}" onclick="switchParallelBestiaryTab('${key}')">${label}</button>`).join('')}</div>${tabs.map(([key]) => `<section class="ptk-detail-page" data-ptk-page="${key}"${key === 'overview' ? '' : ' hidden'}>${pages[key]}</section>`).join('')}</div></div>`;
     body.className = 'parallel-three-kingdoms-bestiary-detail all-regions-bestiary-detail';
     body.dataset.modalType = 'all-regions-bestiary-detail';
