@@ -26707,7 +26707,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   if (jadeRing) {
     const statLabels = { str: '力量', dex: '敏捷', con: '體質', wis: '精神', int: '智力', cha: '魅力' };
     const statDetails = Object.entries(jadeRing.statBonuses || {}).map(([key, value]) => `${statLabels[key] || key} +${value}`).join('｜');
-    monster.uniqueDrops = [`${jadeRing.name}｜${jadeRing.slotLabel}｜${jadeRing.rarity}｜需求等級 ${jadeRing.requiredLevel}｜全職業可用｜獨立掉落率 ${Math.round(Number(jadeRing.chance) * 100)}%｜攻擊 +${jadeRing.attackBonus}｜物理防禦 +${jadeRing.physicalDefenseBonus}｜魔法防禦 +${jadeRing.magicDefenseBonus}｜生命上限 +${jadeRing.maxHpBonus}｜${statDetails}｜不可強化`];
+    monster.uniqueDrops = [`${jadeRing.name}｜${jadeRing.slotLabel}｜${jadeRing.rarity}｜需求等級 ${jadeRing.requiredLevel}｜全職業可用｜獨立掉落率 ${Math.round(Number(jadeRing.chance) * 100)}%｜攻擊 +${jadeRing.attackBonus}｜物理防禦 +${jadeRing.physicalDefenseBonus}｜魔法防禦 +${jadeRing.magicDefenseBonus}｜生命上限 +${Number(jadeRing.maxHpBonus || 0).toLocaleString('en-US')}｜${statDetails}｜不可強化`];
   }
   const roster = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
   const previous = roster.find(entry => entry && entry.name === monster.name);
@@ -27865,6 +27865,15 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     const level = m.levelRange || m.level || '—';
     const back = `openBestiaryZone(${esc(JSON.stringify(zone))})`;
     const abilityValue = key => stats[key] == null ? '—' : fmt(stats[key]);
+    const ring = m.jadeSealRingDrop;
+    const jadeSealRingCards = ring ? [
+      card('董卓專屬戒指', esc(ring.name)),
+      card('裝備資訊', `${esc(ring.slotLabel || '戒指')}｜${esc(ring.rarity || '—')}｜需求等級 ${esc(ring.requiredLevel ?? '—')}｜${esc(ring.classKey === 'shared' ? '全職業可用' : (ring.classKeys || []).join('、'))}`),
+      card('掉落機率', `獨立掉落率 ${Math.round(Number(ring.chance || 0) * 100)}%｜${esc(ring.sourceLabel || '專屬掉落')}`),
+      card('基礎能力', `攻擊 +${fmt(ring.attackBonus)}｜物理防禦 +${fmt(ring.physicalDefenseBonus)}｜魔法防禦 +${fmt(ring.magicDefenseBonus)}｜生命上限 +${fmt(ring.maxHpBonus)}`),
+      card('能力屬性加成', Object.entries(ring.statBonuses || {}).map(([key, value]) => `${statLabels[key] || key} +${fmt(value)}`).join('｜') || '無額外能力加成'),
+      card('強化限制', ring.cannotEnhance ? '不可強化｜強化等級固定 +0' : `可強化｜目前強化 +${fmt(ring.enhancementLevel)}`)
+    ] : [];
     const pages = {
       overview: `<h4>📋 怪物概要</h4><div class="ptk-detail-grid">${cards([card('區域', esc(zone)), card('等級／類型', `${m.type === 'training' ? '修練目標' : `Lv. ${esc(level)}`}｜${typeName(m)}`), card('怪物說明', esc(m.description || `出沒於${zone}，使用${m.attackType || '一般攻擊'}作戰。`)), card('攻擊方式', esc(m.attackType || '一般攻擊'), `${esc(m.attackRange || 'melee')}｜${esc(m.damageType || 'physical')}`)])}</div>`,
       battle: `<h4>⚔️ 戰鬥資料</h4><div class="ptk-detail-grid">${cards([card('生命值', `${fmt(m.hp || m.maxHp)} / ${fmt(m.maxHp || m.hp)}`), card('攻擊力／攻速', `${fmt(m.atk)}｜${esc(m.attackSpeed || '—')} 次／秒`), card('經驗／魂幣', `${fmt(m.exp)}｜${fmt(m.gold)}`), card('遭遇權重', `${esc(m.encounterChance ?? '—')}%`), card('戰鬥加成', `攻擊 +${fmt(bonuses.attack)}｜物防 +${fmt(bonuses.defense)}｜魔防 +${fmt(bonuses.magicDefense)}`), card('暴擊／迴避', `${Math.round(Number(bonuses.critical || 0) * 100)}%｜${Math.round(Number(bonuses.evasion || m.evasion || 0) * 100)}%`)])}</div>`,
@@ -27874,7 +27883,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       rewards: `<h4>🎁 獎勵</h4><div class="ptk-detail-grid">${cards([card('擊敗獎勵', `經驗 ${fmt(m.exp)}｜魂幣 ${fmt(m.gold)}`), card('一般補給', '補血藥水｜8%'), card('品質規則', typeName(m) === 'BOSS' ? 'BOSS 裝備與套裝依獨立機率判定。' : typeName(m) === '特殊怪' ? '特殊怪裝備與套裝依獨立機率判定。' : '一般怪依一般掉落規則判定。')])}</div>`,
       weapon: `<h4>⚔️ 武器</h4><div class="ptk-detail-grid">${cards(customDrops.filter(drop => /武器|刀|槍|弓|斧|杖|戟|刃/.test(drop)).map(drop => card('專屬／相關武器', esc(drop))))}</div>`,
       armor: `<h4>🛡️ 防具、飾品與座騎</h4><div class="ptk-detail-grid">${cards(customDrops.filter(drop => /防具|胸甲|鎧|甲|盾|護腕|套裝|翅膀|背部|座騎|坐騎|戒指|飾品/.test(drop)).map(drop => card('專屬裝備／飾品／座騎', esc(drop))))}</div>`,
-      special: `<h4>🌟 特殊資料</h4><div class="ptk-detail-grid">${cards([m.specialTier ? card('特殊階級', esc(m.specialTier)) : '', m.visualNote ? card('圖像備註', esc(m.visualNote)) : '', m.jadeSealRingDrop ? card('特殊專屬物品', esc(`${m.jadeSealRingDrop.name}｜獨立掉落率 ${Number(m.jadeSealRingDrop.chance || 0) * 100}%`)) : '', bossPhases.map(phase => card(`BOSS 階段｜${esc(phase.name)}`, esc(phase.description), phase.trigger)).join('')])}</div>`,
+      special: `<h4>🌟 特殊資料</h4><div class="ptk-detail-grid">${cards([m.specialTier ? card('特殊階級', esc(m.specialTier)) : '', m.visualNote ? card('圖像備註', esc(m.visualNote)) : '', ...jadeSealRingCards, bossPhases.map(phase => card(`BOSS 階段｜${esc(phase.name)}`, esc(phase.description), phase.trigger)).join('')])}</div>`,
       drops: `<h4>📜 掉落規則</h4>${typeof getMonsterDropDisplay === 'function' ? `<div class="ptk-detail-drop-panel">${getMonsterDropDisplay(m, zone)}</div>` : `<div class="ptk-detail-empty">目前沒有掉落規則資料。</div>`}`
     };
     const tabs = [['overview','📋 概要'],['battle','⚔️ 戰鬥'],['ability','📊 能力'],['defense','🛡️ 防禦'],['skills','✨ 技能'],['rewards','🎁 獎勵'],['weapon','⚔️ 武器'],['armor','🛡️ 防具／飾品／座騎'],['special','🌟 特殊'],['drops','📜 掉落規則']];
