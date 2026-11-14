@@ -14959,7 +14959,12 @@ function getCombatVisualCycleDuration(actionPath) {
             if (duplicateIndex >= 0) currentPlayer.storage.splice(duplicateIndex, 1);
             if (currentPlayer.storage.length >= warehouse.capacity) { alert(`共通倉庫已滿（${warehouse.capacity} 格）。`); return; }
             if (kind === 'weapon') {
-                if (currentPlayer.equipment.weaponId === instanceId) { alert('請先卸下裝備中的武器。'); return; }
+                // 修羅戰士單手斧分別記錄在左右手欄位，雙手大斧則記錄在 weaponId。
+                // 三個欄位都必須檢查，避免已裝備的單手斧被誤存入倉庫。
+                const equipment = currentPlayer.equipment || {};
+                const isEquippedWeapon = [equipment.weaponId, equipment.leftHandAxeId, equipment.rightHandAxeId]
+                    .some(equippedId => String(equippedId ?? '') !== '' && String(equippedId) === String(instanceId ?? ''));
+                if (isEquippedWeapon) { alert('這把武器目前已裝備，不能存入倉庫；請先卸下裝備。'); return; }
                 const index = currentPlayer.items.weapons.findIndex(item => item.instanceId === instanceId);
                 if (index < 0) { alert('找不到這件武器，物品沒有被移動。請重新整理背包後再試。'); return; }
                 const item = currentPlayer.items.weapons[index];
