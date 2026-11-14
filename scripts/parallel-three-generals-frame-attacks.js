@@ -8,28 +8,28 @@
   const definitions = [
     {
       names: ['李儒'], bodyDir: 'li_ru_attack', waveDir: 'li_ru_attack_wave',
-      waveScale: .12, waveCurve: -.015, waveLift: -.025, spriteScale: 1.15,
+      waveScale: .12, waveCurve: -.015, waveLift: -.025, spriteScale: 1.2,
       frameMs: [135, 120, 105, 95, 125, 180],
       waveStops: [0.02, 0.06, 0.28, 0.62, 0.88, 1],
       waveAlpha: [.28, .55, .92, 1, .88, .30]
     },
     {
       names: ['樊稠將軍', '樊稠'], bodyDir: 'fan_chou_attack', waveDir: 'fan_chou_attack_wave',
-      waveScale: .12, waveCurve: .01, waveLift: .015, spriteScale: 1.15,
+      waveScale: .12, waveCurve: .01, waveLift: .015, spriteScale: 1.2,
       frameMs: [135, 120, 105, 95, 125, 180],
       waveStops: [0.02, 0.07, 0.30, 0.64, 0.90, 1],
       waveAlpha: [.26, .54, .95, 1, .92, .36]
     },
     {
       names: ['張濟將軍', '張濟'], bodyDir: 'zhang_ji_attack', waveDir: 'zhang_ji_attack_wave',
-      waveScale: .12, waveCurve: -.005, waveLift: -.01, waveFlip: true, spriteScale: 1.15,
+      waveScale: .12, waveCurve: -.005, waveLift: -.01, waveFlip: true, spriteScale: 1.2,
       frameMs: [130, 115, 100, 90, 120, 175],
       waveStops: [0.01, 0.05, 0.34, 0.70, 0.94, 1],
       waveAlpha: [.22, .50, .95, 1, .88, .24]
     },
     {
       names: ['呂布'], bodyDir: 'lu_bu_attack', waveDir: 'lu_bu_attack_wave',
-      waveScale: .12, waveCurve: .02, waveLift: -.035, spriteScale: 1.15,
+      waveScale: .12, waveCurve: .02, waveLift: -.035, spriteScale: 1.2,
       frameMs: [150, 130, 110, 95, 145, 195],
       waveStops: [0.01, 0.06, 0.28, 0.60, 0.88, 1],
       waveAlpha: [.30, .62, .98, 1, .96, .38]
