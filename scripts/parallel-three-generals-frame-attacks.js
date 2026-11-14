@@ -8,28 +8,28 @@
   const definitions = [
     {
       names: ['李儒'], bodyDir: 'li_ru_attack', waveDir: 'li_ru_attack_wave',
-      waveScale: .46, waveCurve: -.015, waveLift: -.025, spriteScale: 1.4,
+      waveScale: .12, waveCurve: -.015, waveLift: -.025, spriteScale: 1.15,
       frameMs: [135, 120, 105, 95, 125, 180],
       waveStops: [0.02, 0.06, 0.28, 0.62, 0.88, 1],
       waveAlpha: [.28, .55, .92, 1, .88, .30]
     },
     {
       names: ['樊稠將軍', '樊稠'], bodyDir: 'fan_chou_attack', waveDir: 'fan_chou_attack_wave',
-      waveScale: .52, waveCurve: .01, waveLift: .015, spriteScale: 1.4,
+      waveScale: .12, waveCurve: .01, waveLift: .015, spriteScale: 1.15,
       frameMs: [135, 120, 105, 95, 125, 180],
       waveStops: [0.02, 0.07, 0.30, 0.64, 0.90, 1],
       waveAlpha: [.26, .54, .95, 1, .92, .36]
     },
     {
       names: ['張濟將軍', '張濟'], bodyDir: 'zhang_ji_attack', waveDir: 'zhang_ji_attack_wave',
-      waveScale: .54, waveCurve: -.005, waveLift: -.01, waveFlip: true, spriteScale: 1.4,
+      waveScale: .12, waveCurve: -.005, waveLift: -.01, waveFlip: true, spriteScale: 1.15,
       frameMs: [130, 115, 100, 90, 120, 175],
       waveStops: [0.01, 0.05, 0.34, 0.70, 0.94, 1],
       waveAlpha: [.22, .50, .95, 1, .88, .24]
     },
     {
       names: ['呂布'], bodyDir: 'lu_bu_attack', waveDir: 'lu_bu_attack_wave',
-      waveScale: .64, waveCurve: .02, waveLift: -.035, spriteScale: 1.4,
+      waveScale: .12, waveCurve: .02, waveLift: -.035, spriteScale: 1.15,
       frameMs: [150, 130, 110, 95, 145, 195],
       waveStops: [0.01, 0.06, 0.28, 0.60, 0.88, 1],
       waveAlpha: [.30, .62, .98, 1, .96, .38]
@@ -106,12 +106,12 @@
   }
 
   function placeWave(record, frameIndex) {
-    const { definition, stage, waveImage, sourcePoint, targetPoint, stageRect } = record;
+    const { definition, stage, waveImage, sourcePoint, targetPoint, stageRect, maxWaveWidth } = record;
     const travel = definition.waveStops[frameIndex];
     const curveY = Math.sin(Math.PI * travel) * stageRect.height * definition.waveCurve;
     const x = sourcePoint.x + (targetPoint.x - sourcePoint.x) * travel;
     const y = sourcePoint.y + (targetPoint.y - sourcePoint.y) * travel + curveY + stageRect.height * definition.waveLift;
-    const width = Math.min(stageRect.width * definition.waveScale, 720);
+    const width = Math.min(stageRect.width * definition.waveScale, maxWaveWidth, 720);
     const height = width / 1.5;
 
     waveImage.style.left = `${x - width / 2}px`;
@@ -126,12 +126,15 @@
     const stage = document.getElementById('battle-stage');
     const sprite = document.querySelector('#monster-icon .monster-sprite');
     const player = document.getElementById('player-icon');
+    const vsLabel = document.getElementById('battle-vs-text');
     if (!stage || !sprite || !player || !sprite.isConnected) return false;
 
     cancelActive();
     const stageRect = stage.getBoundingClientRect();
     const monsterRect = sprite.getBoundingClientRect();
     const playerRect = player.getBoundingClientRect();
+    const vsWidth = vsLabel?.getBoundingClientRect().width || 48;
+    const maxWaveWidth = Math.max(32, vsWidth * 1.1);
     if (stageRect.width < 10 || stageRect.height < 10 || !monsterRect.width || !playerRect.width) return false;
 
     const originalStagePosition = stage.style.getPropertyValue('position');
@@ -167,7 +170,7 @@
     };
     const record = {
       token: ++runId, definition, stage, sprite, idleSource, waveImage,
-      sourcePoint, targetPoint, stageRect, timers: [],
+      sourcePoint, targetPoint, stageRect, maxWaveWidth, timers: [],
       changedStagePosition, previousStagePosition: originalStagePosition,
       changedSpriteScale, previousSpriteScale, previousSpriteScalePriority,
       previousSpriteOrigin, previousSpriteOriginPriority

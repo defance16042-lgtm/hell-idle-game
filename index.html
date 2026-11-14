@@ -9138,7 +9138,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             body.style.setProperty('box-sizing','border-box','important');
             body.style.setProperty('height','auto','important');
             body.style.setProperty('min-height','0','important');
-            body.style.setProperty('max-height','82vh','important');
+            body.style.setProperty('max-height','90vh','important');
             body.style.setProperty('overflow-x','hidden','important');
             body.style.setProperty('overflow-y','auto','important');
             body.style.setProperty('overscroll-behavior','contain','important');
@@ -9155,6 +9155,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             const pets = ensurePetStorage(currentPlayer);
             const eggs = pets.eggs, hatched = pets.hatched, capacity = getPetCapacityState(currentPlayer);
             const activePetIds = new Set(pets.activeIds.map(String));
+            const activePets = pets.activeIds.map(id => hatched.find(pet => String(pet.id) === String(id))).filter(Boolean);
             const normalBabyCount = hatched.filter(pet => pet.grade === 'normal' && !pet.locked && !activePetIds.has(String(pet.id))).length;
             const rareBabyCount = hatched.filter(pet => pet.grade === 'rare' && !pet.locked && !activePetIds.has(String(pet.id))).length;
             const mutantBabyCount = hatched.filter(pet => pet.grade === 'mutant' && !pet.locked && !activePetIds.has(String(pet.id))).length;
@@ -9169,9 +9170,19 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                 return `<article class="pet-hatched-card ${active ? 'pet-phase2-active' : ''}"><img class="pet-sprite" src="${type.image}" alt="${petEsc(type.label)}"><strong><img class="pet-type-icon" src="${type.image}" alt="${petEsc(type.label)}">${petEsc(pet.name)}</strong>${active ? '<span class="pet-phase2-active-badge">出戰中</span>' : ''}${pet.locked ? '<span class="pet-phase2-active-badge" style="background:#596b9b;">🔒 已鎖定</span>' : ''}<div class="pet-phase1-meta"><span style="color:${grade.color}">${grade.label}</span>｜${type.label}｜寵物 Lv.${pet.level}<br>資質 ${Number(pet.aptitude).toFixed(3)}（上限 ${getPetAptitudeMax(pet.grade).toFixed(2)}）｜<span data-pet-attack-count="${petEsc(pet.id)}">攻擊次數 ${Number(pet.attackCount) || 0}</span><div class="pet-phase2-progress"><i style="width:${expPct}%"></i></div>經驗 ${Number(pet.exp || 0).toLocaleString()} / ${expNeed.toLocaleString()}${Number(currentPlayer.level) > pet.level ? '' : '（已達角色等級上限）'}<br>來源：${petEsc(pet.sourceMonster)}</div><div class="pet-phase2-skill-box"><strong>戰鬥技能／效果</strong><br>${getPetSkillDescription(pet)}</div><div class="pet-phase2-battle-note">${active ? '目前出戰中；擊敗怪物時與其他出戰寵物共享 20% 擊殺經驗。' : '未出戰；加入出戰陣型後生效。'}</div><button class="pet-phase1-btn pet-phase2-btn" type="button" onclick="selectPetForBattle('${petEsc(pet.id)}')">${active ? '🐾 收回寵物' : '⚔️ 設為出戰'}</button><button class="pet-phase1-btn pet-phase2-btn" type="button" onclick="togglePetLock('${petEsc(pet.id)}')">${pet.locked ? '🔓 解除鎖定' : '🔒 鎖定寵物'}</button><button class="pet-discard-btn" type="button" ${(active || pet.locked) ? `disabled title="${active ? '出戰中的寵物受到保護，請先收回出戰' : '已鎖定的寵物受到保護，請先解除鎖定'}"` : ''} onclick="requestDiscardPet('${petEsc(pet.id)}')">${active ? '🛡️ 出戰中不可拋棄' : pet.locked ? '🔒 已鎖定不可拋棄' : '🗑️ 拋棄寵物'}</button></article>`;
             }).join('\n') : '<div class="pet-phase1-empty">尚未孵化出寵物。</div>';
             const fullClass = (capacity.eggFull || capacity.hatchedFull) ? ' pet-capacity-full' : '';
+            const activeSlotsHtml = Array.from({ length: getPetBattleLimit(currentPlayer) }, (_, index) => {
+                const pet = activePets[index];
+                if (!pet) return `<div class="pet-active-slot is-empty" aria-label="第 ${index + 1} 個出戰位置尚未配置"><span class="pet-active-slot-number">${index + 1}</span><strong>尚未配置</strong><small>空位</small></div>`;
+                const type = PET_TYPE_DEFS[pet.type] || PET_TYPE_DEFS.tank;
+                const grade = PET_GRADE_DEFS[pet.grade] || PET_GRADE_DEFS.normal;
+                return `<div class="pet-active-slot" aria-label="第 ${index + 1} 位：${petEsc(pet.name)}，${grade.label}，等級 ${pet.level}"><span class="pet-active-slot-number">${index + 1}</span><img src="${type.image}" alt=""><span class="pet-active-slot-copy"><strong>${petEsc(pet.name)}</strong><small><span style="color:${grade.color}">${grade.label}</span>｜${type.label}｜Lv.${pet.level}</small></span></div>`;
+            }).join('');
             const petModalBody = document.getElementById('modal-body');
             const petScrollTop = petModalBody.scrollTop;
             petModalBody.innerHTML = `<div class="pet-phase1-panel"><div class="pet-phase1-head"><h3>🐾 寵物系統｜出戰與收容</h3><button class="modal-btn" type="button" onclick="closePetSystem()">關閉</button></div><div class="pet-capacity-summary${fullClass}"><span>寵物蛋倉：<strong>${capacity.eggs} / ${capacity.eggLimit}</strong></span><span>已孵化寵物：<strong>${capacity.hatched} / ${capacity.hatchedLimit}</strong></span><span>${capacity.eggFull ? '蛋倉已滿：不再掉落寵物蛋' : `蛋倉尚有 ${capacity.eggFree} 格`}${capacity.hatchedFull ? '｜寵物欄已滿' : ''}</span></div><div class="pet-phase1-summary"><span class="pet-phase1-chip">蛋倉 ${eggs.length} / ${capacity.eggLimit} 顆</span><span class="pet-phase1-chip">寵物欄 ${hatched.length} / ${capacity.hatchedLimit} 隻</span></div><div class="pet-phase1-note">已啟用：寵物蛋掉落、孵化倒數、多寵物出戰、自動攻擊、經驗分潤與升等。每名角色有獨立蛋倉 10 格與已孵化寵物欄 10 格，兩者分開計算；出戰上限：所有職業皆可同時出戰最多 4 隻寵物。出戰中的寵物受到保護，不可拋棄，請先收回出戰；鎖定的寵物也不會被單隻或一鍵拋棄。</div><div class="pet-phase2-battle-summary">⚔️ 目前出戰：<strong>${pets.activeIds.length} / ${getPetBattleLimit(currentPlayer)}</strong>｜每隻寵物獨立攻擊冷卻。<br>各寵物卡會列出魅力加成後的實際技能數值；同類效果相加，坦寵減傷總上限 40%。</div><section class="pet-phase1-section"><h4>🥚 孵化中的寵物蛋</h4><div class="pet-egg-list">${eggHtml}</div></section><section class="pet-phase1-section"><div class="pet-hatched-toolbar"><h4>🐣 已孵化寵物</h4><div class="pet-bulk-discard-actions"><button class="pet-bulk-discard-btn" type="button" onclick="requestDiscardPetsByGrade('normal')" ${normalBabyCount ? '' : 'disabled'}>🗑️ 拋棄普通（${normalBabyCount}）</button><button class="pet-bulk-discard-btn rare" type="button" onclick="requestDiscardPetsByGrade('rare')" ${rareBabyCount ? '' : 'disabled'}>🗑️ 拋棄稀有（${rareBabyCount}）</button><button class="pet-bulk-discard-btn mutant" type="button" onclick="requestDiscardPetsByGrade('mutant')" ${mutantBabyCount ? '' : 'disabled'}>🗑️ 拋棄變異（${mutantBabyCount}）</button></div></div><div class="pet-hatched-list">${petHtml}</div></section></div>`;
+            petModalBody.scrollTop = petScrollTop;
+            petModalBody.querySelector('.pet-phase1-summary')?.remove();
+            petModalBody.querySelector('.pet-capacity-summary')?.insertAdjacentHTML('afterend', `<section class="pet-active-roster" aria-label="目前出戰陣型"><div class="pet-active-roster-title"><strong>⚔️ 出戰陣型</strong><small>${activePets.length} / ${getPetBattleLimit(currentPlayer)} 隻出戰；最多可同時出戰 4 隻</small></div><div class="pet-active-roster-slots">${activeSlotsHtml}</div></section>`);
             petModalBody.scrollTop = petScrollTop;
         }
         function loadGameData(key) {
@@ -14007,10 +14018,11 @@ function getCombatVisualCycleDuration(actionPath) {
         let warehouseStorageGridPage = 1;
         function gridPageControls(kind, page, totalPages) {
             const fn = kind === 'inventory' ? 'setInventoryGridPage' : kind === 'warehouse-source' ? 'setWarehouseSourceGridPage' : 'setWarehouseStorageGridPage';
-            return `<div class="grid-page-controls" style="display:flex;align-items:center;justify-content:center;gap:10px;margin:7px 0;color:#d9c4b4;">
-                <button class="modal-btn" style="margin:0;padding:4px 12px;" onclick="event.stopPropagation(); ${fn}(${Math.max(1,page-1)})" ${page<=1?'disabled':''}>◀ 上一頁</button>
+            const label = kind === 'warehouse-source' ? '背包物品分頁' : kind === 'warehouse-storage' ? '共通倉庫物品分頁' : '背包格子分頁';
+            return `<div class="grid-page-controls" role="navigation" aria-label="${label}" aria-live="polite" style="display:flex;align-items:center;justify-content:center;gap:10px;margin:7px 0;color:#d9c4b4;">
+                <button type="button" class="modal-btn" style="margin:0;padding:4px 12px;" onclick="${fn}(${Math.max(1,page-1)})" ${page<=1?'disabled':''}>◀ 上一頁</button>
                 <strong>第 ${page} / ${Math.max(1,totalPages)} 頁</strong>
-                <button class="modal-btn" style="margin:0;padding:4px 12px;" onclick="event.stopPropagation(); ${fn}(${Math.min(totalPages,page+1)})" ${page>=totalPages?'disabled':''}>下一頁 ▶</button>
+                <button type="button" class="modal-btn" style="margin:0;padding:4px 12px;" onclick="${fn}(${Math.min(totalPages,page+1)})" ${page>=totalPages?'disabled':''}>下一頁 ▶</button>
             </div>`;
         }
         function setInventoryGridPage(page) { inventoryGridPage = Math.max(1, Number(page)||1); renderInventory(); }
@@ -17348,9 +17360,81 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
 <script id="warehouse-resize-and-tooltip-fix">
 (function(){
   const body = () => document.getElementById('modal-body');
+  let warehouseGridZoom=1;
+  let resizeObserver=null;
+  let windowResizeBound=false;
+  const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
+  function updateWarehouseGridSize(){
+    const panel=body();
+    if(!panel?.classList.contains('warehouse-horizontal-modal'))return;
+    const zoomValue=panel.querySelector('[data-warehouse-zoom-value]');
+    if(zoomValue)zoomValue.textContent=`${Math.round(warehouseGridZoom*100)}%`;
+    panel.querySelectorAll('.warehouse-pane').forEach(pane=>{
+      const grid=pane.querySelector('.warehouse-source-grid,.warehouse-storage-grid');
+      if(!grid)return;
+      const title=pane.querySelector('.warehouse-pane-title');
+      const pager=pane.querySelector('.grid-page-controls');
+      const style=getComputedStyle(pane);
+      const paddingX=(parseFloat(style.paddingLeft)||0)+(parseFloat(style.paddingRight)||0);
+      const paddingY=(parseFloat(style.paddingTop)||0)+(parseFloat(style.paddingBottom)||0);
+      const availableWidth=Math.max(140,pane.clientWidth-paddingX-16);
+      const availableHeight=Math.max(140,pane.clientHeight-(title?.offsetHeight||0)-(pager?.offsetHeight||0)-paddingY-34);
+      const size=Math.max(120,Math.round(Math.min(availableWidth,availableHeight)*warehouseGridZoom));
+      grid.style.setProperty('--warehouse-grid-size',`${size}px`);
+    });
+  }
+  window.adjustWarehouseGridZoom=function(delta){warehouseGridZoom=clamp(warehouseGridZoom+(Number(delta)||0),.65,1.45);updateWarehouseGridSize();};
+  window.resetWarehouseGridZoom=function(){warehouseGridZoom=1;updateWarehouseGridSize();};
   window.setupWarehouseResizeHandle = function(){
     const panel=body();
-    if(panel) panel.querySelector('#warehouse-resize-grip')?.remove();
+    if(!panel?.classList.contains('warehouse-horizontal-modal'))return;
+    const actionBar=panel.querySelector(':scope > div:first-child > div:last-child');
+    if(actionBar&&!actionBar.querySelector('.warehouse-zoom-controls')){
+      const zoom=document.createElement('div');
+      zoom.className='warehouse-zoom-controls';
+      zoom.setAttribute('role','group');
+      zoom.setAttribute('aria-label','調整倉庫格子大小');
+      zoom.innerHTML='<span>格子</span><button type="button" aria-label="縮小格子" onclick="adjustWarehouseGridZoom(-0.1)">A−</button><output data-warehouse-zoom-value>100%</output><button type="button" aria-label="放大格子" onclick="adjustWarehouseGridZoom(0.1)">A＋</button><button type="button" aria-label="重設格子大小" onclick="resetWarehouseGridZoom()">重設</button>';
+      actionBar.prepend(zoom);
+    }
+    let grip=panel.querySelector('#warehouse-resize-grip');
+    if(!grip){
+      grip=document.createElement('button');
+      grip.id='warehouse-resize-grip';
+      grip.className='warehouse-resize-grip';
+      grip.type='button';
+      grip.textContent='↘';
+      grip.title='拖曳調整倉庫視窗大小';
+      grip.setAttribute('aria-label','拖曳調整倉庫視窗大小');
+      let drag=null;
+      grip.addEventListener('pointerdown',event=>{
+        event.preventDefault();
+        const rect=panel.getBoundingClientRect();
+        drag={pointerId:event.pointerId,x:event.clientX,y:event.clientY,width:rect.width,height:rect.height};
+        try{grip.setPointerCapture(event.pointerId);}catch(_){}
+      });
+      grip.addEventListener('pointermove',event=>{
+        if(!drag||event.pointerId!==drag.pointerId)return;
+        const maxWidth=Math.max(280,window.innerWidth-20),maxHeight=Math.max(280,window.innerHeight-20);
+        const width=clamp(drag.width+event.clientX-drag.x,Math.min(720,maxWidth),maxWidth);
+        const height=clamp(drag.height+event.clientY-drag.y,Math.min(500,maxHeight),maxHeight);
+        panel.style.setProperty('--warehouse-modal-width',`${Math.round(width)}px`);
+        panel.style.setProperty('--warehouse-modal-height',`${Math.round(height)}px`);
+        updateWarehouseGridSize();
+      });
+      const endDrag=event=>{if(drag&&event.pointerId===drag.pointerId)drag=null;};
+      grip.addEventListener('pointerup',endDrag);
+      grip.addEventListener('pointercancel',endDrag);
+      panel.appendChild(grip);
+    }
+    if(resizeObserver)resizeObserver.disconnect();
+    if(typeof ResizeObserver==='function'){
+      resizeObserver=new ResizeObserver(updateWarehouseGridSize);
+      resizeObserver.observe(panel);
+      panel.querySelectorAll('.warehouse-pane').forEach(pane=>resizeObserver.observe(pane));
+    }
+    if(!windowResizeBound){window.addEventListener('resize',updateWarehouseGridSize);windowResizeBound=true;}
+    if(typeof requestAnimationFrame==='function')requestAnimationFrame(updateWarehouseGridSize);else updateWarehouseGridSize();
   };
   window.setupWarehouseGameTooltips = function(){
     const panel=body(); if(!panel)return;
@@ -27441,6 +27525,119 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 #inventory-hover-compare .ihc-up{color:#8af0a8;font-weight:800}
 #inventory-hover-compare .ihc-down{color:#ff8f8f;font-weight:800}
 #inventory-hover-compare .ihc-even{color:#c6c0b8}
+</style>
+<style id="warehouse-pet-interface-optimization-v1">
+/* 倉庫：避免固定方格把頁碼導覽擠出容器；格子縮放與視窗拖曳共用同一個可用空間。 */
+#modal-body.warehouse-horizontal-modal {
+  position:relative!important; box-sizing:border-box!important;
+  width:var(--warehouse-modal-width,min(1100px,92vw))!important;
+  max-width:calc(100vw - 20px)!important; min-width:min(720px,calc(100vw - 20px))!important;
+  height:var(--warehouse-modal-height,min(760px,86vh))!important;
+  max-height:calc(100vh - 20px)!important; min-height:min(500px,calc(100vh - 20px))!important;
+  overflow:hidden!important; padding:10px 12px 30px!important;
+}
+#modal-body.warehouse-horizontal-modal > div:first-child { padding-right:28px!important; }
+#modal-body.warehouse-horizontal-modal .warehouse-horizontal-layout {
+  height:calc(100% - 90px)!important; min-height:0!important; gap:9px!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important; overflow:hidden!important;
+}
+#modal-body.warehouse-horizontal-modal .warehouse-pane {
+  display:flex!important; flex-direction:column!important; min-width:0!important; min-height:0!important;
+  overflow:auto!important; overscroll-behavior:contain; scrollbar-width:thin;
+}
+#modal-body.warehouse-horizontal-modal .warehouse-pane-title { flex:none!important; }
+#modal-body.warehouse-horizontal-modal .warehouse-source-grid,
+#modal-body.warehouse-horizontal-modal .warehouse-storage-grid {
+  box-sizing:border-box!important; width:var(--warehouse-grid-size,min(100%,560px))!important;
+  height:var(--warehouse-grid-size,min(100%,560px))!important; max-width:none!important; max-height:none!important;
+  flex:0 0 auto!important; min-width:0!important; min-height:0!important; margin:0 auto!important;
+  aspect-ratio:1/1!important; display:grid!important; grid-template-columns:repeat(8,minmax(0,1fr))!important;
+  grid-template-rows:repeat(8,minmax(0,1fr))!important; grid-auto-rows:minmax(0,1fr)!important;
+  align-content:stretch!important; align-items:stretch!important; gap:5px!important; overflow:auto!important;
+}
+#modal-body.warehouse-horizontal-modal .warehouse-tile {
+  box-sizing:border-box!important; width:100%!important; height:100%!important; min-width:0!important;
+  min-height:0!important; max-width:none!important; max-height:none!important; aspect-ratio:auto!important;
+  flex:none!important; align-self:stretch!important; transform:none!important;
+}
+#modal-body.warehouse-horizontal-modal .warehouse-tile:not([aria-hidden="true"]):hover { transform:none!important; }
+#modal-body.warehouse-horizontal-modal .grid-page-controls {
+  position:sticky!important; bottom:0!important; z-index:6!important; flex:none!important; margin:4px 0 0!important;
+  padding:6px 3px!important; border-top:1px solid rgba(210,174,117,.28);
+  border-radius:0 0 7px 7px; background:linear-gradient(180deg,rgba(18,14,17,.88),rgba(18,14,17,.98));
+}
+#modal-body.warehouse-horizontal-modal .grid-page-controls strong { white-space:nowrap; font-variant-numeric:tabular-nums; }
+.warehouse-zoom-controls { display:inline-flex; align-items:center; justify-content:center; gap:4px; flex-wrap:nowrap; color:#ead7b6; font-size:11px; white-space:nowrap; }
+.warehouse-zoom-controls button { min-width:30px; min-height:28px; padding:3px 6px; border:1px solid #8e6e43; border-radius:6px; background:#2a2020; color:#ffe4ae; font:inherit; cursor:pointer; }
+.warehouse-zoom-controls button:hover { border-color:#ffcf74; background:#493323; }
+.warehouse-zoom-controls output { min-width:38px; color:#ffe4ae; text-align:center; font-variant-numeric:tabular-nums; }
+.warehouse-resize-grip { position:absolute!important; right:3px!important; bottom:3px!important; z-index:12!important; display:grid!important; place-items:center!important; width:25px!important; height:25px!important; padding:0!important; border:1px solid #bd955b!important; border-radius:6px 2px 8px 2px!important; background:linear-gradient(145deg,#493427,#211a1b)!important; color:#ffe0a3!important; box-shadow:0 2px 8px #0008!important; cursor:nwse-resize!important; touch-action:none!important; }
+.warehouse-resize-grip:hover { border-color:#ffe0a3!important; filter:brightness(1.18); }
+/* 攻擊飛斬依 VS 標籤限定尺寸，標籤本身維持在覆層上方。 */
+#battle-stage:has(.parallel-generals-slash-frames) > #battle-vs-text { position:relative!important; z-index:95!important; }
+@media(max-width:760px) {
+  #modal-body.warehouse-horizontal-modal .warehouse-horizontal-layout {
+    height:calc(100% - 90px)!important; max-height:none!important; overflow:auto!important;
+    grid-template-columns:minmax(0,1fr)!important; grid-template-rows:repeat(2,minmax(280px,1fr))!important;
+  }
+  #modal-body.warehouse-horizontal-modal .warehouse-pane { min-height:280px!important; }
+  #modal-body.warehouse-horizontal-modal > div:first-child { padding-right:25px!important; }
+  .warehouse-zoom-controls { gap:2px; }
+}
+
+/* 寵物面板：容量摘要去重後，以四個固定出戰位置呈現隊伍；卡片在窄螢幕自動改排。 */
+#modal-body[data-modal-type="pet-system"] { width:min(1120px,calc(100vw - 24px))!important; max-width:calc(100vw - 24px)!important; }
+#modal-body[data-modal-type="pet-system"] .pet-phase1-panel { width:100%; max-width:1120px; display:flex; flex-direction:column; gap:11px; }
+#modal-body[data-modal-type="pet-system"] .pet-phase1-head {
+  position:sticky; top:-1px; z-index:5; margin:0; padding:10px 12px;
+  border:1px solid rgba(214,163,103,.34); border-radius:10px;
+  background:linear-gradient(100deg,rgba(38,25,31,.98),rgba(24,22,34,.98));
+  box-shadow:0 5px 16px rgba(0,0,0,.3);
+}
+#modal-body[data-modal-type="pet-system"] .pet-capacity-summary { justify-content:flex-start; gap:10px 18px; margin:0; padding:10px 12px; }
+#modal-body[data-modal-type="pet-system"] .pet-active-roster {
+  padding:11px 12px; border:1px solid rgba(113,187,195,.35); border-radius:10px;
+  background:linear-gradient(130deg,rgba(19,42,49,.74),rgba(27,22,36,.84));
+}
+.pet-active-roster-title { display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; color:#e2fbf3; }
+.pet-active-roster-title strong { color:#9df0db; font-size:14px; }
+.pet-active-roster-title small { color:#b5c7c8; font-size:11px; }
+.pet-active-roster-slots { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; }
+.pet-active-slot { position:relative; display:flex; align-items:center; gap:9px; min-width:0; min-height:62px; padding:7px 9px; border:1px solid rgba(123,190,182,.36); border-radius:8px; background:rgba(14,28,33,.72); }
+.pet-active-slot img { width:42px; height:48px; flex:none; object-fit:contain; filter:drop-shadow(0 2px 4px #0009); }
+.pet-active-slot-number { position:absolute; top:4px; right:6px; color:#8fcfc6; font-size:10px; font-weight:800; }
+.pet-active-slot-copy { display:flex; flex-direction:column; min-width:0; padding-right:9px; }
+.pet-active-slot-copy strong { overflow:hidden; color:#fff0c5; text-overflow:ellipsis; white-space:nowrap; font-size:12px; }
+.pet-active-slot-copy small { color:#bbc7be; font-size:10px; line-height:1.45; }
+.pet-active-slot.is-empty { justify-content:center; border-style:dashed; border-color:rgba(153,165,165,.34); color:#a7b1b1; }
+.pet-active-slot.is-empty strong { color:#bbc2c2; font-size:11px; }
+.pet-active-slot.is-empty small { color:#849292; font-size:10px; }
+#modal-body[data-modal-type="pet-system"] .pet-phase1-section { margin:0; padding:13px; border-color:rgba(181,112,103,.34); }
+#modal-body[data-modal-type="pet-system"] .pet-phase1-section h4 { font-size:15px; }
+#modal-body[data-modal-type="pet-system"] .pet-egg-list,
+#modal-body[data-modal-type="pet-system"] .pet-hatched-list { grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:10px; }
+#modal-body[data-modal-type="pet-system"] .pet-egg-card { display:flex; flex-direction:column; gap:7px; padding:11px; }
+#modal-body[data-modal-type="pet-system"] .pet-hatched-card { display:grid; grid-template-columns:74px minmax(0,1fr); align-items:start; gap:7px 10px; padding:11px; }
+#modal-body[data-modal-type="pet-system"] .pet-hatched-card > .pet-sprite { grid-column:1; grid-row:1 / span 3; width:70px; height:82px; margin:0; }
+#modal-body[data-modal-type="pet-system"] .pet-hatched-card > strong { grid-column:2; align-self:center; min-width:0; overflow-wrap:anywhere; font-size:14px; }
+#modal-body[data-modal-type="pet-system"] .pet-hatched-card > .pet-phase2-active-badge { grid-column:2; width:fit-content; margin:0; }
+#modal-body[data-modal-type="pet-system"] .pet-hatched-card > .pet-phase1-meta,
+#modal-body[data-modal-type="pet-system"] .pet-hatched-card > .pet-phase2-skill-box,
+#modal-body[data-modal-type="pet-system"] .pet-hatched-card > .pet-phase2-battle-note { grid-column:1 / -1; overflow-wrap:anywhere; }
+#modal-body[data-modal-type="pet-system"] .pet-hatched-card > .pet-phase2-btn { grid-column:span 1; width:100%; min-height:36px; margin:0; }
+#modal-body[data-modal-type="pet-system"] .pet-hatched-card > .pet-discard-btn { grid-column:1 / -1; width:100%; min-height:34px; margin:0; }
+#modal-body[data-modal-type="pet-system"] .pet-phase1-btn:focus-visible,
+#modal-body[data-modal-type="pet-system"] .pet-discard-btn:focus-visible,
+#modal-body[data-modal-type="pet-system"] .pet-bulk-discard-btn:focus-visible { outline:2px solid #ffe39c; outline-offset:2px; }
+@media(max-width:760px) {
+  #modal-body[data-modal-type="pet-system"] { width:calc(100vw - 20px)!important; max-width:calc(100vw - 20px)!important; }
+  .pet-active-roster-slots { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #modal-body[data-modal-type="pet-system"] .pet-phase1-section { padding:9px; }
+  #modal-body[data-modal-type="pet-system"] .pet-hatched-card { grid-template-columns:58px minmax(0,1fr); gap:6px 8px; }
+  #modal-body[data-modal-type="pet-system"] .pet-hatched-card > .pet-sprite { width:54px; height:68px; }
+  #modal-body[data-modal-type="pet-system"] .pet-hatched-card > .pet-phase2-btn { grid-column:1 / -1; }
+  #modal-body[data-modal-type="pet-system"] .pet-hatched-toolbar { align-items:flex-start; }
+}
 </style>
 <script id="inventory-hover-equipment-comparison-script-v1">
 (()=>{
