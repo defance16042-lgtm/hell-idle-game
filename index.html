@@ -15507,8 +15507,8 @@ function getCombatVisualCycleDuration(actionPath) {
                     ['potion', '❤️ 補血藥水', 50, `恢復 ${getHpPotionRestoreAmount()} 生命（依體質加成）`],
                     ['mpPotion', '🔮 補魔藥水', 150, `恢復 ${getMpPotionRestoreAmount()} 魔力（依精神加成）`],
                     ['returnScroll', '📜 回村捲軸', 100, '使用後返回烈焰村莊'],
-                    ['weaponScroll', '⚔️ 普通武器強化卷', 300, '用於強化武器，安定值 +6'],
-                    ['armorScroll', '🛡️ 普通防具強化卷', 100, '用於強化防具，安定值 +4'],
+                    ['weaponScroll', '⚔️ 普通武器強化卷', 30000, '用於強化武器，安定值 +6'],
+                    ['armorScroll', '🛡️ 普通防具強化卷', 15000, '用於強化防具，安定值 +4'],
                     ['fishingRod', '🎣 釣魚竿', 800, '釣魚必備工具，可重複使用'],
                     ['fishingWorm', '🪱 蚯蚓魚餌', 20, '每次釣魚消耗 1 條蚯蚓']
                  ].map(([key, label, cost, effect]) => { const icon = label.split(' ')[0]; const name = label.substring(label.indexOf(' ') + 1); return `<div class="shop-buy-card"><div class="shop-buy-icon" aria-hidden="true">${SHOP_SCROLL_I體質_ASSETS[key] ? `<img src="${SHOP_SCROLL_I體質_ASSETS[key]}" alt="${name}" draggable="false">` : icon}</div><div class="shop-buy-content"><strong class="shop-buy-title">${name}</strong><small class="shop-buy-desc">${effect}</small><small class="shop-buy-price">單價：${cost} 魂幣</small><small class="shop-buy-total">本次總價：<span id="shop-total-${key}" data-cost="${cost}">${cost}</span> 魂幣</small></div><div class="shop-buy-actions"><div class="quantity-control"><button class="modal-btn" aria-label="減少${name}數量" onclick="changeShopQuantity('${key}', -1)">−</button><input id="shop-qty-${key}" type="number" min="1" max="9999" value="${getRememberedShopQuantity(key)}" aria-label="${name}購買數量（最多9999個）" oninput="updateShopTotal('${key}')"><button class="modal-btn" aria-label="增加${name}數量" onclick="changeShopQuantity('${key}', 1)">＋</button></div><button class="modal-btn" onclick="buyItem('${key}', ${cost})">購買</button></div></div>`; }).join('')}</div>
