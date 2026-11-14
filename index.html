@@ -18541,7 +18541,7 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
 /* 套裝與九神龍圖鑑圖示統一置中。 */
 .set-equipment-icon,.bestiary-monster-portrait img{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center center!important;margin:auto!important}.bestiary-monster-portrait{display:flex!important;align-items:center!important;justify-content:center!important;width:82px!important;height:64px!important;margin:0 auto!important;overflow:hidden!important}
 /* 角色能力與圖鑑每頁固定在視窗內，不把整個 modal 撐成長頁。 */
-#modal-body.character-stats-modal{max-height:calc(100vh - 42px)!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}.character-stats-modal .character-stats-tabs{flex:0 0 auto}.character-stats-modal .character-stats-page{flex:1 1 auto;min-height:0;height:calc(100vh - 180px);overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;}.character-stats-modal .character-stats-page>*{max-width:100%}.character-stats-modal .character-stats-close-button{flex:0 0 auto;margin-top:7px}.bestiary-grid{max-height:calc(100vh - 240px)!important;overflow:hidden!important}
+#modal-body.character-stats-modal{max-height:calc(100vh - 42px)!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}.character-stats-modal .character-stats-tabs{flex:0 0 auto}.character-stats-modal .character-stats-page{flex:1 1 auto;min-height:0;height:calc(100vh - 180px);overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;}.character-stats-modal .character-stats-page>*{max-width:100%}.character-stats-modal .character-stats-close-button{flex:0 0 auto;margin-top:7px}.bestiary-grid{max-height:none!important;overflow:visible!important}
 
 /* 消耗品圖示採用立體漸層 SVG，維持小尺寸。 */
 .item-icon.item-potion,.item-icon.item-mpPotion,.item-icon.item-gold,.item-icon.item-returnScroll{filter:drop-shadow(0 2px 3px #0009)}.consumable-svg{width:88%;height:88%;display:block}
@@ -18569,7 +18569,36 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
  // Add enhancement badges after every inventory redraw.
  function decorate(){document.querySelectorAll('.inventory-grid .inventory-slot').forEach(el=>{let item=null;if(el.dataset.ordinaryCompareKind){const list=el.dataset.ordinaryCompareKind==='weapon'?currentPlayer?.items?.weapons:currentPlayer?.items?.armors;item=(list||[]).find(x=>String(x.instanceId)===String(el.dataset.ordinaryCompareId))}else if(el.dataset.setCompareId){item=(currentPlayer?.items?.setEquipment||[]).find(x=>String(x.instanceId)===String(el.dataset.setCompareId))}if(item&&Number(item.enhancementLevel)>0&&!el.querySelector('.enhancement-badge')){const b=document.createElement('span');b.className='enhancement-badge';b.textContent='+'+Number(item.enhancementLevel);el.appendChild(b)}})}
  const mo=new MutationObserver(decorate);mo.observe(document.body,{subtree:true,childList:true});setTimeout(decorate,50);
-
+ // Restore the v1.0.59 generic region bestiary card list.
+ const originalZone=window.openBestiaryZone;
+ window.openBestiaryZone=function(zoneIndex,...args){
+  const zoneName=typeof zoneIndex==='string'?zoneIndex:(typeof getBestiaryZones==='function'?getBestiaryZones()[Number(zoneIndex)]?.[0]:null);
+  if(!zoneName||!zoneMonsters?.[zoneName])return typeof originalZone==='function'?originalZone.call(this,zoneIndex,...args):typeof openBestiary==='function'&&openBestiary();
+  if(zoneName==='魔物首領窟'&&typeof zoneIndex!=='string'&&typeof openBestiaryLeaderCave==='function')return openBestiaryLeaderCave();
+  const monsters=zoneMonsters[zoneName]||[];
+  const body=document.getElementById('modal-body'),modal=document.getElementById('modal-window');
+  if(!body||!modal)return;
+  window.__activeBestiaryZone=zoneName;
+  const isCaveFloor=zoneName==='魔物首領窟'||zoneName==='魔物首領窟・第二層';
+  const backAction=isCaveFloor?'openBestiaryLeaderCave()':'openBestiary()';
+  const backLabel=isCaveFloor?'返回魔物首領窟樓層選單':'返回區域列表';
+  let html=`<div class="bestiary-nav"><button class="modal-btn" onclick="${backAction}">← ${backLabel}</button><button class="modal-btn" onclick="closeModal()">關閉圖鑑</button></div><h3>${esc(getBestiaryZoneIcon(zoneName))} ${esc(zoneName)}</h3><p style="color:#a08080;font-size:13px;">點選怪物小圖示，查看獨立能力值表與掉落資料。</p><div class="bestiary-grid">`;
+  const entries=typeof getBestiaryEntries==='function'?getBestiaryEntries():[];
+  for(const monster of monsters){
+   const index=entries.findIndex(entry=>entry.zone===zoneName&&(entry.monster===monster||entry.monster?.name===monster.name));
+   const level=monster.type==='training'?'修練目標':`等級 ${esc(monster.levelRange||monster.level||'—')}`;
+   const kind=monster.type==='boss'?'BOSS':monster.type==='special'?'特殊怪':monster.type==='training'?'修練目標':'一般怪';
+   let matchup='';
+   try{const d=getMonsterDefenseArchetype(monster);matchup=`<span class="bestiary-defense-matchup-v5" style="font-size:10px;line-height:1.25;color:#e6bd94;">防禦 近×${d.melee.toFixed(2)} · 遠×${d.ranged.toFixed(2)} · 魔×${d.magic.toFixed(2)}</span>`}catch(_){}
+   const portrait=monster.image?`<img src="${esc(resolveEmbeddedAsset(monster.image))}" alt="${esc(monster.name)}" loading="lazy">`:esc(monster.icon||'👹');
+   html+=`<button class="bestiary-monster-button bestiary-type-${esc(monster.type||'normal')}" type="button" title="${esc(monster.name)} ${level}｜點擊查看能力值" aria-label="查看${esc(monster.name)}能力值" onclick="openBestiaryDetail(${index})"><span class="bestiary-monster-portrait">${portrait}</span><span class="bestiary-monster-name">${esc(monster.name)}</span><span class="bestiary-monster-level">${level} · ${kind}</span>${matchup}</button>`;
+  }
+  html+='</div>';
+  body.innerHTML=html;
+  body.classList.remove('bestiary-tabbed-modal','bestiary-detail-modal','bestiary-scroll-repair','all-regions-bestiary-clean','parallel-three-kingdoms-bestiary-clean','parallel-three-kingdoms-bestiary-detail');
+  body.classList.add('readable-modal');
+  modal.style.display='flex';
+ };
 })();
 </script>
 
@@ -27975,67 +28004,68 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 })();
 </script>
 
-<style id="all-regions-bestiary-clean-v1">
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) { overflow-x:hidden!important; }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-summary {
+<style id="parallel-three-kingdoms-bestiary-clean-v1">
+#modal-body.parallel-three-kingdoms-bestiary-clean { overflow-x:hidden!important; }
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-summary {
   display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0 14px;padding:11px 13px;
   border:1px solid rgba(155,137,184,.34);border-radius:10px;background:rgba(20,18,29,.72);
   color:#c9c5d2;font-size:12px;line-height:1.6;
 }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-summary strong { color:#e9e4f0;font-size:14px; }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-group { margin:14px 0 18px; }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-group-title {
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-summary strong { color:#e9e4f0;font-size:14px; }
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-group { margin:14px 0 18px; }
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-group-title {
   display:flex;align-items:center;gap:9px;margin:0 0 8px;padding:8px 10px;
   border-left:3px solid #81768f;border-radius:5px;background:rgba(45,39,54,.72);
   color:#ded9e5;font-size:14px;font-weight:850;letter-spacing:.04em;
 }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-group-title small { margin-left:auto;color:#aaa3b3;font-size:11px;font-weight:600; }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-list {
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-group-title small { margin-left:auto;color:#aaa3b3;font-size:11px;font-weight:600; }
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-list {
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;
 }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-card {
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-card {
   display:grid;grid-template-columns:88px minmax(0,1fr);gap:11px;align-items:center;min-width:0;
   padding:10px;border:1px solid rgba(151,140,165,.3);border-radius:10px;
   background:linear-gradient(145deg,rgba(39,34,48,.96),rgba(22,21,29,.96));
   color:#c9c5d0;text-align:left;cursor:pointer;transition:border-color .16s,background .16s,transform .16s;
 }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-card:hover,
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-card:focus-visible {
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-card:hover,
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-card:focus-visible {
   border-color:#9d91ad;background:linear-gradient(145deg,rgba(52,45,64,.98),rgba(27,25,36,.98));transform:translateY(-1px);outline:none;
 }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-portrait {
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-portrait {
   display:flex;align-items:center;justify-content:center;width:88px;height:88px;overflow:hidden;
   border:1px solid rgba(170,158,184,.25);border-radius:8px;background:rgba(8,8,13,.58);
 }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-portrait img { width:100%;height:100%;object-fit:contain; }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-info { min-width:0; }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-name {
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-portrait img { width:100%;height:100%;object-fit:contain; }
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-info { min-width:0; }
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-name {
   display:block;margin:0 0 6px;overflow-wrap:anywhere;color:#f0edf5;font-size:15px;font-weight:900;line-height:1.35;
 }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-name.is-special { color:#9bd7ef; }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-name.is-boss { color:#f0c58b; }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-order { margin-right:5px;color:#8f8998;font-size:11px;font-weight:700; }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-meta { display:flex;flex-wrap:wrap;gap:5px 10px;margin-bottom:6px;color:#b8b2c0;font-size:11px;line-height:1.5; }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-stats {
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-name.is-special { color:#9bd7ef; }
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-name.is-boss { color:#f0c58b; }
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-order { margin-right:5px;color:#8f8998;font-size:11px;font-weight:700; }
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-meta { display:flex;flex-wrap:wrap;gap:5px 10px;margin-bottom:6px;color:#b8b2c0;font-size:11px;line-height:1.5; }
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-stats {
   display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 9px;
   color:#aaa5b1;font-size:11px;line-height:1.5;font-variant-numeric:tabular-nums;
 }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-stats b { color:#d2cdd8;font-weight:700; }
-#modal-body:is(.parallel-three-kingdoms-bestiary-clean,.all-regions-bestiary-clean) .ptk-bestiary-empty { padding:16px;color:#aaa5b1;text-align:center; }
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-stats b { color:#d2cdd8;font-weight:700; }
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-empty { padding:16px;color:#aaa5b1;text-align:center; }
 /* 電腦版限定：圖鑑固定維持雙欄卡片，不提供手機窄螢幕改排。 */
 </style>
-<script id="all-regions-bestiary-clean-v1">
+<script id="parallel-three-kingdoms-bestiary-clean-v1">
 (() => {
   'use strict';
-  if (window.__allRegionsBestiaryCleanV1) return;
-  window.__allRegionsBestiaryCleanV1 = true;
+  if (window.__parallelThreeKingdomsBestiaryCleanV1) return;
+  window.__parallelThreeKingdomsBestiaryCleanV1 = true;
+  const ZONE = '平行三國';
   const previousOpenZone = window.openBestiaryZone;
   if (typeof previousOpenZone !== 'function') return;
   const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const typeOrder = { normal:0, special:1, boss:2, training:3 };
   const typeName = monster => monster.type === 'boss' ? 'BOSS' : monster.type === 'special' ? '特殊怪' : monster.type === 'training' ? '修練目標' : '一般怪';
-  const render = zoneName => {
-    const monsters = Array.isArray(zoneMonsters?.[zoneName]) ? zoneMonsters[zoneName].slice() : [];
+  const render = () => {
+    const monsters = Array.isArray(zoneMonsters?.[ZONE]) ? zoneMonsters[ZONE].slice() : [];
     const sorted = monsters.sort((a,b) =>
       (typeOrder[a.type || 'normal'] ?? 0) - (typeOrder[b.type || 'normal'] ?? 0) ||
       (Number(a.level) || 0) - (Number(b.level) || 0) ||
@@ -28051,17 +28081,16 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     const body = document.getElementById('modal-body');
     const modal = document.getElementById('modal-window');
     if (!body || !modal) return;
-    window.__activeBestiaryZone = zoneName;
     let sequence = 0;
-    let html = `<div class="bestiary-nav"><button class="modal-btn" onclick="${zoneName === '魔物首領窟' || zoneName === '魔物首領窟・第二層' ? 'openBestiaryLeaderCave()' : 'openBestiary()'}">← ${zoneName === '魔物首領窟' || zoneName === '魔物首領窟・第二層' ? '返回魔物首領窟樓層選單' : '返回區域列表'}</button><button class="modal-btn" onclick="closeModal()">關閉圖鑑</button></div>
-      <h3>${typeof getBestiaryZoneIcon === 'function' ? getBestiaryZoneIcon(zoneName) : '⚔️'} ${esc(zoneName)}｜怪物圖鑑</h3>
+    let html = `<div class="bestiary-nav"><button class="modal-btn" onclick="openBestiary()">← 返回區域列表</button><button class="modal-btn" onclick="closeModal()">關閉圖鑑</button></div>
+      <h3>⚔️ 平行三國｜怪物圖鑑</h3>
       <p style="color:#b8b2c0;font-size:12px;line-height:1.65;">依怪物類型分區；每區按等級由低至高排列。點選怪物卡片可查看完整能力、技能與掉落資料。</p>
       <div class="ptk-bestiary-summary"><strong>收錄 ${sorted.length} 種</strong><span>一般怪 ${groups.find(g=>g.type==='normal')?.items.length || 0} 種</span><span>特殊怪 ${groups.find(g=>g.type==='special')?.items.length || 0} 種</span><span>BOSS ${groups.find(g=>g.type==='boss')?.items.length || 0} 隻</span></div>`;
     for (const group of groups) {
       html += `<section class="ptk-bestiary-group"><h4 class="ptk-bestiary-group-title">${group.title}<small>${group.items.length} 種｜依等級排序</small></h4><div class="ptk-bestiary-list">`;
       for (const monster of group.items) {
         sequence++;
-        const index = entries.findIndex(entry => entry.zone === zoneName && (entry.monster === monster || entry.monster?.name === monster.name));
+        const index = entries.findIndex(entry => entry.zone === ZONE && entry.monster === monster);
         const level = monster.levelRange || monster.level || '—';
         const image = monster.image ? resolveEmbeddedAsset(monster.image) : '';
         const levelText = monster.type === 'training' ? '修練目標' : `Lv. ${esc(level)}`;
@@ -28085,15 +28114,13 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     }
     if (!sorted.length) html += '<div class="ptk-bestiary-empty">目前尚未收錄怪物資料。</div>';
     body.innerHTML = html;
-    body.classList.remove('bestiary-tabbed-modal','bestiary-scroll-repair');
-    body.classList.add('readable-modal','all-regions-bestiary-clean');
+    body.classList.add('readable-modal','parallel-three-kingdoms-bestiary-clean');
     modal.style.display = 'flex';
   };
   window.openBestiaryZone = function(zoneIndex) {
     const zoneName = typeof zoneIndex === 'string' ? zoneIndex : getBestiaryZones()?.[Number(zoneIndex)]?.[0];
-    if (!zoneName || !zoneMonsters?.[zoneName]) return previousOpenZone.call(this, zoneIndex);
-    if (zoneName === '魔物首領窟' && typeof openBestiaryLeaderCave === 'function') return openBestiaryLeaderCave();
-    return render(zoneName);
+    if (zoneName === ZONE) return render();
+    return previousOpenZone.call(this, zoneIndex);
   };
 })();
 </script>
