@@ -6,3 +6,89 @@
 .b3-subnav{display:flex;gap:8px}.b3-card-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.b3-monster-card{display:grid;grid-template-columns:92px minmax(0,1fr);gap:10px;min-width:0;padding:8px;text-align:left;border:1px solid #493c59;border-radius:9px;background:linear-gradient(145deg,#201a29,#121018);color:#eee8f6;cursor:pointer}.b3-monster-card:hover{border-color:#c59cff;background:linear-gradient(145deg,#302040,#17111f)}.b3-monster-card.special{border-color:#8154a4}.b3-monster-card.boss{border-color:#a9555c;background:linear-gradient(145deg,#321c27,#171016)}.b3-monster-art{display:flex;align-items:center;justify-content:center;width:92px;height:92px;border-radius:7px;background:radial-gradient(circle,#402c4d,#120d18);font-size:38px;overflow:hidden}.b3-monster-art img{width:100%;height:100%;object-fit:contain}.b3-monster-info{display:flex;flex-direction:column;gap:5px;min-width:0}.b3-monster-info strong{color:#ffe3a4;font-size:14px;overflow-wrap:anywhere}.b3-monster-info span{color:#cfc0d8;font-size:11px}.b3-monster-info span b{color:#9fe8ff}.b3-monster-info small{color:#aaa0b2;font-size:11px;overflow-wrap:anywhere}.b3-pager{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:14px;color:#cfc3d9;font-size:12px}.b3-pager button:disabled{opacity:.35;cursor:not-allowed}.b3-empty{text-align:center;padding:32px;color:#b9adbf}.b3-shell button:focus-visible{outline:2px solid #9cecff;outline-offset:2px}
 @media(max-width:850px){#modal-body.bestiary-v3{width:96vw;padding:12px!important}.b3-zone-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.b3-card-grid{grid-template-columns:1fr}.b3-header h3{font-size:18px}}
 @media(max-width:560px){.b3-zone-grid{grid-template-columns:1fr}.b3-header{flex-direction:column}.b3-monster-card{grid-template-columns:76px minmax(0,1fr)}.b3-monster-art{width:76px;height:76px}}
+
+
+/* 2026-11-14：圖鑑橫向優先排列與詳細頁完整捲動修正（桌面版） */
+/* 區域清單：先填滿橫向欄位，資料多時才往下延伸。 */
+#modal-body.bestiary-v3{
+  display:flex!important;
+  flex-direction:column!important;
+  max-height:90vh!important;
+}
+#modal-body.bestiary-v3 .b3-shell{
+  display:flex;
+  flex:1 1 auto;
+  height:calc(90vh - 52px);
+  max-height:calc(90vh - 52px);
+  min-height:0;
+}
+#modal-body.bestiary-v3 .b3-page{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+}
+#modal-body.bestiary-v3 .b3-card-grid{
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  align-content:start;
+}
+#modal-body.bestiary-v3 .b3-zone-grid{
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  align-content:start;
+}
+
+/* 平行三國全圖鑑：由左至右填滿，不再固定只有兩欄。 */
+#modal-body.parallel-three-kingdoms-bestiary-clean{
+  box-sizing:border-box!important;
+  max-height:90vh!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+}
+#modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-list{
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  align-content:start;
+}
+
+/* 所有怪物詳細頁共用：固定可用高度，分頁內容獨立捲動，避免卡片被切半。 */
+#modal-body.all-regions-bestiary-detail{
+  box-sizing:border-box!important;
+  max-height:90vh!important;
+  overflow:hidden!important;
+}
+#modal-body.all-regions-bestiary-detail .ptk-detail-shell{
+  display:flex!important;
+  flex-direction:column!important;
+  height:calc(90vh - 48px)!important;
+  max-height:calc(90vh - 48px)!important;
+  min-height:0!important;
+}
+#modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root{
+  display:flex!important;
+  flex:1 1 auto!important;
+  flex-direction:column!important;
+  min-height:0!important;
+  overflow:hidden!important;
+}
+#modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root .ptk-detail-tabs{
+  flex:0 0 auto!important;
+}
+#modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root [role="tabpanel"],
+#modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root .ptk-detail-page{
+  box-sizing:border-box!important;
+  flex:1 1 auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  height:auto!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+}
+#modal-body.all-regions-bestiary-detail .ptk-detail-grid{
+  grid-template-columns:repeat(auto-fit,minmax(300px,1fr))!important;
+  align-content:start;
+}
+#modal-body.all-regions-bestiary-detail .ptk-detail-card{
+  min-width:0;
+  height:auto!important;
+  align-self:start;
+}

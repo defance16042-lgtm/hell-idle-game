@@ -36,7 +36,7 @@
     { key: SECOND, title: '第二層', icon: '🌊', tone: '#37e8ff', desc: '海底深淵、墮落天界與九神龍圖鑑。' },
     { key: THIRD, title: '第三層', icon: '🪐', tone: '#b35cff', desc: '克卜勒異星機械首領層。' }
   ];
-  const state = { zone: '', page: 1, pageSize: 10 };
+  const state = { zone: '', page: 1, pageSize: Number.MAX_SAFE_INTEGER };
 
   function shell(title, subtitle, content) {
     return `<div class="b3-shell"><header class="b3-header"><div><div class="b3-kicker">HELL IDLE · BESTIARY</div><h3>${title}</h3><p>${subtitle}</p></div><button class="modal-btn b3-close" type="button" data-b3-action="close">關閉圖鑑</button></header>${content}</div>`;
