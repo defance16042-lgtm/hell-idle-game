@@ -220,6 +220,7 @@
   let yuanmenCanvas = null;
   let yuanmenRaf = 0;
   let yuanmenPoseRaf = 0;
+  let yuanmenPoseRunId = 0;
   const yuanmenBowSource = 'assets/monsters/parallel_three_kingdoms/lu_bu-bow-boss.png';
 
   function setYuanmenBowPose(sprite, progress) {
@@ -246,11 +247,12 @@
     const player = document.getElementById('player-icon');
     if (!stage || !sprite || !player) return false;
     if (yuanmenPoseRaf) cancelAnimationFrame(yuanmenPoseRaf);
+    const poseRunId = ++yuanmenPoseRunId;
     sprite.setAttribute('src', typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(yuanmenBowSource) : yuanmenBowSource);
     const poseStarted = performance.now();
     const poseDuration = 920;
     const drawPose = now => {
-      if (!sprite.isConnected || !window.__parallelLuBuPhase2Active) {
+      if (!sprite.isConnected || poseRunId !== yuanmenPoseRunId) {
         sprite.style.removeProperty('transform');
         sprite.style.removeProperty('transform-origin');
         yuanmenPoseRaf = 0;
@@ -284,6 +286,41 @@
       if (yuanmenCanvas.width !== Math.round(rect.width * dpr) || yuanmenCanvas.height !== Math.round(rect.height * dpr)) { yuanmenCanvas.width = Math.round(rect.width * dpr); yuanmenCanvas.height = Math.round(rect.height * dpr); }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, rect.width, rect.height);
       const t = Math.min(1, Math.max(0, (now - started) / duration));
+      // 明確畫出「抬弓／拉弦／放箭」三段姿勢，避免只換站立圖看不出攻擊動作。
+      const bowProgress = Math.min(1, t / .58);
+      const release = t >= .52;
+      ctx.save();
+      ctx.translate(from.x, from.y);
+      ctx.rotate(angle);
+      const bowWidth = 34 + bowProgress * 8;
+      const drawBack = release ? 0 : -bowProgress * 28;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = 'rgba(255,224,133,.98)';
+      ctx.shadowColor = '#ff9d35';
+      ctx.shadowBlur = 12;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(4, -bowWidth);
+      ctx.quadraticCurveTo(-18 - bowProgress * 10, 0, 4, bowWidth);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(255,247,197,.92)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(4, -bowWidth);
+      ctx.lineTo(drawBack, 0);
+      ctx.lineTo(4, bowWidth);
+      ctx.stroke();
+      if (!release) {
+        ctx.strokeStyle = '#fff1a8';
+        ctx.shadowColor = '#ffd15c';
+        ctx.shadowBlur = 10;
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(drawBack - 4, 0); ctx.lineTo(46, 0); ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+      ctx.restore();
       const travel = t < .18 ? 0 : Math.min(1, (t - .18) / .57);
       const ease = 1 - Math.pow(1 - travel, 2.1);
       const x = from.x + dx * ease, y = from.y + dy * ease;
@@ -314,7 +351,10 @@
   const previous = window.playParallelThreeKingdomsBossAttackStoryboard;
   window.playParallelThreeKingdomsBossAttackStoryboard = (name, skillName) => {
     const cleanName = String(name || '').trim();
-    if (cleanName === '呂布' && window.__parallelLuBuPhase2Active) return playLuBuYuanmenShootingVfx();
+    const currentPhase2 = window.__parallelLuBuPhase2Active || (() => {
+      try { return typeof currentMonster !== 'undefined' && currentMonster?.name === '呂布' && currentMonster?._parallelLuBuPhase === 2; } catch (_) { return false; }
+    })();
+    if (cleanName === '呂布' && currentPhase2) return playLuBuYuanmenShootingVfx();
     const definition = definitionByName.get(cleanName);
     if (definition) return playFrameSequence(definition);
     return previous?.(name, skillName) || false;
