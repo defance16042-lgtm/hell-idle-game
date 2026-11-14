@@ -24417,7 +24417,7 @@ const roster=[{"name":"暗芯偵察豆","image":"assets/monsters/kepler_452b/kep
 const list=Array.isArray(zoneMonsters[ZONE])?zoneMonsters[ZONE]:(zoneMonsters[ZONE]=[]);
 for(const m of roster) if(!list.some(x=>x&&x.name===m.name)) list.push(m);
 const dropOld=window.getMonsterDropDisplay;
-if(typeof dropOld==='function'&&!dropOld.__keplerDrop91_100){const wrapped=function(monster,...args){let html=dropOld.call(this,monster,...args);if(monster&&monster.level>=91&&monster.level<=100){const rows=[...(monster.dropTable||[]),...(monster.uniqueDrops||[])].map(x=>`<div class="bestiary-drop-item wide"><span class="bestiary-drop-icon">✧</span><div class="bestiary-drop-text"><strong>克卜勒專屬掉落</strong>${x}</div></div>`).join('');html+=`<div class="bestiary-drop-panel kepler-drop-panel"><div class="bestiary-drop-title">🌑 克卜勒 ${monster.level}LV 掉落清單</div><div class="bestiary-drop-grid">${rows}</div></div>`;}return html};wrapped.__keplerDrop91_100=true;window.getMonsterDropDisplay=wrapped;}
+if(typeof dropOld==='function'&&!dropOld.__keplerDrop91_100){const wrapped=function(monster,...args){let html=dropOld.call(this,monster,...args);if(monster&&monster.zone==='克卜勒-452b'&&monster.level>=91&&monster.level<=100){const rows=[...(monster.dropTable||[]),...(monster.uniqueDrops||[])].map(x=>`<div class="bestiary-drop-item wide"><span class="bestiary-drop-icon">✧</span><div class="bestiary-drop-text"><strong>克卜勒專屬掉落</strong>${x}</div></div>`).join('');html+=`<div class="bestiary-drop-panel kepler-drop-panel"><div class="bestiary-drop-title">🌑 克卜勒 ${monster.level}LV 掉落清單</div><div class="bestiary-drop-grid">${rows}</div></div>`;}return html};wrapped.__keplerDrop91_100=true;window.getMonsterDropDisplay=wrapped;}
 })();
 </script>
 <style id="bestiary-equipment-drop-color-v1">
@@ -28413,5 +28413,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   }
 })();
 </script>
+  <link rel="stylesheet" href="scripts/bestiary-tabs-v3.css">
+  <script src="scripts/bestiary-tabs-v3.js"></script>
 </body>
 </html>
