@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>四將攻擊逐格預覽｜新特效</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 22px; background: #080d17; color: #e8edf8; font: 15px/1.45 system-ui, "Noto Sans TC", sans-serif; }
+  main { width: min(1600px, 100%); margin: 0 auto; }
+  h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: .04em; }
+  .subtitle { margin: 0 0 18px; color: #9baabe; }
+  .timeline { display: grid; grid-template-columns: 112px repeat(6, minmax(0, 1fr)); gap: 7px; }
+  .label, .frame { min-width: 0; min-height: 160px; border: 1px solid #2b3b50; border-radius: 10px; background: #101927; }
+  .label { display: flex; flex-direction: column; justify-content: center; padding: 12px; color: #f2dca6; font-weight: 800; font-size: 17px; }
+  .label small { margin-top: 5px; color: #91a5bd; font-size: 11px; font-weight: 500; }
+  .frame { position: relative; overflow: hidden; background: radial-gradient(ellipse at 45% 62%, #1b2d43, #0d1522 72%); }
+  .number { position: absolute; z-index: 5; left: 9px; top: 7px; color: #bdc9d8; font-size: 12px; }
+  .ground { position: absolute; left: 4%; right: 4%; bottom: 12px; height: 1px; background: linear-gradient(90deg, transparent, #566174, transparent); }
+  .target { position: absolute; left: 11%; top: 54%; width: 6px; height: 6px; border-radius: 50%; background: white; box-shadow: 0 0 8px 5px #7cecff, 0 0 20px 9px #248cff88; }
+  .wave { position: absolute; z-index: 2; left: var(--x); top: 47%; width: 92%; height: auto; transform: translateY(-50%); object-fit: contain; opacity: var(--alpha); }
+  .fighter { position: absolute; z-index: 3; right: -5px; bottom: 4px; height: 142px; width: 96px; object-fit: contain; object-position: bottom right; filter: drop-shadow(0 4px 5px #000b); }
+  .footer { margin-top: 14px; color: #91a1b5; font-size: 12px; }
+  @media (max-width: 900px) { body { padding: 12px; } .timeline { grid-template-columns: 80px repeat(6, minmax(120px,1fr)); overflow-x: auto; } .label, .frame { min-height: 145px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>四將攻擊逐格預覽｜新特效接入六格戰鬥分鏡</h1>
+  <p class="subtitle">角色動作沿用既有預備、蓄勢、起招、出招、收勢與回守影格；新透明斬擊由右向左移動並脈動淡出。</p>
+  <section class="timeline" id="timeline" aria-label="四位武將六格攻擊分鏡"></section>
+  <p class="footer">靜態逐格預覽；遊戲內由共用播放器依角色速度設定逐格播放。命中與傷害邏輯不變。</p>
+</main>
+<script>
+const root = '../assets/monsters/parallel_three_kingdoms/';
+const heroes = [
+  {name:'李儒', id:'li_ru', title:'毒焰咒斬'},
+  {name:'樊稠將軍', id:'fan_chou', title:'黃土烈焰重斬'},
+  {name:'張濟將軍', id:'zhang_ji', title:'冷鋼槍刃風斬'},
+  {name:'呂布', id:'lu_bu', title:'藍白赤芒裂斬'}
+];
+const xStops = ['53%','43%','34%','25%','16%','6%'];
+const alphas = [.28,.55,.92,1,.88,.3];
+const timeline = document.getElementById('timeline');
+for (const hero of heroes) {
+  const label = document.createElement('div');
+  label.className = 'label';
+  label.innerHTML = `${hero.name}<small>${hero.title}</small>`;
+  timeline.appendChild(label);
+  for (let i=1;i<=6;i++) {
+    const cell = document.createElement('div');
+    cell.className = 'frame';
+    cell.innerHTML = `<span class="number">0${i}</span><div class="ground"></div><div class="target"></div><img class="wave" style="--x:${xStops[i-1]};--alpha:${alphas[i-1]}" src="${root}${hero.id}_attack_wave/frame_${String(i).padStart(2,'0')}.png" alt=""><img class="fighter" src="${root}${hero.id}_attack/frame_${String(i).padStart(2,'0')}.png" alt="">`;
+    timeline.appendChild(cell);
+  }
+}
+</script>
+</body>
+</html>
