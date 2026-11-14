@@ -14020,14 +14020,28 @@ function getCombatVisualCycleDuration(actionPath) {
             const fn = kind === 'inventory' ? 'setInventoryGridPage' : kind === 'warehouse-source' ? 'setWarehouseSourceGridPage' : 'setWarehouseStorageGridPage';
             const label = kind === 'warehouse-source' ? '背包物品分頁' : kind === 'warehouse-storage' ? '共通倉庫物品分頁' : '背包格子分頁';
             return `<div class="grid-page-controls" role="navigation" aria-label="${label}" aria-live="polite" style="display:flex;align-items:center;justify-content:center;gap:10px;margin:7px 0;color:#d9c4b4;">
-                <button type="button" class="modal-btn" style="margin:0;padding:4px 12px;" onclick="${fn}(${Math.max(1,page-1)})" ${page<=1?'disabled':''}>◀ 上一頁</button>
+                <button type="button" class="modal-btn" style="margin:0;padding:4px 12px;" onclick="${fn}(${Math.max(1,page-1)}, event)" ${page<=1?'disabled':''}>◀ 上一頁</button>
                 <strong>第 ${page} / ${Math.max(1,totalPages)} 頁</strong>
-                <button type="button" class="modal-btn" style="margin:0;padding:4px 12px;" onclick="${fn}(${Math.min(totalPages,page+1)})" ${page>=totalPages?'disabled':''}>下一頁 ▶</button>
+                <button type="button" class="modal-btn" style="margin:0;padding:4px 12px;" onclick="${fn}(${Math.min(totalPages,page+1)}, event)" ${page>=totalPages?'disabled':''}>下一頁 ▶</button>
             </div>`;
         }
         function setInventoryGridPage(page) { inventoryGridPage = Math.max(1, Number(page)||1); renderInventory(); }
-        function setWarehouseSourceGridPage(page) { warehouseSourceGridPage = Math.max(1, Number(page)||1); openWarehouse(); }
-        function setWarehouseStorageGridPage(page) { warehouseStorageGridPage = Math.max(1, Number(page)||1); openWarehouse(); }
+        function setWarehouseSourceGridPage(page, event) {
+            // 分頁按鈕只更新倉庫內容，不讓點擊事件冒泡到外層遮罩或其他關閉監聽。
+            if (event) { event.preventDefault(); event.stopPropagation(); }
+            warehouseSourceGridPage = Math.max(1, Number(page)||1);
+            openWarehouse();
+            const modal = document.getElementById('modal-window');
+            if (modal) modal.style.display = 'flex';
+        }
+        function setWarehouseStorageGridPage(page, event) {
+            // 分頁按鈕只更新倉庫內容，不讓點擊事件冒泡到外層遮罩或其他關閉監聽。
+            if (event) { event.preventDefault(); event.stopPropagation(); }
+            warehouseStorageGridPage = Math.max(1, Number(page)||1);
+            openWarehouse();
+            const modal = document.getElementById('modal-window');
+            if (modal) modal.style.display = 'flex';
+        }
 
         // ================= 🎒 背包系統與道具使用 =================
         function openInventory() {
@@ -27770,11 +27784,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 }
 #modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-stats b { color:#d2cdd8;font-weight:700; }
 #modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-empty { padding:16px;color:#aaa5b1;text-align:center; }
-@media(max-width:620px) {
-  #modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-list { grid-template-columns:minmax(0,1fr); }
-  #modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-card { grid-template-columns:76px minmax(0,1fr);padding:8px; }
-  #modal-body.parallel-three-kingdoms-bestiary-clean .ptk-bestiary-portrait { width:76px;height:76px; }
-}
+/* 電腦版限定：圖鑑固定維持雙欄卡片，不提供手機窄螢幕改排。 */
 </style>
 <script id="parallel-three-kingdoms-bestiary-clean-v1">
 (() => {
