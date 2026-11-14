@@ -9578,11 +9578,9 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             }, { passive: true });
         }
         function battleLogShouldFollow(box) {
-            if (!box) return true;
-            trackBattleLogScroll(box);
-            if (box.dataset.battleLogManualLock === 'true') return false;
-            if (box.dataset.battleLogFollowLatest === 'false') return false;
-            return battleLogIsAtBottom(box);
+            // 戰鬥日誌完全由玩家控制捲動；新紀錄不自動拉到底部。
+            if (box) trackBattleLogScroll(box);
+            return false;
         }
         function openBattleLog() {
             const modal = document.getElementById('modal-window');
@@ -9596,8 +9594,6 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             if (expanded) {
                 trackBattleLogScroll(expanded);
                 expanded.dataset.battleLogSyncedSequence = String(battleLogSequence);
-                expanded.scrollTop = expanded.scrollHeight;
-                expanded.dataset.battleLogFollowLatest = 'true';
             }
         }
         function syncExpandedBattleLog() {
