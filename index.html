@@ -26206,7 +26206,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       : '';
 
     const setRuleHtml = monster.type === 'boss' || monster.type === 'special'
-      ? '<div class="bv2-drop wing"><strong>職業套裝隨機詞綴</strong>掉落率：BOSS 8%、特殊怪 4%；隨機職業與部位，82% 機率優先補足未收集部位。套裝會隨機生成職業專屬暴擊率、暴擊傷害與適性副詞綴；35% 機率附加 2–8% 元素傷害，另有 1% 致命暴擊詞綴、3% 強力暴擊詞綴。</div>'
+      ? '<div class="bv2-drop wing"><strong>職業套裝隨機詞綴</strong>隨機職業與部位，未收集部位有 82% 機率優先補足。每件套裝會隨機生成職業專屬暴擊率、暴擊傷害與適性副詞綴；35% 機率附加 2–8% 元素傷害，另有 1% 致命暴擊詞綴、3% 強力暴擊詞綴。</div>'
       : '';
     showBody('<div class="bv2-detail"><div class="bv2-toolbar">' +
       '<button class="modal-btn bv2-back" type="button" onclick="openBestiaryZoneV2(&quot;' + esc(zone) + '&quot;)">← ' + esc(zone) + '</button>' +
