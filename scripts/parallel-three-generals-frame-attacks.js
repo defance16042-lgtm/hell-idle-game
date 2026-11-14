@@ -36,7 +36,9 @@
     },
     {
       names: ['高順將軍', '高順'], bodyDir: 'gao_shun_attack', waveDir: 'gao_shun_attack_wave',
-      waveScale: .44, waveCurve: -.012, waveLift: -.02, spriteScale: 1.18,
+      // 高順攻擊分鏡的原圖是 768x768 正方形，人物上下留白比例比呂布多；
+      // 提高顯示倍率後，實際人物高度與呂布的 1.2 倍攻擊分鏡一致。
+      waveScale: .44, waveCurve: -.012, waveLift: -.02, spriteScale: 1.28,
       frameMs: [140, 120, 105, 92, 125, 185],
       waveStops: [0.01, 0.06, 0.30, 0.64, 0.90, 1],
       waveAlpha: [.24, .55, .94, 1, .90, .30]
@@ -217,11 +219,48 @@
 
   let yuanmenCanvas = null;
   let yuanmenRaf = 0;
+  let yuanmenPoseRaf = 0;
+  const yuanmenBowSource = 'assets/monsters/parallel_three_kingdoms/lu_bu-bow-boss.png';
+
+  function setYuanmenBowPose(sprite, progress) {
+    // 六段弓將攻擊分鏡：站立蓄力、拉弓、滿弦、放箭、回身、復位。
+    // 使用同一張高解析弓將站立圖，透過姿勢位移與旋轉保持人物大小不變，
+    // 避免攻擊時又換回第一階段的方天畫戟人物。
+    const poses = [
+      [0, 0, 0, 1], [3, -2, -2, 1.02], [7, -4, -4, 1.04],
+      [13, -1, 2, 1.01], [6, 1, 1, 1.02], [0, 0, 0, 1]
+    ];
+    const scaled = Math.min(0.999, Math.max(0, progress)) * (poses.length - 1);
+    const index = Math.floor(scaled);
+    const next = Math.min(poses.length - 1, index + 1);
+    const mix = scaled - index;
+    const pose = poses[index].map((value, i) => value + (poses[next][i] - value) * mix);
+    const [x, y, rotate, scale] = pose;
+    sprite.style.setProperty('transform', `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0) rotate(${rotate.toFixed(2)}deg) scale(${scale.toFixed(3)})`, 'important');
+    sprite.style.setProperty('transform-origin', 'center bottom', 'important');
+  }
+
   function playLuBuYuanmenShootingVfx() {
     const stage = document.getElementById('battle-stage');
     const sprite = document.querySelector('#monster-icon .monster-sprite');
     const player = document.getElementById('player-icon');
     if (!stage || !sprite || !player) return false;
+    if (yuanmenPoseRaf) cancelAnimationFrame(yuanmenPoseRaf);
+    sprite.setAttribute('src', typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(yuanmenBowSource) : yuanmenBowSource);
+    const poseStarted = performance.now();
+    const poseDuration = 920;
+    const drawPose = now => {
+      if (!sprite.isConnected || !window.__parallelLuBuPhase2Active) {
+        sprite.style.removeProperty('transform');
+        sprite.style.removeProperty('transform-origin');
+        yuanmenPoseRaf = 0;
+        return;
+      }
+      setYuanmenBowPose(sprite, (now - poseStarted) / poseDuration);
+      if (now - poseStarted < poseDuration) yuanmenPoseRaf = requestAnimationFrame(drawPose);
+      else yuanmenPoseRaf = 0;
+    };
+    yuanmenPoseRaf = requestAnimationFrame(drawPose);
     if (!yuanmenCanvas || yuanmenCanvas.parentElement !== stage) {
       yuanmenCanvas?.remove();
       yuanmenCanvas = document.createElement('canvas');
