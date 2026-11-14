@@ -7208,9 +7208,8 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             weapon.rarity = '神話';
             weapon.quality = '神話';
             weapon.qualityColor = '#c879ff';
-            weapon.classKeys = ['knight', 'warrior'];
-            const activeClass = typeof currentPlayer !== 'undefined' ? currentPlayer?.key : '';
-            weapon.classKey = ['knight', 'warrior'].includes(activeClass) ? activeClass : (weapon.classKey || 'knight');
+            weapon.classKeys = ['knight'];
+            weapon.classKey = 'knight';
             weapon.weaponType = 'melee';
             weapon.baseAttackBonus = 520;
             weapon.attackBonus = expectedAttack;
@@ -7293,9 +7292,10 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             }
 
             const repairedHalberd = player.items.weapons.some(normalizeLuBuHalberdItem);
+            const isLuBuBaodiaoBow = weapon => weapon?.templateId === 'baodiao_bow_v1' || weapon?.id === 'baodiao_bow_v1';
             if (repairedHalberd) gameHasUnsavedChanges = true;
             const isDivineDragonUniqueWeapon = weapon => !!(weapon && (weapon.isDivineDragonUnique === true || weapon.uniqueDropType === 'divine_dragon_unique'));
-            player.items.weapons = player.items.weapons.filter(weapon => weapon && weapon.instanceId && (weapon.classKey === player.key || weapon.templateId === 'li_ru_poison_wine_staff_v1' || weapon.templateId === 'fangtian_halberd_v1' || isDivineDragonUniqueWeapon(weapon)));
+            player.items.weapons = player.items.weapons.filter(weapon => weapon && weapon.instanceId && ((weapon.classKey === player.key && weapon.templateId !== 'fangtian_halberd_v1' && weapon.templateId !== 'baodiao_bow_v1') || (player.key === 'knight' && weapon.templateId === 'fangtian_halberd_v1') || (player.key === 'elf' && weapon.templateId === 'baodiao_bow_v1') || weapon.templateId === 'li_ru_poison_wine_staff_v1' || isDivineDragonUniqueWeapon(weapon)));
             const family = weaponFamilies[player.key] || weaponFamilies.knight;
             player.items.weapons.forEach(weapon => {
                 const enhancementLevel = Number(weapon.enhancementLevel) || 0;
@@ -7311,6 +7311,17 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                     weapon.baseAttackSpeedBonus = savedBaseSpeed;
                     weapon.attackSpeedBonus = savedBaseSpeed + Math.min(0.60, enhancementLevel * 0.03);
                     weapon.enhancementLevel = enhancementLevel;
+                    return;
+                }
+                if (weapon.templateId === 'baodiao_bow_v1') {
+                    weapon.name = '寶雕弓'; weapon.classKey = 'elf'; weapon.classKeys = ['elf']; weapon.weaponType = 'ranged';
+                    weapon.baseAttackBonus = Math.max(0, Number(weapon.baseAttackBonus) || 500);
+                    weapon.attackBonus = weapon.baseAttackBonus + enhancementLevel * 4;
+                    weapon.baseAttackSpeedBonus = Number.isFinite(Number(weapon.baseAttackSpeedBonus)) ? Number(weapon.baseAttackSpeedBonus) : 0.01;
+                    weapon.attackSpeedBonus = weapon.baseAttackSpeedBonus + Math.min(0.60, enhancementLevel * 0.03);
+                    weapon.rangedHitBonus = 0.06; weapon.statBonuses = { dex: 78, con: 34, rangedHitBonus: 0.06, rangedCritRate: 0.05, rangedCritDamage: 0.10, rangedAttackBonus: 85 }; weapon.stats = { ...weapon.statBonuses };
+                    weapon.cannotEnhance = false; weapon.enhancementLevel = enhancementLevel; weapon.uniqueDropType = 'lu_bu_divine_treasure'; weapon.isLuBuDivineTreasure = true;
+                    weapon.properties = ['武器部位｜獵手專用｜需求等級 100', `遠距離攻擊力 +${weapon.attackBonus}｜遠距離攻擊加成 +85`, '敏捷 +78｜體質 +34', '遠距離命中率 +6%｜遠距離暴擊率 +5%｜遠距離暴擊傷害 +10%', '轅門射戟：遠距離命中時 10% 機率觸發，本次傷害提高 30%，對 BOSS 額外提高 8%。', '呂布專屬掉落｜獨立掉落率 2%', '強化規則：每次成功強化攻擊力 +4、攻速 +0.03（攻速加成上限 +0.60）'];
                     return;
                 }
                 if (weapon.templateId === 'fangtian_halberd_v1') {
@@ -7361,7 +7372,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                     rollWeaponProperties(weapon);
                 }
             });
-            const usableWeapons = player.items.weapons.filter(weapon => weapon.classKey === player.key || weapon.templateId === 'fangtian_halberd_v1' || isDivineDragonUniqueWeapon(weapon));
+            const usableWeapons = player.items.weapons.filter(weapon => (weapon.classKey === player.key && weapon.templateId !== 'fangtian_halberd_v1' && weapon.templateId !== 'baodiao_bow_v1') || (player.key === 'knight' && weapon.templateId === 'fangtian_halberd_v1') || (player.key === 'elf' && weapon.templateId === 'baodiao_bow_v1') || isDivineDragonUniqueWeapon(weapon));
             if (player.equipment.weaponId === undefined) {
                 if (!usableWeapons.length) {
                     const starter = rollWeaponProperties(createWeaponItem(player.key, 0, { attackSpeedBonus: (weaponFamilies[player.key] || weaponFamilies.knight).speed + player.equipment.weaponAttackSpeedBonus }));
@@ -12225,6 +12236,7 @@ function getCombatVisualCycleDuration(actionPath) {
                 damage = window.applyAbyssWingOutgoingDamage?.(damage, { attackType, skillTriggered, activeSkill, target: currentMonster, trainingSimulation }) ?? damage;
                 if (currentMonster.type !== 'training') { const abyssHpDamage = window.applyAbyssDragonIncomingDamage?.(currentMonster, damage, attackType === 'magic' ? 'magic' : 'physical') ?? damage; currentMonster.hp = Math.max(0, currentMonster.hp - abyssHpDamage); }
                 window.syncFallenHeavenBossPhase?.(currentMonster, true);
+                window.syncParallelLuBuPhase?.(currentMonster, true);
                 if (typeof updateMonsterHealthUI === 'function') updateMonsterHealthUI();
                 try { if (typeof window.__hellClassAttackHitV2 === 'function') window.__hellClassAttackHitV2(); } catch (_) {}
                 playBattleSound('hit');
@@ -12283,6 +12295,7 @@ function getCombatVisualCycleDuration(actionPath) {
         function performMonsterAttack() {
             if (!currentMonster || monsterDefeatInProgress || currentMonster.hp <= 0) return;
             window.syncFallenHeavenBossPhase?.(currentMonster, true);
+            window.syncParallelLuBuPhase?.(currentMonster, true);
             applyShadowMageRecovery(currentMonster);
             const monsterName = currentMonster.name;
             const icon = document.getElementById('monster-icon');
@@ -14755,7 +14768,8 @@ function getCombatVisualCycleDuration(actionPath) {
             const isLuBuGoldenArmor = !isWeapon && item.templateId === 'golden_armor_v1';
             const successChance = Math.min(100, getEnhancementSuccessChance(level, isWeapon ? 6 : 4) + (bestScroll?.bonus || 0));
             const scrollCount = ['weaponScroll','armorScroll','weaponScrollAdvanced','armorScrollAdvanced','weaponScrollHigh','armorScrollHigh'].reduce((sum,key) => sum + ((isWeapon ? key.startsWith('weaponScroll') : key.startsWith('armorScroll')) ? Math.max(0,Number(currentPlayer.items[key])||0) : 0),0);
-            const canEnhance = (isDivineDragonUnique || isLiRuStaff || isLuBuHalberd || isLuBuGoldenArmor || (!item.cannotEnhance && item.slot !== 'necklace')) && !!bestScroll && level < maxEnhancementLevel;
+            const isLuBuBaodiaoBow = isWeapon && item.templateId === 'baodiao_bow_v1';
+            const canEnhance = (isDivineDragonUnique || isLiRuStaff || isLuBuHalberd || isLuBuBaodiaoBow || isLuBuGoldenArmor || (!item.cannotEnhance && item.slot !== 'necklace')) && !!bestScroll && level < maxEnhancementLevel;
             const equipmentLevelText = `LV ${getEquipmentRequiredLevel(item, kind)}`;
             const isShadowVoidSixLumenItem = item.templateId === 'shadow_void_six_lumen_pendant' || item.id === 'shadow_void_six_lumen_pendant' || item.name === '影虛・六曜冥星墜';
             const enhancementText = isDivineDragonUnique
@@ -14766,8 +14780,8 @@ function getCombatVisualCycleDuration(actionPath) {
                 ? `${equipmentLevelText}｜${item.material || '六曜冥星晶'}｜項鍊｜不可強化｜六項能力各 +50（可突破上限）`
                 : item.slot === 'necklace'
                 ? `${equipmentLevelText}｜${item.material || '項鍊材料'}｜項鍊｜不可強化｜${(item.properties || []).filter(property => !String(property).includes('六項能力各 +50')).join('｜') || '依物品能力加成為準'}`
-                : isWeapon && isLuBuHalberd
-                ? `${equipmentLevelText}｜攻擊力 ${formatEquipmentStatValue('attackBonus', item.attackBonus)}｜攻速 ${formatEquipmentNumber(item.attackSpeedBonus || 0, 2)} 次/秒｜每次成功強化：攻擊 +4、攻速 +0.03（攻速加成上限 +0.60）｜強化 +${level}／上限 +${maxEnhancementLevel}`
+                : isWeapon && (isLuBuHalberd || isLuBuBaodiaoBow)
+                ? `${equipmentLevelText}｜${isLuBuBaodiaoBow ? '遠距離攻擊力' : '攻擊力'} ${formatEquipmentStatValue('attackBonus', item.attackBonus)}｜攻速 ${formatEquipmentNumber(item.attackSpeedBonus || 0, 2)} 次/秒｜每次成功強化：攻擊 +4、攻速 +0.03（攻速加成上限 +0.60）｜強化 +${level}／上限 +${maxEnhancementLevel}`
                 : isLuBuGoldenArmor
                 ? `${equipmentLevelText}｜${item.slotLabel || '胸甲'}｜物理防禦 ${formatEquipmentStatValue('physicalDefenseBonus', item.physicalDefenseBonus)}｜魔法防禦 ${formatEquipmentStatValue('magicDefenseBonus', item.magicDefenseBonus)}｜每次成功強化：物防 +4、魔防 +2｜強化 +${level}／上限 +${maxEnhancementLevel}`
                 : isWeapon && isLiRuStaff
@@ -27661,10 +27675,13 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     name: '呂布', icon: '🔱',
     image: 'assets/monsters/parallel_three_kingdoms/lu_bu-boss.png',
     battleImage: 'assets/monsters/parallel_three_kingdoms/lu_bu-boss.png',
+    phase2Image: 'assets/monsters/parallel_three_kingdoms/lu_bu-bow-boss.png',
     level: 100, levelRange: '100', attackSpeed: 0.88,
     hp: 2480000, maxHp: 2480000, atk: 12800, def: 4380, magicDefense: 3960,
     attackType: '赤紫方天裂空斬', basicAttackName: '赤紫方天裂空斬',
     attackRange: 'melee', damageType: 'physical',
+    phase2AttackType: '轅門射戟', phase2BasicAttackName: '轅門射戟',
+    phase2AttackRange: 'ranged', phase2DamageType: 'physical',
     exp: 280000, gold: 128000, type: 'boss', encounterChance: 0.5,
     facing: 'left-full-body', orientation: 'strict-left-profile',
     visualNote: '可愛黑暗Q版紅紫呂布騎乘赤兔馬，全身與馬匹完整入鏡；呂布、赤兔馬、馬尾、四蹄、披風與方天畫戟全部嚴格朝左，禁止正面、右朝與鏡像。',
@@ -27674,14 +27691,14 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     skills: [
       { name: '赤紫方天裂空斬', phase: 'normal', chance: 0.42, damageType: 'physical', attackRange: 'melee', powerMultiplier: 2.12, effect: 'heavy' },
       { name: '鬼神踏陣', phase: 'normal', chance: 0.24, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.88, effect: 'shock' },
-      { name: '修羅赤紫天罰', phase: 'lowHp', chance: 0.42, damageType: 'magic', attackRange: 'melee', powerMultiplier: 2.52, effect: 'blast' }
+      { name: '轅門射戟', phase: 'lowHp', chance: 0.46, damageType: 'physical', attackRange: 'ranged', powerMultiplier: 2.35, effect: 'blast' }
     ],
-    description: '平行三國的鬼神呂布騎乘赤兔馬，身披赤紅與深紫交織的暗鎧，揮舞方天畫戟。赤兔馬披著暗色紅紫戰甲，與主人並肩衝陣；圓臉、短身與小獠牙帶著可愛黑暗氣息，狂怒時紅紫鬼火包覆全身。',
+    description: '平行三國的鬼神呂布騎乘赤兔馬，第一形態揮舞方天畫戟；生命值降至 50% 時裂鎧變身為弓將，取出寶雕弓施放唯一大招「轅門射戟」。紅紫鬼火與金色箭光交織，整體維持可愛黑暗 Q 版的左向戰鬥風格。',
     dropTable: ['魂幣 128,000', '經驗 280,000', '補血藥水（12%）'],
     uniqueDrops: [],
     bossPhases: [
       { name: '赤紫鬼神', trigger: '生命值高於 50%', description: '呂布壓低身形，揮動方天畫戟施展赤紫方天裂空斬，紅紫刃光朝左側爆發。' },
-      { name: '修羅覺醒', trigger: '生命值低於或等於 50%', description: '暗鎧裂縫燃起紅紫鬼火，攻勢加劇並施放修羅赤紫天罰，席捲整個戰場。' }
+      { name: '轅門弓將', trigger: '生命值低於或等於 50%', description: '呂布卸下方天畫戟並取出寶雕弓，嚴格朝左張弓；以唯一大招「轅門射戟」射出金色箭矢與紅紫戟影。' }
     ],
     zone: ZONE, threatTier: 'parallel-three-kingdoms-boss'
   };
@@ -27692,6 +27709,54 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 
 })();
 </script>
+
+<script id="parallel-lu-bu-phase-sync-v1">
+(() => {
+  if (window.__parallelLuBuPhaseSyncV1) return;
+  window.__parallelLuBuPhaseSyncV1 = true;
+  window.syncParallelLuBuPhase = function(monster, announce = true) {
+    if (!monster || monster.name !== '呂布') return monster;
+    const threshold = Number(monster.maxHp) * 0.5;
+    const phase2 = Number(monster.hp) <= threshold;
+    const wasPhase2 = monster._parallelLuBuPhase === 2;
+    if (phase2 === wasPhase2) {
+      window.__parallelLuBuPhase2Active = phase2;
+      return monster;
+    }
+    monster._parallelLuBuPhase = phase2 ? 2 : 1;
+    window.__parallelLuBuPhase2Active = phase2;
+    if (phase2) {
+      monster.attackRange = monster.phase2AttackRange || 'ranged';
+      monster.attackType = monster.phase2AttackType || '轅門射戟';
+      monster.basicAttackName = monster.phase2BasicAttackName || '轅門射戟';
+      monster.damageType = monster.phase2DamageType || 'physical';
+      monster.battleImage = monster.phase2Image || monster.battleImage;
+      monster.image = monster.phase2Image || monster.image;
+      if (announce && typeof addBattleLog === 'function') {
+        addBattleLog('🏹 <strong>呂布裂鎧變身為轅門弓將，取出寶雕弓！</strong> 唯一大招「轅門射戟」已解鎖。');
+      }
+    } else {
+      monster.attackRange = monster.phase1AttackRange || 'melee';
+      monster.attackType = monster.phase1AttackType || '赤紫方天裂空斬';
+      monster.basicAttackName = monster.phase1BasicAttackName || '赤紫方天裂空斬';
+      monster.damageType = monster.phase1DamageType || 'physical';
+      monster.battleImage = monster.phase1Image || monster.battleImage;
+      monster.image = monster.phase1Image || monster.image;
+    }
+    const icon = document.querySelector('#monster-icon .monster-sprite');
+    if (icon) {
+      const image = monster.battleImage || monster.image;
+      if (image) icon.src = image;
+      icon.alt = `${monster.name}${phase2 ? '｜轅門弓將' : '｜赤紫鬼神'}`;
+    }
+    if (typeof updateMonsterHealthUI === 'function') updateMonsterHealthUI();
+    if (typeof updateGameUI === 'function') updateGameUI();
+    return monster;
+  };
+})();
+</script>
+
+
 
 <script src="scripts/parallel-three-generals-frame-attacks.js"></script>
 
@@ -27720,11 +27785,21 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       id: 'fangtian_halberd_v1', name: '方天畫戟', kind: 'weapon', slot: 'weapon', slotLabel: '武器',
       icon: '🔱', weaponType: 'melee',
       level: 100, requiredLevel: 100, rarity: '神話', quality: '神話', qualityColor: '#c879ff',
-      classKeys: ['knight', 'warrior'], classKey: 'knight', dropChance: 0.02, sourceMonster: '呂布',
+      classKeys: ['knight'], classKey: 'knight', dropChance: 0.02, sourceMonster: '呂布',
       attackBonus: 520, baseAttackBonus: 520, attackSpeedBonus: 0, baseAttackSpeedBonus: 0,
       statBonuses: { str: 85, con: 45, physicalDefense: 120, meleeHitBonus: 0.05, meleeCritRate: 0.06, meleeCritDamage: 0.12 },
       passiveSkills: [{ id: 'ghost_god_breaker', name: '鬼神破陣', trigger: 'meleeHit', chance: 0.10, damageMultiplier: 1.35, bossDamageMultiplier: 1.10 }],
-      properties: ['武器部位｜騎士、修羅戰士可用｜需求等級 100', '攻擊力 +520', '力量 +85｜體質 +45｜物理防禦 +120', '近戰命中率 +5%｜近戰暴擊率 +6%｜近戰暴擊傷害 +12%', '鬼神破陣：近戰攻擊命中時 10% 機率觸發，本次傷害提高 35%，對 BOSS 額外提高 10%。', '呂布專屬掉落｜獨立掉落率 2%', '強化規則：每次成功強化攻擊力 +4、攻速 +0.03（攻速加成上限 +0.60）']
+      properties: ['武器部位｜騎士專用｜需求等級 100', '攻擊力 +520', '力量 +85｜體質 +45｜物理防禦 +120', '近戰命中率 +5%｜近戰暴擊率 +6%｜近戰暴擊傷害 +12%', '鬼神破陣：近戰攻擊命中時 10% 機率觸發，本次傷害提高 35%，對 BOSS 額外提高 10%。', '呂布專屬掉落｜獨立掉落率 2%', '強化規則：每次成功強化攻擊力 +4、攻速 +0.03（攻速加成上限 +0.60）']
+    },
+    baodiao_bow_v1: {
+      id: 'baodiao_bow_v1', name: '寶雕弓', kind: 'weapon', slot: 'weapon', slotLabel: '武器',
+      icon: '🏹', iconAsset: 'assets/items/parallel_lu_bu_baodiao_bow.png', weaponType: 'ranged', damageType: 'physical',
+      level: 100, requiredLevel: 100, rarity: '神話', quality: '神話', qualityColor: '#f1bd58',
+      classKeys: ['elf'], classKey: 'elf', dropChance: 0.02, sourceMonster: '呂布',
+      attackBonus: 500, baseAttackBonus: 500, attackSpeedBonus: 0.01, baseAttackSpeedBonus: 0.01,
+      statBonuses: { dex: 78, con: 34, rangedHitBonus: 0.06, rangedCritRate: 0.05, rangedCritDamage: 0.10, rangedAttackBonus: 85 },
+      passiveSkills: [{ id: 'yuanmen_shooting_halberd', name: '轅門射戟', trigger: 'rangedHit', chance: 0.10, damageMultiplier: 1.30, bossDamageMultiplier: 1.08 }],
+      properties: ['武器部位｜獵手專用｜需求等級 100', '遠距離攻擊力 +500｜遠距離攻擊加成 +85', '敏捷 +78｜體質 +34', '遠距離命中率 +6%｜遠距離暴擊率 +5%｜遠距離暴擊傷害 +10%', '轅門射戟：遠距離命中時 10% 機率觸發，本次傷害提高 30%，對 BOSS 額外提高 8%。', '呂布專屬掉落｜獨立掉落率 2%', '強化規則：每次成功強化攻擊力 +4、攻速 +0.03（攻速加成上限 +0.60）']
     },
     golden_armor_v1: {
       id: 'golden_armor_v1', name: '黃金鎧甲', kind: 'armor', slot: 'chest', slotLabel: '胸甲',
@@ -27753,7 +27828,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   const luBu = window.parallelThreeKingdomsLuBu;
   if (luBu) {
     luBu.uniqueDrops = treasureList.map(item => {
-      const enhancementText = item.id === 'fangtian_halberd_v1'
+      const enhancementText = ['fangtian_halberd_v1', 'baodiao_bow_v1'].includes(item.id)
         ? '可強化：每次成功攻擊 +4、攻速 +0.03（攻速加成上限 +0.60）'
         : item.id === 'golden_armor_v1'
           ? '可強化：每次成功物理防禦 +4、魔法防禦 +2'
@@ -27772,11 +27847,11 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       icon: def.icon, iconAsset: def.iconAsset, image: def.iconAsset, armorType: def.armorType, weaponType: def.weaponType,
       level: def.level, requiredLevel: def.requiredLevel, requiredMonsterLevel: def.requiredLevel,
       rarity: def.rarity, quality: def.quality, qualityColor: def.qualityColor,
-      classKey: isWeapon && ['knight', 'warrior'].includes(player?.key) ? player.key : def.classKey,
+      classKey: isWeapon && def.classKeys.includes(player?.key) ? player.key : def.classKey,
       classKeys: def.classKeys.slice(),
       dropChance: def.dropChance, sourceMonster: def.sourceMonster, sourceDropChance: def.dropChance,
       statBonuses: { ...def.statBonuses }, stats: { ...def.statBonuses }, passiveSkills: def.passiveSkills.map(skill => ({ ...skill })),
-      properties, enhancementLevel: 0, cannotEnhance: !(['fangtian_halberd_v1', 'golden_armor_v1'].includes(def.id)), uniqueDropType: 'lu_bu_divine_treasure', isLuBuDivineTreasure: true, obtainedAt: Date.now()
+      properties, enhancementLevel: 0, cannotEnhance: !(['fangtian_halberd_v1', 'baodiao_bow_v1', 'golden_armor_v1'].includes(def.id)), uniqueDropType: 'lu_bu_divine_treasure', isLuBuDivineTreasure: true, obtainedAt: Date.now()
     };
     if (isWeapon) { item.attackBonus = def.attackBonus; item.baseAttackBonus = def.baseAttackBonus; item.attackSpeedBonus = 0; item.baseAttackSpeedBonus = 0; }
     if (def.physicalDefenseBonus) { item.physicalDefenseBonus = def.physicalDefenseBonus; item.basePhysicalDefenseBonus = def.physicalDefenseBonus; }
