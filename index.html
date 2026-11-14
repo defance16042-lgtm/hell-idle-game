@@ -11855,6 +11855,8 @@ function getCombatVisualCycleDuration(actionPath) {
 
         function resolveMonsterDefeat(zoneName) {
             if (!currentMonster || monsterDefeatInProgress) return;
+            // 呂布第一條 248 萬 HP 歸零時，和熾天墮龍一樣先攔截死亡並轉入下一階段。
+            if (currentMonster.name === '呂布' && window.advanceParallelLuBuBossPhase?.(currentMonster)) return;
             if (window.advanceFallenHeavenBossPhase?.(currentMonster)) return;
             monsterDefeatInProgress = true;
             monsterZeroHpSince = Date.now();
@@ -27677,6 +27679,9 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     battleImage: 'assets/monsters/parallel_three_kingdoms/lu_bu-boss.png',
     phase2Image: 'assets/monsters/parallel_three_kingdoms/lu_bu-bow-boss.png',
     level: 100, levelRange: '100', attackSpeed: 0.88,
+    // 呂布是兩段獨立血條：第一階段與第二階段各 2,480,000 HP。
+    // 第一階段血量歸零時攔截死亡，立即重置第二條血並切換弓將。
+    phase1Hp: 2480000, phase2Hp: 2480000, phase2TriggerHp: 0,
     hp: 2480000, maxHp: 2480000, atk: 12800, def: 4380, magicDefense: 3960,
     attackType: '赤紫方天裂空斬', basicAttackName: '赤紫方天裂空斬',
     attackRange: 'melee', damageType: 'physical',
@@ -27693,12 +27698,12 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       { name: '鬼神踏陣', phase: 'normal', chance: 0.24, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.88, effect: 'shock' },
       { name: '轅門射戟', phase: 'lowHp', chance: 0.46, damageType: 'physical', attackRange: 'ranged', powerMultiplier: 2.35, effect: 'blast' }
     ],
-    description: '平行三國的鬼神呂布騎乘赤兔馬，第一形態揮舞方天畫戟；生命值降至 50% 時裂鎧變身為弓將，取出寶雕弓施放唯一大招「轅門射戟」。紅紫鬼火與金色箭光交織，整體維持可愛黑暗 Q 版的左向戰鬥風格。',
+    description: '平行三國的鬼神呂布騎乘赤兔馬，第一階段完整擁有 248 萬 HP；第一條血打完歸零後裂鎧變身為弓將，並重新展開第二條 248 萬 HP 血條，取出寶雕弓施放唯一大招「轅門射戟」。紅紫鬼火與金色箭光交織，整體維持可愛黑暗 Q 版的左向戰鬥風格。',
     dropTable: ['魂幣 128,000', '經驗 280,000', '補血藥水（12%）'],
     uniqueDrops: [],
     bossPhases: [
-      { name: '赤紫鬼神', trigger: '生命值高於 50%', description: '呂布壓低身形，揮動方天畫戟施展赤紫方天裂空斬，紅紫刃光朝左側爆發。' },
-      { name: '轅門弓將', trigger: '生命值低於或等於 50%', description: '呂布卸下方天畫戟並取出寶雕弓，嚴格朝左張弓；以唯一大招「轅門射戟」射出金色箭矢與紅紫戟影。' }
+      { name: '赤紫鬼神', trigger: '第一階段 248 萬 HP 尚未歸零', description: '呂布壓低身形，揮動方天畫戟施展赤紫方天裂空斬，紅紫刃光朝左側爆發。' },
+      { name: '轅門弓將', trigger: '第一階段 248 萬 HP 歸零後', description: '呂布卸下方天畫戟並取出寶雕弓，重新展開第二條 248 萬 HP 血條，嚴格朝左張弓；以唯一大招「轅門射戟」射出金色箭矢與紅紫戟影。' }
     ],
     zone: ZONE, threatTier: 'parallel-three-kingdoms-boss'
   };
@@ -27714,16 +27719,37 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 (() => {
   if (window.__parallelLuBuPhaseSyncV1) return;
   window.__parallelLuBuPhaseSyncV1 = true;
+  window.advanceParallelLuBuBossPhase = function(monster) {
+    if (!monster || monster.name !== '呂布' || monster._parallelLuBuPhase === 2 || Number(monster.hp) > 0) return false;
+    monster._parallelLuBuPhase = 2;
+    monster.maxHp = Math.max(1, Number(monster.phase2Hp) || Number(monster.maxHp) || 2480000);
+    monster.hp = monster.maxHp;
+    monster.attackRange = monster.phase2AttackRange || 'ranged';
+    monster.attackType = monster.phase2AttackType || '轅門射戟';
+    monster.basicAttackName = monster.phase2BasicAttackName || '轅門射戟';
+    monster.damageType = monster.phase2DamageType || 'physical';
+    monster.battleImage = monster.phase2Image || monster.battleImage;
+    monster.image = monster.phase2Image || monster.image;
+    window.__parallelLuBuPhase2Active = true;
+    if (typeof addBattleLog === 'function') addBattleLog('🏹 <strong>呂布第一條 248 萬 HP 已擊破，裂鎧變身為轅門弓將！</strong> 第二條 248 萬 HP 開始，唯一大招「轅門射戟」已解鎖。');
+    const icon = document.querySelector('#monster-icon .monster-sprite');
+    if (icon) {
+      icon.src = typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(monster.battleImage) : monster.battleImage;
+      icon.alt = `${monster.name}｜轅門弓將`;
+    }
+    if (typeof updateMonsterHealthUI === 'function') updateMonsterHealthUI();
+    if (typeof updateGameUI === 'function') updateGameUI();
+    if (typeof nextPlayerAttackAt !== 'undefined') nextPlayerAttackAt = Date.now() + 650;
+    if (typeof nextMonsterAttackAt !== 'undefined') nextMonsterAttackAt = Date.now() + 900;
+    monsterDefeatInProgress = false;
+    monsterZeroHpSince = 0;
+    return true;
+  };
   window.syncParallelLuBuPhase = function(monster, announce = true) {
     if (!monster || monster.name !== '呂布') return monster;
-    const threshold = Number(monster.maxHp) * 0.5;
-    const phase2 = Number(monster.hp) <= threshold;
-    const wasPhase2 = monster._parallelLuBuPhase === 2;
-    if (phase2 === wasPhase2) {
-      window.__parallelLuBuPhase2Active = phase2;
-      return monster;
-    }
-    monster._parallelLuBuPhase = phase2 ? 2 : 1;
+    // 與熾天墮龍相同：sync 只套用目前階段，轉階只由 advance 函式在 HP 歸零時觸發。
+    const phase2 = monster._parallelLuBuPhase === 2;
+    if (!phase2 && !Number.isFinite(Number(monster._parallelLuBuPhase))) monster._parallelLuBuPhase = 1;
     window.__parallelLuBuPhase2Active = phase2;
     if (phase2) {
       monster.attackRange = monster.phase2AttackRange || 'ranged';
@@ -27732,9 +27758,6 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       monster.damageType = monster.phase2DamageType || 'physical';
       monster.battleImage = monster.phase2Image || monster.battleImage;
       monster.image = monster.phase2Image || monster.image;
-      if (announce && typeof addBattleLog === 'function') {
-        addBattleLog('🏹 <strong>呂布裂鎧變身為轅門弓將，取出寶雕弓！</strong> 唯一大招「轅門射戟」已解鎖。');
-      }
     } else {
       monster.attackRange = monster.phase1AttackRange || 'melee';
       monster.attackType = monster.phase1AttackType || '赤紫方天裂空斬';
