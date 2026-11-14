@@ -10726,7 +10726,11 @@ function getCombatVisualCycleDuration(actionPath) {
             const equippedDetailOverlay = document.getElementById('equipped-detail-overlay');
             if (equippedDetailOverlay?.style.display === 'flex' && equippedDetailOverlay.contains(event.target)) return;
             const inventory = document.getElementById('inventory-float');
-            if (!inventory || inventory.style.display !== 'flex' || inventory.contains(event.target)) return;
+            if (!inventory || inventory.style.display !== 'flex') return;
+            // 內容重繪可能讓原始 target 脫離 DOM；composedPath 仍保留點擊當下的背包祖先路徑。
+            const clickedInsideInventory = inventory.contains(event.target)
+                || (typeof event.composedPath === 'function' && event.composedPath().includes(inventory));
+            if (clickedInsideInventory) return;
             const openedAt = Number(inventory.dataset.openedAt || 0);
             if (Date.now() - openedAt < 180) return;
             closeInventory();
@@ -14025,7 +14029,12 @@ function getCombatVisualCycleDuration(actionPath) {
                 <button type="button" class="modal-btn" style="margin:0;padding:4px 12px;" onclick="${fn}(${Math.min(totalPages,page+1)}, event)" ${page>=totalPages?'disabled':''}>下一頁 ▶</button>
             </div>`;
         }
-        function setInventoryGridPage(page) { inventoryGridPage = Math.max(1, Number(page)||1); renderInventory(); }
+        function setInventoryGridPage(page, event) {
+            // 分頁會立即重繪背包並移除原按鈕；先阻止事件冒泡，避免外部點擊監聽誤關背包。
+            if (event) { event.preventDefault(); event.stopPropagation(); }
+            inventoryGridPage = Math.max(1, Number(page)||1);
+            renderInventory();
+        }
         function setWarehouseSourceGridPage(page, event) {
             // 分頁按鈕只更新倉庫內容，不讓點擊事件冒泡到外層遮罩或其他關閉監聽。
             if (event) { event.preventDefault(); event.stopPropagation(); }
