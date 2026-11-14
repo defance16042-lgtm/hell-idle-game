@@ -27806,7 +27806,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     if (!body || !modal) return;
     let sequence = 0;
     let html = `<div class="bestiary-nav"><button class="modal-btn" onclick="openBestiary()">← 返回區域列表</button><button class="modal-btn" onclick="closeModal()">關閉圖鑑</button></div>
-      <h3>${esc(typeof getBestiaryZoneIcon === 'function' ? getBestiaryZoneIcon(ZONE).replace(/<[^>]*>/g,'') : '⚔️')} 平行三國｜怪物圖鑑</h3>
+      <h3>⚔️ 平行三國｜怪物圖鑑</h3>
       <p style="color:#b8b2c0;font-size:12px;line-height:1.65;">依怪物類型分區；每區按等級由低至高排列。點選怪物卡片可查看完整能力、技能與掉落資料。</p>
       <div class="ptk-bestiary-summary"><strong>收錄 ${sorted.length} 種</strong><span>一般怪 ${groups.find(g=>g.type==='normal')?.items.length || 0} 種</span><span>特殊怪 ${groups.find(g=>g.type==='special')?.items.length || 0} 種</span><span>BOSS ${groups.find(g=>g.type==='boss')?.items.length || 0} 隻</span></div>`;
     for (const group of groups) {
