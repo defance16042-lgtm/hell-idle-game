@@ -26694,6 +26694,12 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     ],
     zone: ZONE, threatTier: 'parallel-three-kingdoms-boss'
   };
+  const jadeRing = monster.jadeSealRingDrop;
+  if (jadeRing) {
+    const statLabels = { str: '力量', dex: '敏捷', con: '體質', wis: '精神', int: '智力', cha: '魅力' };
+    const statDetails = Object.entries(jadeRing.statBonuses || {}).map(([key, value]) => `${statLabels[key] || key} +${value}`).join('｜');
+    monster.uniqueDrops = [`${jadeRing.name}｜${jadeRing.slotLabel}｜${jadeRing.rarity}｜需求等級 ${jadeRing.requiredLevel}｜全職業可用｜獨立掉落率 ${Math.round(Number(jadeRing.chance) * 100)}%｜攻擊 +${jadeRing.attackBonus}｜物理防禦 +${jadeRing.physicalDefenseBonus}｜魔法防禦 +${jadeRing.magicDefenseBonus}｜生命上限 +${jadeRing.maxHpBonus}｜${statDetails}｜不可強化`];
+  }
   const roster = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
   const previous = roster.find(entry => entry && entry.name === monster.name);
   if (previous) Object.assign(previous, monster); else roster.push(monster);
@@ -27795,11 +27801,13 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 #modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-card strong{display:block;margin:0;color:#fff0b4;font-size:12px;line-height:1.6}
 #modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-value{display:flex;flex-wrap:wrap;align-items:center;gap:5px;min-width:0;color:#eee8f5;overflow-wrap:anywhere;word-break:break-word}
 #modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-value-part{display:inline-block;max-width:100%;padding:1px 6px;border:1px solid rgba(142,126,166,.2);border-radius:5px;background:rgba(255,255,255,.035)}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-value-part.is-item-name{border-color:rgba(255,194,94,.5);background:rgba(255,184,68,.12);color:#ffd47a;font-weight:900;text-shadow:0 0 8px rgba(255,190,86,.2)}
 #modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-value-part:has(br){flex-basis:100%;padding:0;border:0;background:none}
 #modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-card small{grid-column:2;display:block;color:#a99fbd;font-size:11px;line-height:1.55;overflow-wrap:anywhere}
 #modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-page h4{margin:2px 0 8px;color:#f5d88d;font-size:15px;border-bottom:1px solid #332946;padding-bottom:6px}
 #modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-empty{padding:18px 12px;border:1px dashed #5b4d73;border-radius:8px;color:#aaa0b7;text-align:center}
 #modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-drop-panel{margin:0!important;padding:10px!important;border-color:#4a3b62!important}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-drop-panel .bestiary-drop-text strong{color:#ffd47a!important;text-shadow:0 0 8px rgba(255,190,86,.22)}
 </style>
 <script id="parallel-three-kingdoms-bestiary-detail-v1">
 (() => {
@@ -27824,7 +27832,8 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   };
   window.switchParallelBestiaryTab = openTab;
   const card = (label, value, note = '') => {
-    const parts = String(value).split('｜').map(part => `<span class="ptk-detail-value-part">${part}</span>`).join('');
+    const highlightItemName = /專屬|相關/.test(label);
+    const parts = String(value).split('｜').map((part, index) => `<span class="ptk-detail-value-part${highlightItemName && index === 0 ? ' is-item-name' : ''}">${part}</span>`).join('');
     return `<div class="ptk-detail-card"><strong>${esc(label)}</strong><span class="ptk-detail-value">${parts}</span>${note ? `<small>${esc(note)}</small>` : ''}</div>`;
   };
   const cards = list => list.filter(Boolean).join('') || '<div class="ptk-detail-empty">這個分類目前沒有額外資料。</div>';
@@ -27850,11 +27859,11 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       skills: `<h4>✨ 技能與招式</h4><div class="ptk-detail-grid">${cards(skills.map(skill => card(skill.name, `${esc(skill.phase || 'normal')}｜${esc(skill.damageType || 'physical')}｜發動 ${Math.round(Number(skill.chance || 0) * 100)}%`, skill.description || skill.effect || `倍率 ${skill.powerMultiplier || 1}`)))}</div>`,
       rewards: `<h4>🎁 獎勵</h4><div class="ptk-detail-grid">${cards([card('擊敗獎勵', `經驗 ${fmt(m.exp)}｜魂幣 ${fmt(m.gold)}`), card('一般補給', '補血藥水｜8%'), card('品質規則', typeName(m) === 'BOSS' ? 'BOSS 裝備與套裝依獨立機率判定。' : typeName(m) === '特殊怪' ? '特殊怪裝備與套裝依獨立機率判定。' : '一般怪依一般掉落規則判定。')])}</div>`,
       weapon: `<h4>⚔️ 武器</h4><div class="ptk-detail-grid">${cards(customDrops.filter(drop => /武器|刀|槍|弓|斧|杖|刃/.test(String(drop))).map(drop => card('專屬／相關武器', esc(drop))))}</div>`,
-      armor: `<h4>🛡️ 防具與座騎</h4><div class="ptk-detail-grid">${cards(customDrops.filter(drop => /防具|胸甲|鎧|甲|盾|護腕|套裝|翅膀|背部|座騎|坐騎/.test(String(drop))).map(drop => card('專屬裝備／坐騎', esc(drop))))}</div>`,
+      armor: `<h4>🛡️ 防具、飾品與座騎</h4><div class="ptk-detail-grid">${cards(customDrops.filter(drop => /防具|胸甲|鎧|甲|盾|護腕|套裝|翅膀|背部|座騎|坐騎|戒指|飾品/.test(String(drop))).map(drop => card('專屬裝備／飾品／座騎', esc(drop))))}</div>`,
       special: `<h4>🌟 特殊資料</h4><div class="ptk-detail-grid">${cards([m.specialTier ? card('特殊階級', esc(m.specialTier)) : '', m.visualNote ? card('圖像備註', esc(m.visualNote)) : '', m.jadeSealRingDrop ? card('特殊專屬物品', esc(`${m.jadeSealRingDrop.name}｜獨立掉落率 ${Number(m.jadeSealRingDrop.chance || 0) * 100}%`)) : '', m.bossPhases?.map(phase => card(`BOSS 階段｜${phase.name}`, esc(phase.description), phase.trigger)).join('')])}</div>`,
       drops: `<h4>📜 掉落規則</h4>${typeof getMonsterDropDisplay === 'function' ? `<div class="ptk-detail-drop-panel">${getMonsterDropDisplay(m, ZONE)}</div>` : `<div class="ptk-detail-empty">目前沒有掉落規則資料。</div>`}`
     };
-    const tabs = [['overview','📋 概要'],['battle','⚔️ 戰鬥'],['ability','📊 能力'],['defense','🛡️ 防禦'],['skills','✨ 技能'],['rewards','🎁 獎勵'],['weapon','⚔️ 武器'],['armor','🛡️ 防具／座騎'],['special','🌟 特殊'],['drops','📜 掉落規則']];
+    const tabs = [['overview','📋 概要'],['battle','⚔️ 戰鬥'],['ability','📊 能力'],['defense','🛡️ 防禦'],['skills','✨ 技能'],['rewards','🎁 獎勵'],['weapon','⚔️ 武器'],['armor','🛡️ 防具／飾品／座騎'],['special','🌟 特殊'],['drops','📜 掉落規則']];
     body.innerHTML = `<div class="ptk-detail-shell"><div class="ptk-detail-toolbar"><button class="modal-btn" onclick="${back}">← 返回平行三國</button><h3>⚔️ ${esc(m.name)}｜${typeName(m)}</h3><button class="modal-btn" onclick="closeModal()">關閉</button></div><div class="ptk-detail-hero"><div class="ptk-detail-art">${image ? `<img src="${esc(image)}" alt="${esc(m.name)}">` : esc(m.icon || '⚔️')}</div><div class="ptk-detail-summary"><div class="ptk-detail-badges"><span class="ptk-detail-badge">Lv. ${esc(level)}</span><span class="ptk-detail-badge ${kindClass}">${typeName(m)}</span><span class="ptk-detail-badge">${esc(m.attackType || '一般攻擊')}</span></div><p>${esc(m.description || '目前沒有額外說明。')}</p></div></div><div id="ptk-detail-tabs-root"><div class="ptk-detail-tabs" role="tablist">${tabs.map(([key,label], i) => `<button type="button" data-ptk-tab="${key}" aria-selected="${i === 0 ? 'true' : 'false'}" onclick="switchParallelBestiaryTab('${key}')">${label}</button>`).join('')}</div>${tabs.map(([key]) => `<section class="ptk-detail-page" data-ptk-page="${key}"${key === 'overview' ? '' : ' hidden'}>${pages[key]}</section>`).join('')}</div></div>`;
     body.className = 'parallel-three-kingdoms-bestiary-detail';
     body.dataset.modalType = 'parallel-three-kingdoms-bestiary-detail';
