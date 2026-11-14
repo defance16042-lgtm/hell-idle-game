@@ -8149,23 +8149,23 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                 makeVariant(2,{name:'深淵守衛',icon:'🛡️',type:'special',level:21,scale:2.05,attackType:'深淵重擊',attackSpeed:.72,encounterChance:1.5,
                     description:'守護空城古門的重甲魔像，會以沉重打擊震退挑戰者，生命降低後啟動大地脈衝。',
                     skills:[{name:'深淵重擊',phase:'normal',chance:.30,damageType:'physical',effect:'stun'},{name:'大地脈衝',phase:'lowHp',chance:.28,damageType:'magic',effect:'shock'}],
-                    setDropDescription:'特殊怪套裝掉落率 8%；四種職業套裝隨機掉落，部位隨機。'}),
+                    setDropDescription:'特殊怪套裝掉落率 4%；四種職業套裝隨機掉落，部位隨機。'}),
                 makeVariant(10,{name:'腐化螳魔',icon:'🦗',type:'special',level:22,scale:2.2,attackType:'腐蝕毒刺',attackSpeed:.84,encounterChance:1.2,
                     description:'受到古代魔力污染的巨型螳魔，鋒利前肢會施加腐蝕毒傷，瀕危時噴出腐化毒霧。',
                     skills:[{name:'腐蝕毒刺',phase:'normal',chance:.34,damageType:'physical',effect:'poison'},{name:'腐化毒霧',phase:'lowHp',chance:.30,damageType:'magic',effect:'poison'}],
-                    setDropDescription:'特殊怪套裝掉落率 8%；未收集部位較容易被抽中，但仍可能重複。'}),
+                    setDropDescription:'特殊怪套裝掉落率 4%；未收集部位較容易被抽中，但仍可能重複。'}),
                 makeVariant(4,{name:'暗翼魔將',icon:'🦇',type:'special',level:23,scale:2.35,attackType:'闇翼斬',attackSpeed:.9,encounterChance:.9,
                     description:'盤踞空城島的黑翼魔物，會以闇翼斬突襲，生命低於一半時施展黑翼連斬。',
                     skills:[{name:'闇翼斬',phase:'normal',chance:.32,damageType:'physical',effect:'bleed'},{name:'黑翼連斬',phase:'lowHp',chance:.34,damageType:'physical',effect:'bleed'}],
-                    setDropDescription:'特殊怪套裝掉落率 8%；套裝部位為稀有掉落，非必掉。'}),
+                    setDropDescription:'特殊怪套裝掉落率 4%；套裝部位為稀有掉落，非必掉。'}),
                 makeVariant(9,{name:'幽魂狼王',icon:'🐺',type:'special',level:23,scale:2.45,attackType:'幽魂狼襲',attackSpeed:.7,encounterChance:.8,
                     description:'由空城島怨氣凝聚而成的幽魂狼王，會以幽魂狼襲撲擊目標，瀕危時發出怨靈嚎叫。',
                     skills:[{name:'幽魂狼襲',phase:'normal',chance:.28,damageType:'physical',effect:'blast'},{name:'怨靈嚎叫',phase:'lowHp',chance:.35,damageType:'magic',effect:'fear'}],
-                    setDropDescription:'特殊怪套裝掉落率 8%；四種職業套裝隨機掉落，部位隨機。'}),
+                    setDropDescription:'特殊怪套裝掉落率 4%；四種職業套裝隨機掉落，部位隨機。'}),
                 makeVariant(1,{name:'骸骨龍王',icon:'🐉',type:'boss',level:26,scale:5.8,attackType:'龍王滅世吐息',attackSpeed:.82,encounterChance:.25,
                     description:'空城島最危險的古代龍王，能施展滅世吐息與骨龍召喚；生命低於一半後進入暴怒狀態，攻擊威力大幅提升。',
                     skills:[{name:'龍王滅世吐息',phase:'normal',chance:.36,damageType:'magic',attackRange:'ranged',effect:'blast'},{name:'骨龍召喚',phase:'lowHp',chance:.4,damageType:'physical',effect:'summon'},{name:'龍王暴怒',phase:'lowHp',chance:.25,damageType:'magic',effect:'enrage'}],
-                    setDropDescription:'BOSS 套裝掉落率 16%；四種職業套裝完全隨機掉落，未收集部位優先抽選。'})
+                    setDropDescription:'BOSS 套裝掉落率 8%；四種職業套裝完全隨機掉落，未收集部位優先抽選。'})
             );
             // 保留空城島原本所有普通怪，不要從原始地圖清除。
             // 只有「魔物首領窟」會在集合時篩選特殊怪與 BOSS；空城島本身仍保有完整怪物名單。
@@ -13306,7 +13306,7 @@ function getCombatVisualCycleDuration(actionPath) {
             const skillBookChance = m.type === 'boss' ? 20 : m.type === 'special' ? 10 : m.type === 'normal' ? 3 : 0;
             const skillBookLevelBand = `${Math.max(1, Number(m.level) - SKILL_BOOK_LEVEL_TOLERANCE)}–${Number(m.level) + SKILL_BOOK_LEVEL_TOLERANCE} 級`;
             const bestiaryBookCandidates = getClassSkills(currentPlayer).filter(skill => skill.level > 1 && skill.level <= (currentPlayer?.level || 1) && !new Set(currentPlayer?.learnedSkillIds || []).has(`${currentPlayer?.key}:${skill.level}`) && !hasSkillBookInInventory(currentPlayer, skill, currentPlayer?.key) && isSkillBookLevelMatch(skill, m));
-            const skillBookSources = skillBookChance ? `<div><b>📖 職業技能書掉落率：</b>${skillBookChance}%；本怪等級 ${Number(m.level) || 1}，僅抽選書本等級在 ${skillBookLevelBand} 範圍內、目前職業未習得且未持有的技能書。${bestiaryBookCandidates.length ? `<br><b>目前可掉落：</b>${bestiaryBookCandidates.map(skill => `Lv.${skill.level} ${skill.name}`).join('、')}` : '<br>目前沒有符合條件的技能書。'}<br><b>🛡️ 職業套裝掉落率：</b>${m.type === 'boss' ? 16 : m.type === 'special' ? 8 : 0}%；四職業隨機、部位隨機，有機會優先補足未收集部位。<br><span style="color:#c9a7ff;">技能書掉率：一般怪 3%、特殊怪 10%、BOSS 20%；技能書等級必須與怪物等級相差 5 級內；職業套裝僅特殊怪 8%、BOSS 16%，一般怪不掉職業套裝。</span></div>` : '';
+            const skillBookSources = skillBookChance ? `<div><b>📖 職業技能書掉落率：</b>${skillBookChance}%；本怪等級 ${Number(m.level) || 1}，僅抽選書本等級在 ${skillBookLevelBand} 範圍內、目前職業未習得且未持有的技能書。${bestiaryBookCandidates.length ? `<br><b>目前可掉落：</b>${bestiaryBookCandidates.map(skill => `Lv.${skill.level} ${skill.name}`).join('、')}` : '<br>目前沒有符合條件的技能書。'}<br><b>🛡️ 職業套裝掉落率：</b>${m.type === 'boss' ? 8 : m.type === 'special' ? 4 : 0}%；四職業隨機、部位隨機，有機會優先補足未收集部位。<br><span style="color:#c9a7ff;">技能書掉率：一般怪 3%、特殊怪 10%、BOSS 20%；技能書等級必須與怪物等級相差 5 級內；職業套裝僅特殊怪 8%、BOSS 16%，一般怪不掉職業套裝。</span></div>` : '';
             const criticalSummaryHtml = `<div><b>⚡ 暴擊能力：</b>怪物暴擊率 ${Math.round(bonuses.critical * 100)}%；角色的近距離、遠距離與魔法暴擊傷害抵減依戰鬥類型套用。</div>`;
             body.innerHTML = `
                 <div class="bestiary-nav"><button class="modal-btn" onclick="${detailBackAction}">← ${detailBackLabel}</button><button class="modal-btn" onclick="closeModal()">關閉圖鑑</button></div>
@@ -13325,7 +13325,7 @@ function getCombatVisualCycleDuration(actionPath) {
                         <div><b>遭遇機率:</b> ${m.type === 'training' ? '進入修練場後每 5 秒遭遇判定 100%' : `每 3 秒實際遭遇率 ${getMonsterActualEncounterChancePercent(m, zone).toFixed(2)}%（每次判定 75% × 成功遭遇後此怪抽中 ${getMonsterEncounterChancePercent(m, zone).toFixed(2)}%；先依區域分配怪物類型，再按同類權重抽選；不看角色或怪物等級差）`}</div>
                         <div><b>攻擊招式:</b> <span style="color:#ff6b6b;">${detailMonster.attackType}</span></div>
                          ${`<div><b>怪物說明:</b> <span style="color:#d8c6ff;">${escapeBestiaryHtml(getMonsterBestiaryDescription(m, zone))}</span></div>`}
-                         ${(m.type === 'boss' || m.type === 'special') ? `<div><b>🎁 全區域統一掉落規則：</b> <span style="color:#ffd27c;">${m.type === 'boss' ? 'BOSS：職業技能書 20%、職業套裝 16%' : '特殊怪：職業技能書 10%、職業套裝 8%'}；技能書只抽選怪物等級與書本等級相差 5 級內、目前職業尚未習得且未持有的技能；套裝為四職業隨機、部位隨機，有機會優先補足未收集部位。</span></div>` : ''}
+                         ${(m.type === 'boss' || m.type === 'special') ? `<div><b>🎁 全區域統一掉落規則：</b> <span style="color:#ffd27c;">${m.type === 'boss' ? 'BOSS：職業技能書 20%、職業套裝 8%' : '特殊怪：職業技能書 10%、職業套裝 4%'}；技能書只抽選怪物等級與書本等級相差 5 級內、目前職業尚未習得且未持有的技能；套裝為四職業隨機、部位隨機，有機會優先補足未收集部位。</span></div>` : ''}
                         ${((m.skills || m.magicSkills) || []).length ? `<div><b>特殊技能:</b> ${(m.skills || m.magicSkills).map(skill => getMonsterSkillSummary(m, skill)).join('；')}</div>` : ''}
                         ${getMonsterDefenseSkillsHtml(m)}
                         ${getMonsterDropDisplay(m, zone)}
@@ -16608,7 +16608,7 @@ function getCombatVisualCycleDuration(actionPath) {
             let dropText = '裝備、技能書、經驗與魂幣依各怪物原有掉落資料判定；請點選下方怪物查看個別掉落詳情。';
             if (zoneName === '暗火墓穴') dropText = '全區域統一：一般怪技能書 3%、特殊怪 10%、BOSS 20%；技能書僅從與怪物等級相差 5 級內且尚未習得／持有的技能抽選。套裝：特殊怪 8%、BOSS 16%；一般怪不掉職業套裝。';
              else if (zoneName === '海底深淵') dropText = '黑暗海底區域：技能書依怪物與書本等級相差 5 級內規則掉落（一般怪 3%、特殊怪 10%、BOSS 20%）；套裝特殊怪 8%、BOSS 16%。';
-            else if (zoneName === '空城島') dropText = '特殊怪套裝掉落率 8%、BOSS 套裝掉落率 16%；其他掉落保留各怪物原有設定。';
+            else if (zoneName === '空城島') dropText = '特殊怪套裝掉落率 4%、BOSS 套裝掉落率 8%；其他掉落保留各怪物原有設定。';
             else if (zoneName === '魔物首領窟') dropText = '第一層：原首領窟特殊怪套裝 8%、BOSS 套裝 16%；不包含海底深淵。';
             else if (zoneName === '魔物首領窟・第二層') dropText = '第二層副本：海底深淵與墮落天界特殊怪／BOSS 沿用各自原始掉落設定；九神龍依輪替遭遇規則掉落神龍套裝。';
 
@@ -23291,7 +23291,7 @@ body {
     let dropMarkup = '';
     try { if (typeof window.getMonsterDropDisplay === 'function') dropMarkup = window.getMonsterDropDisplay(monster, zone) || ''; } catch (_) {}
     const skillBookChance = monster.type === 'boss' ? 20 : monster.type === 'special' ? 10 : monster.type === 'normal' ? 3 : 0;
-    const setChance = monster.type === 'boss' ? 16 : monster.type === 'special' ? 8 : 0;
+    const setChance = monster.type === 'boss' ? 8 : monster.type === 'special' ? 4 : 0;
     const classDropMarkup = skillBookChance ? `<div class="dd-set-drop"><b>全區域職業掉落規則</b><p>職業技能書 ${skillBookChance}%（${monster.type === 'normal' ? '一般怪' : monster.type === 'special' ? '特殊怪' : 'BOSS'}）；職業套裝 ${setChance}%。僅抽選等級與此怪相差 5 級內、目前職業未習得且未持有的技能書；套裝為職業與部位隨機，依遊戲規則優先補足未收集部位。</p></div>` : '';
     const secondLayer = zone === SECOND;
     const backAction = secondLayer ? "__returnFromCaveMonsterDetailV1('second')" : "__returnFromCaveMonsterDetailV1('first')";
@@ -26205,6 +26205,9 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       ? '<div class="bv2-drop wing"><strong>套裝掉落補充</strong>' + esc(monster.setDropDescription) + '</div>'
       : '';
 
+    const setRuleHtml = monster.type === 'boss' || monster.type === 'special'
+      ? '<div class="bv2-drop wing"><strong>職業套裝隨機詞綴</strong>掉落率：BOSS 8%、特殊怪 4%；隨機職業與部位，82% 機率優先補足未收集部位。套裝會隨機生成職業專屬暴擊率、暴擊傷害與適性副詞綴；35% 機率附加 2–8% 元素傷害，另有 1% 致命暴擊詞綴、3% 強力暴擊詞綴。</div>'
+      : '';
     showBody('<div class="bv2-detail"><div class="bv2-toolbar">' +
       '<button class="modal-btn bv2-back" type="button" onclick="openBestiaryZoneV2(&quot;' + esc(zone) + '&quot;)">← ' + esc(zone) + '</button>' +
       '<span class="bv2-badges"><span class="bv2-badge level">' + (training ? '修練目標' : 'Lv.' + esc(monster.levelRange || monster.level || '—')) +
@@ -26219,7 +26222,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       '<section class="bv2-section"><h4>⚡ 戰鬥能力加成</h4><div class="bv2-stat-grid">' + bonusHtml + '</div></section>' +
       '<section class="bv2-section"><h4>⚔️ 戰鬥技能</h4><div class="bv2-skill-grid">' + skillHtml + '</div></section>' +
       defenseSkillHtml + phaseHtml +
-      '<section class="bv2-section"><h4>🎁 完整掉落資料</h4>' + dropHtml + setDropHtml +
+      '<section class="bv2-section"><h4>🎁 完整掉落資料</h4>' + dropHtml + setDropHtml + setRuleHtml +
       '<p class="bv2-note" style="margin:9px 0 0">此處整合怪物專屬掉落、一般裝備、技能書、職業套裝、強化卷軸與遊戲共用掉落規則；各項機率依實際戰鬥判定。</p></section>' +
       '</div>', 'bestiary-v2-detail');
   }
