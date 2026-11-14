@@ -14788,7 +14788,7 @@ function getCombatVisualCycleDuration(actionPath) {
                 <p>下一次強化成功率 ${successChance}%｜${isWeapon ? '安定值 +6' : '安定值 +4，成功時物防 +2、魔防 +1'}｜超過安定值後，失敗有 20% 機率不退化；每逢 +10、+20 等整十階段不會降級</p>
                 <p>可用${isWeapon ? '武器' : '防具'}強化卷：${scrollCount} 張｜本次優先使用：${bestScroll ? `${bestScroll.name}（成功率加成 +${bestScroll.bonus}%）` : '沒有可用卷軸'}</p>
                 ${equipped
-                    ? `<button class="modal-btn" onclick="${isWeapon ? `unequipWeapon();` : `unequipArmor('${item.slot}');`} ${from === 'inventory' ? 'closeModal(); renderInventory();' : `showEquipmentDetails('${kind}','${instanceId}','${from}')` }">卸下</button>`
+                    ? `<button class="modal-btn" onclick="${isWeapon ? `unequipWeapon();` : `unequipArmor('${item.slot}','${instanceId}');`} ${from === 'inventory' ? 'closeModal(); renderInventory();' : `showEquipmentDetails('${kind}','${instanceId}','${from}')` }">卸下</button>`
                     : `<button class="modal-btn" onclick="${isWeapon ? `equipWeapon('${instanceId}');` : `equipArmor('${instanceId}');`} ${from === 'inventory' ? 'closeModal(); renderInventory();' : `showEquipmentDetails('${kind}','${instanceId}','${from}')`}">裝備</button>`}
                 <div class="enhance-batch-control" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin:10px auto;padding:10px;border:1px solid #7a5a35;border-radius:9px;background:rgba(255,190,70,.07);">
                     <label style="font-weight:800;color:#ffe0a0;">自動強化次數</label>
@@ -14862,13 +14862,22 @@ function getCombatVisualCycleDuration(actionPath) {
             updateGameUI(); saveGame(); renderInventory();
         }
 
-        function unequipArmor(slotKey) {
+        function unequipArmor(slotKey, instanceId = '') {
             ensurePlayerArmor(currentPlayer);
             const slot = armorSlots.find(item => item.key === slotKey);
-            if (!slot) return;
-            currentPlayer.equipment[slot.equipmentKey] = null;
+            const isRingKey = ['ring', 'ringLeft', 'ringRight'].includes(String(slotKey || ''));
+            let equipmentKeys = slot?.equipmentKey ? [slot.equipmentKey] : [];
+            if (isRingKey) {
+                const ringKeys = slot?.equipmentKey ? [slot.equipmentKey] : ['leftRingId', 'rightRingId'];
+                equipmentKeys = ringKeys.filter(key => {
+                    const equippedId = currentPlayer.equipment?.[key];
+                    return !instanceId || String(equippedId ?? '') === String(instanceId);
+                });
+            }
+            if (!equipmentKeys.length) return;
+            equipmentKeys.forEach(key => { currentPlayer.equipment[key] = null; });
             clampPlayerResourcesToEffectiveMax(currentPlayer);
-            addBattleLog(`🛡️ 已卸下${slot.label}防具。`);
+            addBattleLog(`🛡️ 已卸下${isRingKey ? '戒指' : slot.label}防具。`);
             updateGameUI(); saveGame(); renderInventory();
         }
 
