@@ -28254,5 +28254,164 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   window.openBestiaryDetail = render;
 })();
 </script>
+<style id="all-regions-bestiary-detail-tabs-v2">
+  #modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px;
+    min-height: 0;
+  }
+  #modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root .ptk-detail-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+    gap: 6px;
+    margin: 0;
+    padding: 6px;
+    border: 1px solid #49375f;
+    border-radius: 9px;
+    background: #100d19;
+  }
+  #modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root .ptk-detail-tabs [role="tab"] {
+    min-width: 0;
+    min-height: 36px;
+    padding: 7px 8px;
+    border: 1px solid #4e4168;
+    border-radius: 7px;
+    background: #211832;
+    color: #d8c9f5;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.3;
+    white-space: normal;
+    cursor: pointer;
+  }
+  #modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root .ptk-detail-tabs [role="tab"]:hover,
+  #modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root .ptk-detail-tabs [role="tab"].active,
+  #modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root .ptk-detail-tabs [role="tab"][aria-selected="true"] {
+    border-color: #c59cff;
+    background: linear-gradient(135deg, #5a347c, #30245e);
+    color: #fff;
+    box-shadow: 0 0 9px rgba(176, 112, 255, .22);
+  }
+  #modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root .ptk-detail-tabs [role="tab"]:focus-visible {
+    outline: 2px solid #9cecff;
+    outline-offset: 2px;
+  }
+  #modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root [role="tabpanel"] {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 0;
+    max-height: min(62vh, 680px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 8px;
+    border: 1px solid rgba(197, 156, 255, .2);
+    border-radius: 8px;
+    background: rgba(15, 11, 23, .56);
+  }
+  #modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root [role="tabpanel"][hidden] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+  #modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root [role="tabpanel"]:not([hidden]) {
+    display: block !important;
+    visibility: visible !important;
+  }
+  @media (max-width: 720px) {
+    #modal-body.all-regions-bestiary-detail #ptk-detail-tabs-root .ptk-detail-tabs {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
+<script id="all-regions-bestiary-detail-tabs-v2">
+(() => {
+  'use strict';
+  if (window.__allRegionsBestiaryDetailTabsV2) return;
+  window.__allRegionsBestiaryDetailTabsV2 = true;
+
+  const getRoot = () => document.getElementById('ptk-detail-tabs-root');
+  const syncTabs = requestedKey => {
+    const root = getRoot();
+    if (!root) return;
+    const tablist = root.querySelector('.ptk-detail-tabs');
+    const buttons = [...root.querySelectorAll('[data-ptk-tab]')];
+    const pages = [...root.querySelectorAll('[data-ptk-page]')];
+    if (!buttons.length || !pages.length) return;
+    if (tablist) {
+      tablist.setAttribute('role', 'tablist');
+      tablist.setAttribute('aria-label', '怪物資訊分類');
+      tablist.setAttribute('aria-orientation', 'horizontal');
+    }
+
+    const activeKey = requestedKey ||
+      buttons.find(button => button.getAttribute('aria-selected') === 'true')?.dataset.ptkTab ||
+      buttons.find(button => button.classList.contains('active'))?.dataset.ptkTab ||
+      pages.find(page => !page.hidden)?.dataset.ptkPage ||
+      buttons[0].dataset.ptkTab;
+
+    buttons.forEach((button, index) => {
+      const key = button.dataset.ptkTab;
+      const active = key === activeKey;
+      const id = `bestiary-detail-tab-${key}`;
+      button.id = id;
+      button.setAttribute('role', 'tab');
+      button.setAttribute('aria-controls', `bestiary-detail-page-${key}`);
+      button.setAttribute('aria-selected', active ? 'true' : 'false');
+      button.tabIndex = active ? 0 : -1;
+      button.classList.toggle('active', active);
+      if (!button.dataset.tabsKeyboardBound) {
+        button.dataset.tabsKeyboardBound = 'true';
+        button.addEventListener('keydown', event => {
+          const currentButtons = [...(getRoot()?.querySelectorAll('[data-ptk-tab]') || [])];
+          const currentIndex = currentButtons.indexOf(event.currentTarget);
+          let nextIndex = currentIndex;
+          if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (currentIndex + 1) % currentButtons.length;
+          else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (currentIndex - 1 + currentButtons.length) % currentButtons.length;
+          else if (event.key === 'Home') nextIndex = 0;
+          else if (event.key === 'End') nextIndex = currentButtons.length - 1;
+          else return;
+          event.preventDefault();
+          const next = currentButtons[nextIndex];
+          next?.focus();
+          if (next) window.switchParallelBestiaryTab?.(next.dataset.ptkTab);
+        });
+      }
+    });
+
+    pages.forEach(page => {
+      const key = page.dataset.ptkPage;
+      const active = key === activeKey;
+      page.id = `bestiary-detail-page-${key}`;
+      page.setAttribute('role', 'tabpanel');
+      page.setAttribute('aria-labelledby', `bestiary-detail-tab-${key}`);
+      page.setAttribute('aria-hidden', active ? 'false' : 'true');
+      page.tabIndex = 0;
+      page.hidden = !active;
+      page.style.display = active ? 'block' : 'none';
+    });
+  };
+
+  const originalSwitch = window.switchParallelBestiaryTab;
+  if (typeof originalSwitch === 'function') {
+    window.switchParallelBestiaryTab = function(key, ...args) {
+      const result = originalSwitch.call(this, key, ...args);
+      syncTabs(String(key));
+      return result;
+    };
+  }
+
+  const originalOpen = window.openBestiaryDetail;
+  if (typeof originalOpen === 'function') {
+    window.openBestiaryDetail = function(...args) {
+      const result = originalOpen.apply(this, args);
+      syncTabs();
+      return result;
+    };
+  }
+})();
+</script>
 </body>
 </html>
