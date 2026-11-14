@@ -71,7 +71,7 @@
   }
 
   function monsterCards(entries) {
-    return entries.map(({ zone, monster }) => `<button type="button" class="b3-monster-card ${typeClass(monster)}" data-b3-zone="${esc(zone)}" data-b3-monster="${esc(monster.name)}"><span class="b3-monster-art">${monster.image ? `<img src="${esc(typeof window.resolveEmbeddedAsset === 'function' ? window.resolveEmbeddedAsset(monster.image) : monster.image)}" alt="${esc(monster.name)}" loading="lazy">` : icon(monster)}</span><span class="b3-monster-info"><strong>${esc(monster.name)}</strong><span><b>Lv.${esc(monster.levelRange || monster.level || '—')}</b>｜${typeName(monster)}</span><small>生命 ${fmt(monster.hp || monster.maxHp)}｜攻擊 ${fmt(monster.atk)}</small></span></button>`).join('');
+    return entries.map(({ zone, monster }) => `<button type="button" class="b3-monster-card ${typeClass(monster)}" data-b3-zone="${esc(zone)}" data-b3-monster="${esc(monster.name)}"><span class="b3-monster-art">${monster.image ? `<img src="${esc(typeof window.resolveEmbeddedAsset === 'function' ? window.resolveEmbeddedAsset(monster.image) : monster.image)}" alt="${esc(monster.name)}" loading="lazy">` : esc(monster.icon || icon(monster))}</span><span class="b3-monster-info"><strong>${esc(monster.name)}</strong><span><b>Lv.${esc(monster.levelRange || monster.level || '—')}</b>｜${typeName(monster)}</span><small>生命 ${fmt(monster.hp || monster.maxHp)}｜攻擊 ${fmt(monster.atk)}</small></span></button>`).join('');
   }
 
   function openZone(zone) {
@@ -104,17 +104,19 @@
   }
 
   function openDetail(zone, name) {
-    if (zone === '平行三國' && typeof legacyDetailByIndex === 'function' && typeof window.getBestiaryEntries === 'function') {
+    // 所有區域都沿用呂布所在「平行三國」的完整分頁詳情，而不是回到舊版三分頁卡片。
+    if (typeof legacyDetailByIndex === 'function' && typeof window.getBestiaryEntries === 'function') {
       const index = window.getBestiaryEntries().findIndex(entry => entry?.zone === zone && entry?.monster?.name === name);
       if (index >= 0) return legacyDetailByIndex(index);
     }
     if (typeof legacyDetail === 'function') return legacyDetail(zone, name);
-    if (typeof legacyDetailByIndex === 'function') return legacyDetailByIndex(zone, name);
   }
 
   window.openBestiaryTabsV3 = openHome;
   window.openBestiaryV2 = openHome;
   window.openBestiary = openHome;
+  // 詳情分頁內的「返回區域」按鈕會呼叫這個名稱，需回到新版橫式圖鑑入口。
+  window.openBestiaryZone = openZone;
   window.openBestiaryZoneV2 = openZone;
   window.openBestiaryDetailV2 = openDetail;
 })();
