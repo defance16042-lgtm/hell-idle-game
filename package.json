@@ -1,6 +1,6 @@
 {
   "name": "hell-idle-game",
-  "version": "1.0.61",
+  "version": "1.0.62",
   "description": "地獄養成放置版",
   "main": "electron/main.js",
   "author": "defance16042-lgtm",
