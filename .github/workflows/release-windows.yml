@@ -2,20 +2,14 @@ name: Build and release Windows installer
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*.*.*'
   workflow_dispatch:
-    inputs:
-      release_tag:
-        description: '要發布的 Git tag，例如 v1.0.5'
-        required: true
-        default: 'v1.0.5'
 
 permissions:
   contents: write
-
-env:
-  RELEASE_TAG: ${{ github.event.inputs.release_tag || github.ref_name }}
 
 jobs:
   build-windows:
@@ -24,7 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.RELEASE_TAG }}
+          ref: ${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -35,17 +29,48 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Windows installer
+      - name: Validate release version
+        shell: pwsh
+        run: |
+          $packageVersion = (node -p "require('./package.json').version").Trim()
+          $metadata = Get-Content version.json -Raw | ConvertFrom-Json
+          if ($metadata.version -ne $packageVersion) {
+            throw "版本不一致：package.json=$packageVersion，version.json=$($metadata.version)"
+          }
+          if ("$env:GITHUB_REF" -like "refs/tags/*") {
+            $tag = "$env:GITHUB_REF_NAME"
+          } else {
+            $tag = "v$packageVersion"
+          }
+          "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "準備發布 $tag"
+
+      - name: Create version tag when publishing from main
+        if: github.ref_type != 'tag'
+        shell: pwsh
+        run: |
+          gh api "repos/$env:GITHUB_REPOSITORY/git/ref/tags/$env:RELEASE_TAG" --jq '.ref' 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh api --method POST "repos/$env:GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$env:RELEASE_TAG" -f "sha=$env:GITHUB_SHA"
+            if ($LASTEXITCODE -ne 0) { throw "建立 $env:RELEASE_TAG 標籤失敗" }
+          } else {
+            Write-Host "標籤 $env:RELEASE_TAG 已存在"
+          }
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Windows installer and updater metadata
         run: npm run dist:win -- --publish never
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Ensure GitHub Release exists
+      - name: Ensure published GitHub Release exists
         shell: pwsh
         run: |
           gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY 2>$null
           if ($LASTEXITCODE -ne 0) {
             gh release create $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --title $env:RELEASE_TAG --notes "Windows installer $env:RELEASE_TAG"
+            if ($LASTEXITCODE -ne 0) { throw "建立 GitHub Release $env:RELEASE_TAG 失敗" }
           }
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -55,16 +80,20 @@ jobs:
         run: |
           $assets = gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json assets --jq '.assets[].name' 2>$null
           foreach ($asset in $assets) {
-            if ($asset) { gh release delete-asset $env:RELEASE_TAG $asset --repo $env:GITHUB_REPOSITORY --yes }
+            if ($asset) {
+              gh release delete-asset $env:RELEASE_TAG $asset --repo $env:GITHUB_REPOSITORY --yes
+              if ($LASTEXITCODE -ne 0) { throw "刪除舊發布檔 $asset 失敗" }
+            }
           }
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload installer to GitHub Release
+      - name: Upload installer and auto-update metadata
         shell: pwsh
         run: |
           $files = Get-ChildItem -Path release -File | Where-Object { $_.Extension -in '.exe', '.blockmap', '.yml' } | ForEach-Object { $_.FullName }
-          if (-not $files) { throw '找不到 Windows 安裝包輸出檔' }
+          if (-not $files) { throw '找不到 Windows 安裝包或自動更新 metadata' }
           gh release upload $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --clobber $files
+          if ($LASTEXITCODE -ne 0) { throw "上傳 $env:RELEASE_TAG 發布檔失敗" }
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
