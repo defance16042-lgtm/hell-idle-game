@@ -28584,5 +28584,38 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 </script>
   <link rel="stylesheet" href="scripts/bestiary-tabs-v3.css">
   <script src="scripts/bestiary-tabs-v3.js"></script>
+<style id="hell-shop-final-scroll-fix-v2">
+/* 雜貨鋪內容很長時，固定彈窗視窗高度，讓內部可以用滾輪／觸控往下瀏覽。 */
+#modal-window:has(#modal-body .shop-buy-grid) {
+  align-items: flex-start !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  overflow: hidden !important;
+  touch-action: pan-y !important;
+}
+#modal-body:has(.shop-buy-grid) {
+  display: block !important;
+  box-sizing: border-box !important;
+  width: min(1480px, 96vw) !important;
+  max-width: min(1480px, 96vw) !important;
+  height: calc(100dvh - 32px) !important;
+  max-height: calc(100dvh - 32px) !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: scroll !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  scrollbar-width: auto !important;
+  scrollbar-color: #c69a68 rgba(20, 12, 10, .96) !important;
+}
+#modal-body:has(.shop-buy-grid)::-webkit-scrollbar { width: 14px !important; display: block !important; }
+#modal-body:has(.shop-buy-grid)::-webkit-scrollbar-track { background: rgba(20, 12, 10, .96) !important; }
+#modal-body:has(.shop-buy-grid)::-webkit-scrollbar-thumb { background: linear-gradient(#e2bd85, #9b7045) !important; border: 2px solid rgba(20, 12, 10, .96) !important; border-radius: 10px !important; }
+@media (max-width: 700px) {
+  #modal-window:has(#modal-body .shop-buy-grid) { padding: 8px !important; }
+  #modal-body:has(.shop-buy-grid) { width: 100% !important; max-width: 100% !important; height: calc(100dvh - 16px) !important; max-height: calc(100dvh - 16px) !important; padding: 16px !important; }
+}
+</style>
 </body>
 </html>
