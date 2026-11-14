@@ -14929,7 +14929,6 @@ function getCombatVisualCycleDuration(actionPath) {
             body.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px;"><h3 style="margin:0;">📦 職業共通倉庫</h3><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end;"><small style="color:#d8b78a;">自動分類排列，不會丟棄物品</small><button class="modal-btn" style="margin:0;" onclick="sortWarehouseItems()">整理倉庫</button><button class="modal-btn" style="margin:0;" onclick="closeModal()">離開</button></div></div><div class="warehouse-horizontal-layout"><section class="warehouse-pane"><strong class="warehouse-pane-title">背包可存入｜每頁 8 × 8 格（64 格）</strong><div class="warehouse-source-grid">${visibleWarehouseSource.join('')}</div>${gridPageControls('warehouse-source', warehouseSourceGridPage, warehouseSourceTotalPages)}</section><section class="warehouse-pane"><strong class="warehouse-pane-title">共通倉庫內容｜8 × 8 格（每頁 64 格）</strong><div class="warehouse-storage-grid">${visibleStorageRows.join('')}</div>${gridPageControls('warehouse-storage', warehouseStorageGridPage, warehouseStorageTotalPages)}</section></div>`;
             body.classList.add('warehouse-horizontal-modal');
             document.getElementById('modal-window').style.display = 'flex';
-            if (typeof setupWarehouseResizeHandle === 'function') setupWarehouseResizeHandle();
             if (typeof setupWarehouseGameTooltips === 'function') setupWarehouseGameTooltips();
         }
 
@@ -17376,70 +17375,9 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
 
 
 
-<script id="warehouse-resize-and-tooltip-fix">
+<script id="warehouse-tooltip-fix">
 (function(){
   const body = () => document.getElementById('modal-body');
-  let resizeObserver=null;
-  let windowResizeBound=false;
-  function updateWarehouseGridSize(){
-    const panel=body();
-    if(!panel?.classList.contains('warehouse-horizontal-modal'))return;
-    panel.querySelectorAll('.warehouse-pane').forEach(pane=>{
-      const grid=pane.querySelector('.warehouse-source-grid,.warehouse-storage-grid');
-      if(!grid)return;
-      const title=pane.querySelector('.warehouse-pane-title');
-      const pager=pane.querySelector('.grid-page-controls');
-      const style=getComputedStyle(pane);
-      const paddingX=(parseFloat(style.paddingLeft)||0)+(parseFloat(style.paddingRight)||0);
-      const paddingY=(parseFloat(style.paddingTop)||0)+(parseFloat(style.paddingBottom)||0);
-      const availableWidth=Math.max(140,pane.clientWidth-paddingX-16);
-      const availableHeight=Math.max(140,pane.clientHeight-(title?.offsetHeight||0)-(pager?.offsetHeight||0)-paddingY-34);
-      const size=Math.max(120,Math.round(Math.min(availableWidth,availableHeight)));
-      grid.style.setProperty('--warehouse-grid-size',`${size}px`);
-    });
-  }
-  window.setupWarehouseResizeHandle = function(){
-    const panel=body();
-    if(!panel?.classList.contains('warehouse-horizontal-modal'))return;
-    let grip=panel.querySelector('#warehouse-resize-grip');
-    if(!grip){
-      grip=document.createElement('button');
-      grip.id='warehouse-resize-grip';
-      grip.className='warehouse-resize-grip';
-      grip.type='button';
-      grip.textContent='↘';
-      grip.title='拖曳調整倉庫視窗大小';
-      grip.setAttribute('aria-label','拖曳調整倉庫視窗大小');
-      let drag=null;
-      grip.addEventListener('pointerdown',event=>{
-        event.preventDefault();
-        const rect=panel.getBoundingClientRect();
-        drag={pointerId:event.pointerId,x:event.clientX,y:event.clientY,width:rect.width,height:rect.height};
-        try{grip.setPointerCapture(event.pointerId);}catch(_){}
-      });
-      grip.addEventListener('pointermove',event=>{
-        if(!drag||event.pointerId!==drag.pointerId)return;
-        const maxWidth=Math.max(280,window.innerWidth-20),maxHeight=Math.max(280,window.innerHeight-20);
-        const width=clamp(drag.width+event.clientX-drag.x,Math.min(720,maxWidth),maxWidth);
-        const height=clamp(drag.height+event.clientY-drag.y,Math.min(500,maxHeight),maxHeight);
-        panel.style.setProperty('--warehouse-modal-width',`${Math.round(width)}px`);
-        panel.style.setProperty('--warehouse-modal-height',`${Math.round(height)}px`);
-        updateWarehouseGridSize();
-      });
-      const endDrag=event=>{if(drag&&event.pointerId===drag.pointerId)drag=null;};
-      grip.addEventListener('pointerup',endDrag);
-      grip.addEventListener('pointercancel',endDrag);
-      panel.appendChild(grip);
-    }
-    if(resizeObserver)resizeObserver.disconnect();
-    if(typeof ResizeObserver==='function'){
-      resizeObserver=new ResizeObserver(updateWarehouseGridSize);
-      resizeObserver.observe(panel);
-      panel.querySelectorAll('.warehouse-pane').forEach(pane=>resizeObserver.observe(pane));
-    }
-    if(!windowResizeBound){window.addEventListener('resize',updateWarehouseGridSize);windowResizeBound=true;}
-    if(typeof requestAnimationFrame==='function')requestAnimationFrame(updateWarehouseGridSize);else updateWarehouseGridSize();
-  };
   window.setupWarehouseGameTooltips = function(){
     const panel=body(); if(!panel)return;
     /* 裝備能力只使用遊戲內自訂提示框，不讓瀏覽器原生 title 提示框重複跳出。 */
@@ -27534,13 +27472,12 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 /* 倉庫：避免固定方格把頁碼導覽擠出容器；格子縮放與視窗拖曳共用同一個可用空間。 */
 #modal-body.warehouse-horizontal-modal {
   position:relative!important; box-sizing:border-box!important;
-  width:var(--warehouse-modal-width,min(1100px,92vw))!important;
+  width:min(1100px,92vw)!important;
   max-width:calc(100vw - 20px)!important; min-width:min(720px,calc(100vw - 20px))!important;
-  height:var(--warehouse-modal-height,min(760px,86vh))!important;
+  height:min(760px,86vh)!important;
   max-height:calc(100vh - 20px)!important; min-height:min(500px,calc(100vh - 20px))!important;
-  overflow:hidden!important; padding:10px 12px 30px!important;
+  overflow:hidden!important; padding:10px 12px!important;
 }
-#modal-body.warehouse-horizontal-modal > div:first-child { padding-right:28px!important; }
 #modal-body.warehouse-horizontal-modal .warehouse-horizontal-layout {
   height:calc(100% - 90px)!important; min-height:0!important; gap:9px!important;
   grid-template-columns:repeat(2,minmax(0,1fr))!important; overflow:hidden!important;
@@ -27571,8 +27508,6 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   border-radius:0 0 7px 7px; background:linear-gradient(180deg,rgba(18,14,17,.88),rgba(18,14,17,.98));
 }
 #modal-body.warehouse-horizontal-modal .grid-page-controls strong { white-space:nowrap; font-variant-numeric:tabular-nums; }
-.warehouse-resize-grip { position:absolute!important; right:3px!important; bottom:3px!important; z-index:12!important; display:grid!important; place-items:center!important; width:25px!important; height:25px!important; padding:0!important; border:1px solid #bd955b!important; border-radius:6px 2px 8px 2px!important; background:linear-gradient(145deg,#493427,#211a1b)!important; color:#ffe0a3!important; box-shadow:0 2px 8px #0008!important; cursor:nwse-resize!important; touch-action:none!important; }
-.warehouse-resize-grip:hover { border-color:#ffe0a3!important; filter:brightness(1.18); }
 /* 攻擊飛斬橫越戰場，VS 標籤固定顯示在特效覆層上方。 */
 #battle-stage:has(.parallel-generals-slash-frames) > #battle-vs-text { position:relative!important; z-index:95!important; }
 @media(max-width:760px) {
