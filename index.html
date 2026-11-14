@@ -27772,5 +27772,91 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   };
 })();
 </script>
+<style id="parallel-three-kingdoms-bestiary-detail-v1">
+#modal-body.parallel-three-kingdoms-bestiary-detail{max-width:min(1180px,96vw)!important;width:100%!important;box-sizing:border-box!important;padding:16px 18px!important;background:linear-gradient(145deg,#171225,#0d0b14)!important;color:#eee8ff!important;overflow:hidden!important}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-shell{display:flex;flex-direction:column;min-height:0;max-height:calc(90vh - 20px)}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-toolbar h3{margin:0;color:#f7d58a;font-size:21px}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-hero{display:grid;grid-template-columns:170px minmax(0,1fr);gap:14px;align-items:stretch;margin-bottom:10px;min-height:150px}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-art{display:flex;align-items:center;justify-content:center;min-height:150px;border:1px solid #4a3b62;border-radius:10px;background:radial-gradient(circle,#352451,#100d18 72%);overflow:hidden;font-size:64px}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-art img{width:100%;height:100%;max-height:210px;object-fit:contain}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-summary{min-width:0;padding:10px 12px;border:1px solid #3e3453;border-radius:10px;background:#13111d;line-height:1.65}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-summary p{margin:7px 0;color:#c8bed4;overflow-wrap:anywhere}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-badges{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:5px}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-badge{padding:3px 8px;border-radius:999px;background:#263b4d;color:#8fe8ff;font-size:11px;font-weight:800}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-badge.special{background:#4a2c62;color:#ebb5ff}.ptk-detail-badge.boss{background:#5c2d38;color:#ffd08a}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;margin:0 0 9px;padding:6px;border:1px solid #49375f;border-radius:9px;background:#100d19}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-tabs button{min-width:0;min-height:34px;padding:6px 5px;border:1px solid #4e4168;border-radius:6px;background:#211832;color:#d8c9f5;font-weight:800;font-size:12px;cursor:pointer;white-space:nowrap}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-tabs button:hover,#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-tabs button.active{color:#fff;border-color:#c59cff;background:linear-gradient(135deg,#5a347c,#30245e);box-shadow:0 0 9px rgba(176,112,255,.22)}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-page{min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 3px 12px;scrollbar-width:thin}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-page[hidden]{display:none}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-card{min-width:0;padding:10px 11px;border:1px solid #3e3453;border-radius:8px;background:linear-gradient(145deg,#211b2c,#15121e);color:#d8cde5;font-size:13px;line-height:1.6;overflow-wrap:anywhere}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-card strong{display:block;margin-bottom:3px;color:#fff0b4;font-size:13px}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-card small{display:block;color:#a99fbd;font-size:11px;line-height:1.5}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-page h4{margin:2px 0 8px;color:#f5d88d;font-size:15px;border-bottom:1px solid #332946;padding-bottom:6px}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-empty{padding:18px 12px;border:1px dashed #5b4d73;border-radius:8px;color:#aaa0b7;text-align:center}
+#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-drop-panel{margin:0!important;padding:10px!important;border-color:#4a3b62!important}
+@media(max-width:700px){#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-hero{grid-template-columns:1fr}.ptk-detail-art{max-height:210px}#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}#modal-body.parallel-three-kingdoms-bestiary-detail .ptk-detail-grid{grid-template-columns:1fr}}
+</style>
+<script id="parallel-three-kingdoms-bestiary-detail-v1">
+(() => {
+  'use strict';
+  if (window.__parallelThreeKingdomsBestiaryDetailV1) return;
+  window.__parallelThreeKingdomsBestiaryDetailV1 = true;
+  const ZONE = '平行三國';
+  const previousDetail = window.openBestiaryDetail;
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  const fmt = value => Number(value || 0).toLocaleString('en-US');
+  const typeName = m => m?.type === 'boss' ? 'BOSS' : m?.type === 'special' ? '特殊怪' : m?.type === 'training' ? '修練目標' : '一般怪';
+  const statLabels = {str:'力量', dex:'敏捷', con:'體質', wis:'精神', int:'智力', cha:'魅力'};
+  const openTab = tab => {
+    const root = document.getElementById('ptk-detail-tabs-root');
+    if (!root) return;
+    root.querySelectorAll('[data-ptk-tab]').forEach(button => {
+      const active = button.dataset.ptkTab === tab;
+      button.classList.toggle('active', active);
+      button.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+    root.querySelectorAll('[data-ptk-page]').forEach(page => { page.hidden = page.dataset.ptkPage !== tab; });
+  };
+  window.switchParallelBestiaryTab = openTab;
+  const card = (label, value, note = '') => `<div class="ptk-detail-card"><strong>${esc(label)}</strong><span>${value}</span>${note ? `<small>${esc(note)}</small>` : ''}</div>`;
+  const cards = list => list.filter(Boolean).join('') || '<div class="ptk-detail-empty">這個分類目前沒有額外資料。</div>';
+  const render = index => {
+    const entry = typeof getBestiaryEntries === 'function' ? getBestiaryEntries()[index] : null;
+    if (!entry || entry.zone !== ZONE) return typeof previousDetail === 'function' ? previousDetail.call(window, index) : undefined;
+    const m = entry.monster || {};
+    const body = document.getElementById('modal-body'), modal = document.getElementById('modal-window');
+    if (!body || !modal) return;
+    const image = m.image ? resolveEmbeddedAsset(m.image) : '';
+    const kindClass = m.type === 'boss' ? 'boss' : m.type === 'special' ? 'special' : '';
+    const stats = m.baseStats || {};
+    const bonuses = m.bonusStats || {};
+    const skills = [...(m.skills || []), ...(m.magicSkills || [])].filter(skill => skill?.name);
+    const customDrops = [...(Array.isArray(m.uniqueDrops) ? m.uniqueDrops : []), ...(Array.isArray(m.dropTable) ? m.dropTable : [])].filter(Boolean);
+    const level = m.levelRange || m.level || '—';
+    const back = `openBestiaryZone('${ZONE}')`;
+    const pages = {
+      overview: `<h4>📋 怪物概要</h4><div class="ptk-detail-grid">${cards([card('區域', ZONE), card('等級／類型', `Lv. ${esc(level)}｜${typeName(m)}`), card('怪物說明', esc(m.description || '目前沒有額外說明。')), card('攻擊方式', esc(m.attackType || '一般攻擊'), `${m.attackRange || 'melee'}｜${m.damageType || 'physical'}`)])}</div>`,
+      battle: `<h4>⚔️ 戰鬥資料</h4><div class="ptk-detail-grid">${cards([card('生命值', `${fmt(m.hp || m.maxHp)} / ${fmt(m.maxHp || m.hp)}`), card('攻擊力／攻速', `${fmt(m.atk)}｜${esc(m.attackSpeed || '—')} 次／秒`), card('經驗／魂幣', `${fmt(m.exp)}｜${fmt(m.gold)}`), card('遭遇權重', `${esc(m.encounterChance ?? '—')}%`), card('戰鬥加成', `攻擊 +${fmt(bonuses.attack)}｜物防 +${fmt(bonuses.defense)}｜魔防 +${fmt(bonuses.magicDefense)}`), card('暴擊／迴避', `${Math.round(Number(bonuses.critical || 0) * 100)}%｜${Math.round(Number(bonuses.evasion || m.evasion || 0) * 100)}%`)])}</div>`,
+      ability: `<h4>📊 六大能力</h4><div class="ptk-detail-grid">${cards(Object.entries(statLabels).map(([key,label]) => card(label, fmt(stats[key]))))}</div>`,
+      defense: `<h4>🛡️ 防禦資料</h4><div class="ptk-detail-grid">${cards([card('物理防禦', fmt(m.def)), card('魔法防禦', fmt(m.magicDefense)), card('防禦原型', esc(typeof getMonsterDefenseArchetype === 'function' ? getMonsterDefenseArchetype(m).label : '依戰鬥規則判定')), card('防禦技能', (m.defenseSkills || []).map(skill => esc(skill.name || skill)).join('、') || '沒有額外防禦技能')])}</div>`,
+      skills: `<h4>✨ 技能與招式</h4><div class="ptk-detail-grid">${cards(skills.map(skill => card(skill.name, `${esc(skill.phase || 'normal')}｜${esc(skill.damageType || 'physical')}｜發動 ${Math.round(Number(skill.chance || 0) * 100)}%`, skill.description || skill.effect || `倍率 ${skill.powerMultiplier || 1}`)))}</div>`,
+      rewards: `<h4>🎁 獎勵</h4><div class="ptk-detail-grid">${cards([card('擊敗獎勵', `經驗 ${fmt(m.exp)}｜魂幣 ${fmt(m.gold)}`), card('一般補給', '補血藥水｜8%'), card('品質規則', typeName(m) === 'BOSS' ? 'BOSS 裝備與套裝依獨立機率判定。' : typeName(m) === '特殊怪' ? '特殊怪裝備與套裝依獨立機率判定。' : '一般怪依一般掉落規則判定。')])}</div>`,
+      weapon: `<h4>⚔️ 武器</h4><div class="ptk-detail-grid">${cards(customDrops.filter(drop => /武器|刀|槍|弓|斧|杖|刃/.test(String(drop))).map(drop => card('專屬／相關武器', esc(drop))))}</div>`,
+      armor: `<h4>🛡️ 防具</h4><div class="ptk-detail-grid">${cards(customDrops.filter(drop => /防具|胸甲|鎧|甲|盾|護腕|套裝|翅膀|背部/.test(String(drop))).map(drop => card('專屬／相關防具', esc(drop))))}</div>`,
+      special: `<h4>🌟 特殊資料</h4><div class="ptk-detail-grid">${cards([m.specialTier ? card('特殊階級', esc(m.specialTier)) : '', m.visualNote ? card('圖像備註', esc(m.visualNote)) : '', m.jadeSealRingDrop ? card('特殊專屬物品', esc(`${m.jadeSealRingDrop.name}｜獨立掉落率 ${Number(m.jadeSealRingDrop.chance || 0) * 100}%`)) : '', m.bossPhases?.map(phase => card(`BOSS 階段｜${phase.name}`, esc(phase.description), phase.trigger)).join('')])}</div>`,
+      drops: `<h4>📜 掉落規則</h4>${typeof getMonsterDropDisplay === 'function' ? `<div class="ptk-detail-drop-panel">${getMonsterDropDisplay(m, ZONE)}</div>` : `<div class="ptk-detail-empty">目前沒有掉落規則資料。</div>`}`
+    };
+    const tabs = [['overview','📋 概要'],['battle','⚔️ 戰鬥'],['ability','📊 能力'],['defense','🛡️ 防禦'],['skills','✨ 技能'],['rewards','🎁 獎勵'],['weapon','⚔️ 武器'],['armor','🛡️ 防具'],['special','🌟 特殊'],['drops','📜 掉落規則']];
+    body.innerHTML = `<div class="ptk-detail-shell"><div class="ptk-detail-toolbar"><button class="modal-btn" onclick="${back}">← 返回平行三國</button><h3>⚔️ ${esc(m.name)}｜${typeName(m)}</h3><button class="modal-btn" onclick="closeModal()">關閉</button></div><div class="ptk-detail-hero"><div class="ptk-detail-art">${image ? `<img src="${esc(image)}" alt="${esc(m.name)}">` : esc(m.icon || '⚔️')}</div><div class="ptk-detail-summary"><div class="ptk-detail-badges"><span class="ptk-detail-badge">Lv. ${esc(level)}</span><span class="ptk-detail-badge ${kindClass}">${typeName(m)}</span><span class="ptk-detail-badge">${esc(m.attackType || '一般攻擊')}</span></div><p>${esc(m.description || '目前沒有額外說明。')}</p></div></div><div id="ptk-detail-tabs-root"><div class="ptk-detail-tabs" role="tablist">${tabs.map(([key,label], i) => `<button type="button" data-ptk-tab="${key}" aria-selected="${i === 0 ? 'true' : 'false'}" onclick="switchParallelBestiaryTab('${key}')">${label}</button>`).join('')}</div>${tabs.map(([key]) => `<section class="ptk-detail-page" data-ptk-page="${key}"${key === 'overview' ? '' : ' hidden'}>${pages[key]}</section>`).join('')}</div></div>`;
+    body.className = 'parallel-three-kingdoms-bestiary-detail';
+    body.dataset.modalType = 'parallel-three-kingdoms-bestiary-detail';
+    modal.style.display = 'flex';
+  };
+  window.openBestiaryDetail = render;
+})();
+</script>
 </body>
 </html>
