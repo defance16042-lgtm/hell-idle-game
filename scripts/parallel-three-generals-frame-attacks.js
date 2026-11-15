@@ -253,14 +253,23 @@
     const poseDuration = 1150;
     const drawPose = now => {
       if (!sprite.isConnected || poseRunId !== yuanmenPoseRunId) {
-        sprite.style.removeProperty('transform');
-        sprite.style.removeProperty('transform-origin');
+        if (sprite.isConnected) {
+          sprite.style.removeProperty('transform');
+          sprite.style.removeProperty('transform-origin');
+        }
         yuanmenPoseRaf = 0;
         return;
       }
-      setYuanmenBowPose(sprite, (now - poseStarted) / poseDuration);
-      if (now - poseStarted < poseDuration) yuanmenPoseRaf = requestAnimationFrame(drawPose);
-      else yuanmenPoseRaf = 0;
+      const progress = (now - poseStarted) / poseDuration;
+      setYuanmenBowPose(sprite, progress);
+      if (progress < 1) {
+        yuanmenPoseRaf = requestAnimationFrame(drawPose);
+      } else {
+        // 動作結束後清除姿勢覆寫，避免影響後續受擊、移動或下一次攻擊動畫。
+        sprite.style.removeProperty('transform');
+        sprite.style.removeProperty('transform-origin');
+        yuanmenPoseRaf = 0;
+      }
     };
     yuanmenPoseRaf = requestAnimationFrame(drawPose);
     if (!yuanmenCanvas || yuanmenCanvas.parentElement !== stage) {
@@ -352,10 +361,18 @@
   const previous = window.playParallelThreeKingdomsBossAttackStoryboard;
   window.playParallelThreeKingdomsBossAttackStoryboard = (name, skillName) => {
     const cleanName = String(name || '').trim();
-    const currentPhase2 = window.__parallelLuBuPhase2Active || (() => {
-      try { return typeof currentMonster !== 'undefined' && currentMonster?.name === '呂布' && currentMonster?._parallelLuBuPhase === 2; } catch (_) { return false; }
+    const skill = String(skillName || '').trim();
+    const currentPhase2 = window.__parallelLuBuPhase2Active === true || (() => {
+      try {
+        return typeof currentMonster !== 'undefined'
+          && currentMonster?.name === '呂布'
+          && (Number(currentMonster?._parallelLuBuPhase) === 2
+            || currentMonster?.attackType === '轅門射戟'
+            || currentMonster?.basicAttackName === '轅門射戟');
+      } catch (_) { return false; }
     })();
-    if (cleanName === '呂布' && currentPhase2) return playLuBuYuanmenShootingVfx();
+    // 技能名稱作第二層保險：即使階段旗標短暫未同步，也不能把弓將大招播成方天斬。
+    if (cleanName === '呂布' && (currentPhase2 || skill.includes('轅門射戟'))) return playLuBuYuanmenShootingVfx();
     const definition = definitionByName.get(cleanName);
     if (definition) return playFrameSequence(definition);
     return previous?.(name, skillName) || false;
