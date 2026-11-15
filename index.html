@@ -28820,7 +28820,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   ];
   function enhance(){
     const body=document.getElementById('modal-body');
-    if(!body||!body.querySelector('.shop-buy-grid')||body.querySelector('.shop-tab-shell'))return;
+    if(!body||!body.querySelector('.shop-buy-grid')||body.querySelector('.shop-tab-shell')||body.querySelector('.shop-tabs')||body.querySelector('.shop-tab-pane'))return;
     const children=Array.from(body.children);
     const title=children.find(el=>el.tagName==='H3');
     const currency=children.find(el=>el.tagName==='P'&&el.textContent.includes('魂幣'));
