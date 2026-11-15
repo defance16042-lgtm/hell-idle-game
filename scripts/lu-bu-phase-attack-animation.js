@@ -47,7 +47,12 @@
 
     clearAnimation();
     const id = ++runId;
-    const phase2 = Number(monster._parallelLuBuPhase) === 2 || window.__parallelLuBuPhase2Active === true;
+    const requestedAttack = String(attackName || '').trim();
+    const phase2 = Number(monster._parallelLuBuPhase) === 2
+      || window.__parallelLuBuPhase2Active === true
+      || monster.attackType === '轅門射戟'
+      || monster.basicAttackName === '轅門射戟'
+      || requestedAttack.includes('轅門射戟');
     const root = makeRoot(stage);
     activeRoot = root;
     activeSprite = sprite;
