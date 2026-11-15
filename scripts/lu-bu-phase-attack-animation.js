@@ -42,12 +42,17 @@
     if (!monster || monster.name !== '呂布') return false;
     const icon = document.querySelector('#monster-icon');
     const sprite = icon?.querySelector('.monster-sprite');
-    const stage = icon?.closest('.battle-stage');
+    const stage = icon?.closest('.battle-stage') || document.getElementById('battle-stage');
     if (!sprite || !stage) return false;
 
     clearAnimation();
     const id = ++runId;
-    const phase2 = Number(monster._parallelLuBuPhase) === 2 || window.__parallelLuBuPhase2Active === true;
+    const requestedAttack = String(attackName || '').trim();
+    const phase2 = Number(monster._parallelLuBuPhase) === 2
+      || window.__parallelLuBuPhase2Active === true
+      || monster.attackType === '轅門射戟'
+      || monster.basicAttackName === '轅門射戟'
+      || requestedAttack.includes('轅門射戟');
     const root = makeRoot(stage);
     activeRoot = root;
     activeSprite = sprite;

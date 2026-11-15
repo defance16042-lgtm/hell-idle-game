@@ -234,8 +234,8 @@
       })() ||
       skill.includes('轅門射戟')
     );
-    // 第二階段只保留目前的呂布站立圖，不切換弓將圖，也不播放弓箭分鏡。
-    if (isLuBuPhase2) return true;
+    // 第二階段交由前置載入的呂布專用動畫處理器播放；不可只回報 true，否則畫面不會有動畫。
+    if (isLuBuPhase2) return typeof previous === 'function' ? previous(name, skillName) : false;
     const definition = definitionByName.get(cleanName);
     if (definition) return playFrameSequence(definition);
     return previous?.(name, skillName) || false;
