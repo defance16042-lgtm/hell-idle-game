@@ -20,6 +20,14 @@ jobs:
         with:
           ref: ${{ github.ref_type == 'tag' && github.ref_name || github.sha }}
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Prepare cropped monster sprites
+        run: |
+          python -m pip install pillow
+          python scripts/trim_parallel_general_body_frames.py
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
