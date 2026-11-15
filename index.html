@@ -28641,6 +28641,119 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   #modal-body:has(.shop-buy-grid) { width: 100% !important; max-width: 100% !important; height: calc(100dvh - 16px) !important; max-height: calc(100dvh - 16px) !important; padding: 16px !important; }
 }
 </style>
+
+<style id="hell-shop-redesign-v1">
+/* 雜貨鋪重新編排：固定標題與分類，僅讓目前分類內容捲動。 */
+#modal-window:has(#modal-body .shop-tab-shell){align-items:flex-start!important;justify-content:center!important;padding:12px!important;overflow:hidden!important}
+#modal-body:has(.shop-tab-shell){display:flex!important;flex-direction:column!important;box-sizing:border-box!important;width:min(1180px,96vw)!important;max-width:min(1180px,96vw)!important;height:calc(100dvh - 24px)!important;max-height:calc(100dvh - 24px)!important;min-height:0!important;margin:0!important;padding:16px!important;overflow:hidden!important;gap:12px!important;background:radial-gradient(ellipse at 50% 0%,rgba(112,54,32,.22),transparent 55%),linear-gradient(155deg,#1b1110,#0c0808 72%)!important;border:1px solid #755137!important;border-radius:14px!important;box-shadow:0 18px 60px #000b, inset 0 0 0 1px #d9a45a18!important}
+.shop-tab-shell{display:flex;flex-direction:column;min-height:0;height:100%;gap:12px;color:#f5e8d6}
+.shop-tab-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 2px 12px;border-bottom:1px solid #725039}
+.shop-tab-title{display:flex;flex-direction:column;gap:5px;min-width:0}
+.shop-tab-title h3{margin:0!important;color:#ffd28b!important;font-size:clamp(21px,2.2vw,29px)!important;letter-spacing:.04em;text-shadow:0 2px 12px #b66c2c55}
+.shop-tab-currency{margin:0!important;padding:5px 10px;border:1px solid #795b36;border-radius:999px;background:#120d0b;color:#f8d78d;font-size:13px}
+.shop-tab-header .modal-btn{flex:0 0 auto;margin:0!important;padding:8px 14px!important}
+.shop-tab-nav{display:flex;gap:8px;flex-wrap:wrap;padding:0 0 10px;border-bottom:1px solid #51382b}
+.shop-tab-button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:40px;padding:8px 14px;border:1px solid #60412f;border-radius:8px;background:linear-gradient(180deg,#2b1b16,#17100e);color:#d7c1aa;font:700 14px inherit;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+.shop-tab-button:hover{border-color:#c08a4b;color:#fff0d5;transform:translateY(-1px)}
+.shop-tab-button[aria-selected="true"]{border-color:#e1b56e;background:linear-gradient(180deg,#81512b,#4b2c1d);color:#fff1d0;box-shadow:0 0 0 1px #e9b96733,0 4px 16px #0005}
+.shop-tab-count{min-width:19px;padding:2px 5px;border-radius:999px;background:#0b0807;color:#e9c88e;font-size:10px;text-align:center}
+.shop-tab-content{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:2px 5px 12px 1px;scrollbar-width:thin;scrollbar-color:#a87949 #170f0c}
+.shop-tab-content::-webkit-scrollbar{width:10px}
+.shop-tab-content::-webkit-scrollbar-track{background:#170f0c;border-radius:8px}
+.shop-tab-content::-webkit-scrollbar-thumb{background:linear-gradient(#d5a66b,#80502f);border:2px solid #170f0c;border-radius:8px}
+.shop-tab-panel[hidden]{display:none!important}
+.shop-tab-panel>h4{margin:3px 0 8px!important;padding:10px 12px;border-left:4px solid #d49a54;border-radius:5px;background:linear-gradient(90deg,#6b3c24aa,#2b1a14aa);color:#ffcf8a!important;font-size:16px!important}
+.shop-tab-panel>small{display:block;line-height:1.55;margin:6px 2px 10px}
+.shop-tab-panel .shop-buy-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px;margin:10px 0}
+.shop-tab-panel .shop-buy-card{grid-template-columns:48px minmax(0,1fr);gap:9px;padding:12px;background:linear-gradient(145deg,#2a1914,#130d0b);border-color:#60412f}
+.shop-tab-panel .shop-buy-icon{width:46px;height:46px}
+.shop-tab-panel .shop-buy-title{font-size:15px}
+.shop-tab-panel .shop-buy-actions{align-items:center;flex-wrap:wrap}
+.shop-tab-panel .shop-equipment-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,285px),1fr));gap:9px}
+.shop-tab-panel .shop-equipment-card{min-width:0}
+.shop-tab-panel .shop-quality-bulk-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.shop-tab-panel .shop-quality-bulk-btn{min-height:82px}
+.shop-tab-panel>.modal-btn[onclick*="bulkSell"]{border-radius:8px!important}
+.shop-tab-panel .shop-row{align-items:center;flex-wrap:wrap;padding:10px}
+.shop-tab-panel .shop-row>.modal-btn{flex:0 0 auto}
+.shop-tab-empty{padding:24px;text-align:center;color:#bba58e}
+@media(max-width:700px){
+ #modal-window:has(#modal-body .shop-tab-shell){padding:6px!important}
+ #modal-body:has(.shop-tab-shell){width:100%!important;max-width:100%!important;height:calc(100dvh - 12px)!important;max-height:calc(100dvh - 12px)!important;padding:11px!important;gap:9px!important}
+ .shop-tab-shell{gap:9px}
+ .shop-tab-header{align-items:flex-start;padding-bottom:8px}
+ .shop-tab-title h3{font-size:21px!important}
+ .shop-tab-currency{font-size:11px;padding:4px 7px}
+ .shop-tab-header .modal-btn{padding:6px 9px!important;font-size:12px!important}
+ .shop-tab-nav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding-bottom:8px}
+ .shop-tab-button{min-height:38px;padding:6px 5px;font-size:12px}
+ .shop-tab-panel .shop-quality-bulk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .shop-tab-panel .shop-buy-grid{grid-template-columns:minmax(0,1fr)}
+ .shop-tab-panel .shop-equipment-grid{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+<script id="hell-shop-redesign-v1-script">
+(function(){
+  if(window.__hellShopRedesignV1Installed)return;
+  window.__hellShopRedesignV1Installed=true;
+  const labels=[
+    {id:'buy',label:'🧺 購買',match:'購買物品',count:'.shop-buy-card'},
+    {id:'gear',label:'⚔️ 裝備收購',match:'武器與防具',count:'.shop-equipment-card'},
+    {id:'skills',label:'📖 技能書',match:'技能書',count:'.shop-equipment-card'},
+    {id:'sets',label:'💎 套裝',match:'套裝',count:'.shop-equipment-card'},
+    {id:'fish',label:'🐟 魚獲',match:'釣魚成果',count:'.shop-row'}
+  ];
+  function enhance(){
+    const body=document.getElementById('modal-body');
+    if(!body||!body.querySelector('.shop-buy-grid')||body.querySelector('.shop-tab-shell'))return;
+    const children=Array.from(body.children);
+    const title=children.find(el=>el.tagName==='H3');
+    const currency=children.find(el=>el.tagName==='P'&&el.textContent.includes('魂幣'));
+    const shell=document.createElement('div');shell.className='shop-tab-shell';
+    const header=document.createElement('div');header.className='shop-tab-header';
+    const titleBox=document.createElement('div');titleBox.className='shop-tab-title';
+    if(title)titleBox.appendChild(title);
+    if(currency){currency.classList.add('shop-tab-currency');titleBox.appendChild(currency);}
+    header.appendChild(titleBox);
+    const nav=document.createElement('div');nav.className='shop-tab-nav';nav.setAttribute('role','tablist');nav.setAttribute('aria-label','雜貨鋪分類');
+    const content=document.createElement('div');content.className='shop-tab-content';
+    const panels={};let active=null;
+    let current=null;
+    for(const node of children){
+      if(node===title||node===currency)continue;
+      if(node.tagName==='H4'){
+        const section=labels.find(item=>node.textContent.includes(item.match));
+        if(section){
+          current=document.createElement('section');current.className='shop-tab-panel';current.dataset.shopTab=section.id;current.hidden=true;
+          current.appendChild(node);panels[section.id]=current;content.appendChild(current);
+          if(!active)active=section.id;
+        }else if(current){current.appendChild(node);}
+      }else if(current){current.appendChild(node);}
+    }
+    const closeButton=content.querySelector('button[onclick="closeModal()"]');
+    if(closeButton){closeButton.classList.add('shop-tab-close');header.appendChild(closeButton);}
+    labels.forEach(item=>{
+      const panel=panels[item.id];if(!panel)return;
+      const button=document.createElement('button');button.type='button';button.className='shop-tab-button';button.dataset.target=item.id;button.setAttribute('role','tab');button.setAttribute('aria-controls','shop-panel-'+item.id);
+      const count=panel.querySelectorAll(item.count).length;
+      button.innerHTML='<span>'+item.label+'</span><span class="shop-tab-count">'+count+'</span>';
+      button.addEventListener('click',()=>select(item.id));
+      panel.id='shop-panel-'+item.id;nav.appendChild(button);
+    });
+    function select(id){
+      Object.entries(panels).forEach(([key,panel])=>{panel.hidden=key!==id;});
+      nav.querySelectorAll('.shop-tab-button').forEach(button=>{const selected=button.dataset.target===id;button.setAttribute('aria-selected',selected?'true':'false');button.tabIndex=selected?0:-1;});
+      content.scrollTop=0;
+    }
+    shell.append(header,nav,content);body.replaceChildren(shell);
+    if(active)select(active);
+  }
+  const original=window.openShop;
+  if(typeof original==='function'){
+    window.openShop=function(...args){const result=original.apply(this,args);enhance();return result;};
+  }
+})();
+</script>
 </body>
 </html>
 
