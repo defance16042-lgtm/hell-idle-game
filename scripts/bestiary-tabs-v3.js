@@ -48,6 +48,11 @@
     body.querySelectorAll('[data-b3-action="close"]').forEach(button => button.addEventListener('click', () => window.closeModal?.()));
     body.querySelectorAll('[data-b3-zone]').forEach(button => button.addEventListener('click', () => openZone(button.dataset.b3Zone)));
     body.querySelectorAll('[data-b3-layer]').forEach(button => button.addEventListener('click', () => openZone(button.dataset.b3Layer)));
+    body.querySelectorAll('[data-b3-type]').forEach(button => button.addEventListener('click', () => {
+      state.type = button.dataset.b3Type || 'all';
+      state.page = 1;
+      openZone(state.zone);
+    }));
     body.querySelectorAll('[data-b3-monster]').forEach(button => button.addEventListener('click', () => openDetail(button.dataset.b3Zone, button.dataset.b3Monster)));
     body.querySelectorAll('[data-b3-page]').forEach(button => button.addEventListener('click', () => {
       state.page = Number(button.dataset.b3Page) || 1;
@@ -76,18 +81,31 @@
     return entries.map(({ zone, monster }) => `<button type="button" class="b3-monster-card ${typeClass(monster)}" data-b3-zone="${esc(zone)}" data-b3-monster="${esc(monster.name)}"><span class="b3-monster-art">${monster.image ? `<img src="${esc(typeof window.resolveEmbeddedAsset === 'function' ? window.resolveEmbeddedAsset(monster.image) : monster.image)}" alt="${esc(monster.name)}" loading="lazy">` : esc(monster.icon || icon(monster))}</span><span class="b3-monster-info"><strong>${esc(monster.name)}</strong><span><b>Lv.${esc(monster.levelRange || monster.level || '—')}</b>｜${typeName(monster)}</span><small>生命 ${fmt(monster.hp || monster.maxHp)}｜攻擊 ${fmt(monster.atk)}</small></span></button>`).join('');
   }
 
+  const categoryDefs = [
+    { key: 'all', label: '全部怪物', matches: () => true },
+    { key: 'normal', label: '一般怪物', matches: monster => !['special','boss'].includes(monster?.type) },
+    { key: 'special', label: '特殊怪物', matches: monster => monster?.type === 'special' },
+    { key: 'boss', label: 'BOSS', matches: monster => monster?.type === 'boss' }
+  ];
+
   function openZone(zone) {
+    const changedZone = state.zone !== zone;
     state.zone = zone;
+    if (changedZone) { state.type = 'all'; state.page = 1; }
     if (zone === CAVE) return openCaveLayers();
     const entry = zoneList().find(item => item.zone === zone);
     const source = entry || { zone, list: layerList(zone) };
     if (!source.list.length) return openHome();
-    const list = source.list.slice().sort((a, b) => (Number(a.level) || 0) - (Number(b.level) || 0) || String(a.name).localeCompare(String(b.name), 'zh-Hant'));
+    const all = source.list.slice().sort((a, b) => (Number(a.level) || 0) - (Number(b.level) || 0) || String(a.name).localeCompare(String(b.name), 'zh-Hant'));
+    const activeCategory = categoryDefs.find(item => item.key === state.type) || categoryDefs[0];
+    const list = all.filter(monster => activeCategory.matches(monster));
+    const counts = categoryDefs.map(item => ({ ...item, count: all.filter(monster => item.matches(monster)).length }));
     const pages = Math.max(1, Math.ceil(list.length / state.pageSize));
     state.page = Math.min(Math.max(1, state.page), pages);
     const pageItems = list.slice((state.page - 1) * state.pageSize, state.page * state.pageSize).map(monster => ({ zone, monster }));
+    const tabs = counts.map(item => `<button type="button" class="b3-type-tab" role="tab" aria-selected="${state.type === item.key ? 'true' : 'false'}" data-b3-type="${item.key}"><span>${item.label}</span><b>${item.count}</b></button>`).join('');
     const pager = pages > 1 ? `<div class="b3-pager"><button class="modal-btn" data-b3-page="${state.page - 1}" ${state.page <= 1 ? 'disabled' : ''}>上一頁</button><span>第 ${state.page}／${pages} 頁</span><button class="modal-btn" data-b3-page="${state.page + 1}" ${state.page >= pages ? 'disabled' : ''}>下一頁</button></div>` : '';
-    render(shell(`🗺️ ${esc(zone)}`, `本區資料獨立保存，共 ${source.list.length} 筆怪物資料；目前顯示第 ${state.page} 頁。`, `<div class="b3-subnav"><button class="modal-btn" data-b3-action="back-zones">← 返回區域分類</button></div><section class="b3-page"><div class="b3-card-grid">${monsterCards(pageItems) || '<p class="b3-empty">此區域目前沒有怪物資料。</p>'}</div>${pager}</section>`));
+    render(shell(`🗺️ ${esc(zone)}`, `本區共收錄 ${all.length} 隻怪物；目前分類「${activeCategory.label}」共 ${list.length} 隻。`, `<div class="b3-subnav"><button class="modal-btn" data-b3-action="back-zones">← 返回區域分類</button></div><section class="b3-page"><div class="b3-type-tabs" role="tablist" aria-label="怪物分類">${tabs}</div><div class="b3-list-heading"><strong>${activeCategory.label}</strong><span>點擊怪物可查看完整能力、技能與掉落資料</span></div><div class="b3-card-grid">${monsterCards(pageItems) || '<p class="b3-empty">此分類目前沒有怪物資料。</p>'}</div>${pager}</section>`));
     const body = modalBody();
     body.querySelector('[data-b3-action="back-zones"]')?.addEventListener('click', openHome);
     bind();
