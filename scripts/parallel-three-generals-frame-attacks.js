@@ -220,6 +220,22 @@
   const previous = window.playParallelThreeKingdomsBossAttackStoryboard;
   window.playParallelThreeKingdomsBossAttackStoryboard = (name, skillName) => {
     const cleanName = String(name || '').trim();
+    const skill = String(skillName || '').trim();
+    const isLuBuPhase2 = cleanName === '呂布' && (
+      window.__parallelLuBuPhase2Active === true ||
+      (() => {
+        try {
+          return typeof currentMonster !== 'undefined'
+            && currentMonster?.name === '呂布'
+            && (Number(currentMonster?._parallelLuBuPhase) === 2
+              || currentMonster?.attackType === '轅門射戟'
+              || currentMonster?.basicAttackName === '轅門射戟');
+        } catch (_) { return false; }
+      })() ||
+      skill.includes('轅門射戟')
+    );
+    // 第二階段只保留目前的呂布站立圖，不切換弓將圖，也不播放弓箭分鏡。
+    if (isLuBuPhase2) return true;
     const definition = definitionByName.get(cleanName);
     if (definition) return playFrameSequence(definition);
     return previous?.(name, skillName) || false;
