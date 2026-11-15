@@ -14757,7 +14757,7 @@ function getCombatVisualCycleDuration(actionPath) {
                     </div>
                     <div class="inventory-category-tabs" role="tablist" aria-label="背包物品分類">${categoryTabs}</div>
                     <div class="inventory-grid-wrap">
-                        ${inventoryCategory === 'all' || inventoryCategory === 'sets' ? getSetBonusHtml(currentPlayer.key) : ''}
+                        
                         <div class="inventory-grid">${visibleSlots.join('')}</div>
                         ${gridPageControls('inventory', inventoryGridPage, inventoryTotalPages)}
                     </div>
