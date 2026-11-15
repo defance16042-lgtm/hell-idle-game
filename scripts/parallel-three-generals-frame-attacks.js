@@ -35,10 +35,18 @@
       waveAlpha: [.30, .62, .98, 1, .96, .38]
     },
     {
-      names: ['高順將軍', '高順'], bodyDir: 'gao_shun_attack', waveDir: 'gao_shun_attack_wave',
-      // 高順站立圖與六張攻擊影格會先依透明主體外框裁切，
-      // 因此使用與其他武將一致的顯示倍率，不再靠放大補償原圖留白。
-      waveScale: .44, waveCurve: -.012, waveLift: -.02, spriteScale: 1.2,
+      names: ['高順將軍', '高順'], bodyDir: 'gao_shun_attack', bodySource: `${root}/gao_shun-general.png`, waveDir: 'gao_shun_attack_wave',
+      // 高順舊分鏡影格含相鄰畫格殘影且部分身體貼邊；改用完整立繪作人物底圖，
+      // 六段以位移、傾身與紅色氣勁變化呈現攻擊，避免人物被切成半身。
+      fullBodyMotion: [
+        { translate: '0 0', rotate: '0deg', filter: 'drop-shadow(0 0 0 rgba(255,35,35,0))' },
+        { translate: '-1.5% 0', rotate: '-3deg', filter: 'drop-shadow(0 0 5px rgba(220,35,35,.35))' },
+        { translate: '2% -1%', rotate: '-7deg', filter: 'drop-shadow(0 0 12px rgba(255,30,30,.70))' },
+        { translate: '4% 0', rotate: '4deg', filter: 'drop-shadow(0 0 18px rgba(255,20,20,.90))' },
+        { translate: '1% 0', rotate: '2deg', filter: 'drop-shadow(0 0 10px rgba(255,30,30,.55))' },
+        { translate: '0 0', rotate: '0deg', filter: 'drop-shadow(0 0 0 rgba(255,35,35,0))' }
+      ],
+      waveScale: .50, waveCurve: -.02, waveLift: -.02, spriteScale: 1.0,
       frameMs: [140, 120, 105, 92, 125, 185],
       waveStops: [0.01, 0.06, 0.30, 0.64, 0.90, 1],
       waveAlpha: [.24, .55, .94, 1, .90, .30]
@@ -55,7 +63,7 @@
 
   for (const definition of definitions) {
     definition.bodyFrames = Array.from({ length: 6 }, (_, index) =>
-      imageFor(`${root}/${definition.bodyDir}/frame_${String(index + 1).padStart(2, '0')}.png`));
+      imageFor(definition.bodySource || `${root}/${definition.bodyDir}/frame_${String(index + 1).padStart(2, '0')}.png`));
     definition.waveFrames = Array.from({ length: 6 }, (_, index) =>
       imageFor(`${root}/${definition.waveDir}/frame_${String(index + 1).padStart(2, '0')}.png`));
     const images = [...definition.bodyFrames, ...definition.waveFrames].map(entry => entry.image);
@@ -91,6 +99,10 @@
     if (!record.changedSpriteScale) return;
     restoreInlineStyle(record.sprite, 'scale', record.previousSpriteScale, record.previousSpriteScalePriority);
     restoreInlineStyle(record.sprite, 'transform-origin', record.previousSpriteOrigin, record.previousSpriteOriginPriority);
+    restoreInlineStyle(record.sprite, 'translate', record.previousSpriteTranslate, record.previousSpriteTranslatePriority);
+    restoreInlineStyle(record.sprite, 'rotate', record.previousSpriteRotate, record.previousSpriteRotatePriority);
+    restoreInlineStyle(record.sprite, 'filter', record.previousSpriteFilter, record.previousSpriteFilterPriority);
+    restoreInlineStyle(record.sprite, 'transition', record.previousSpriteTransition, record.previousSpriteTransitionPriority);
   }
 
   function finish(token) {
@@ -151,10 +163,19 @@
     const previousSpriteScalePriority = sprite.style.getPropertyPriority('scale');
     const previousSpriteOrigin = sprite.style.getPropertyValue('transform-origin');
     const previousSpriteOriginPriority = sprite.style.getPropertyPriority('transform-origin');
-    const changedSpriteScale = definition.spriteScale !== 1;
+    const previousSpriteTranslate = sprite.style.getPropertyValue('translate');
+    const previousSpriteTranslatePriority = sprite.style.getPropertyPriority('translate');
+    const previousSpriteRotate = sprite.style.getPropertyValue('rotate');
+    const previousSpriteRotatePriority = sprite.style.getPropertyPriority('rotate');
+    const previousSpriteFilter = sprite.style.getPropertyValue('filter');
+    const previousSpriteFilterPriority = sprite.style.getPropertyPriority('filter');
+    const previousSpriteTransition = sprite.style.getPropertyValue('transition');
+    const previousSpriteTransitionPriority = sprite.style.getPropertyPriority('transition');
+    const changedSpriteScale = definition.spriteScale !== 1 || Boolean(definition.fullBodyMotion);
     if (changedSpriteScale) {
       sprite.style.setProperty('scale', String(definition.spriteScale), 'important');
       sprite.style.setProperty('transform-origin', 'center bottom', 'important');
+      if (definition.fullBodyMotion) sprite.style.setProperty('transition', 'translate 90ms ease, rotate 90ms ease, filter 90ms ease', 'important');
     }
 
     const waveImage = document.createElement('img');
@@ -180,7 +201,11 @@
       sourcePoint, targetPoint, stageRect, maxWaveWidth, timers: [],
       changedStagePosition, previousStagePosition: originalStagePosition,
       changedSpriteScale, previousSpriteScale, previousSpriteScalePriority,
-      previousSpriteOrigin, previousSpriteOriginPriority
+      previousSpriteOrigin, previousSpriteOriginPriority,
+      previousSpriteTranslate, previousSpriteTranslatePriority,
+      previousSpriteRotate, previousSpriteRotatePriority,
+      previousSpriteFilter, previousSpriteFilterPriority,
+      previousSpriteTransition, previousSpriteTransitionPriority
     };
     active = record;
     const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
@@ -200,6 +225,12 @@
         return;
       }
       sprite.setAttribute('src', definition.bodyFrames[index].source);
+      if (definition.fullBodyMotion) {
+        const pose = definition.fullBodyMotion[index];
+        sprite.style.setProperty('translate', pose.translate, 'important');
+        sprite.style.setProperty('rotate', pose.rotate, 'important');
+        sprite.style.setProperty('filter', pose.filter, 'important');
+      }
       waveImage.src = definition.waveFrames[index].source;
       placeWave(record, index);
       const timer = setTimeout(() => showFrame(index + 1), frameDurations[index]);
