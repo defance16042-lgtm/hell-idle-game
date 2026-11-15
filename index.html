@@ -924,6 +924,26 @@
 .pet-phase2-progress>i{display:block;height:100%;background:linear-gradient(90deg,#6bd9c5,#ffd36b);border-radius:99px}
 .pet-phase2-battle-note{color:#9fe5d5;font-size:11px;margin-top:4px}
 .pet-phase2-skill-box{margin-top:6px;padding:6px 8px;border:1px solid rgba(117,190,205,.28);border-radius:6px;background:rgba(12,28,35,.5);color:#cbe9e8;font-size:11px;line-height:1.5}.pet-phase2-skill-box strong{color:#8ee0dc}
+
+/* === Desktop RPG interface unification === */
+.shop-tabs{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding:10px 2px 12px;margin:0 0 12px;border-bottom:1px solid #67482f;position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#160e0d 0%,rgba(16,9,9,.96) 100%)}
+.shop-tab{flex:1 0 auto;min-width:112px;padding:10px 14px;border:1px solid #63452f;border-radius:8px;background:linear-gradient(145deg,#2a1b17,#140d0c);color:#d9c2a8;font-weight:700;cursor:pointer;transition:all .16s ease}
+.shop-tab:hover{border-color:#c18a4d;color:#ffe0a2;transform:translateY(-1px)}
+.shop-tab.active{border-color:#f0bd69;background:linear-gradient(145deg,#674322,#352012);color:#fff0c9;box-shadow:inset 0 0 0 1px rgba(255,220,150,.15),0 3px 12px rgba(0,0,0,.35)}
+.shop-tab-pane[hidden]{display:none!important}
+.shop-tab-pane{min-height:220px;animation:shopPaneIn .16s ease}
+@keyframes shopPaneIn{from{opacity:.55;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+#modal-body:has(.shop-tabs){max-height:calc(100vh - 90px);overflow-y:auto;scrollbar-color:#765337 #170f0d}
+#modal-body:has(.shop-tabs)>h3{color:#ffd28b;text-shadow:0 2px 10px #000}
+#modal-body:has(.shop-tabs)>p{display:inline-block;padding:7px 13px;border:1px solid #63452f;border-radius:7px;background:#170f0d;color:#e9d5b9}
+.inventory-tab-shell,.warehouse-horizontal-layout{color:#ead9c4}
+.inventory-toolbar,.warehouse-tabs-header{border-color:#755237}
+.inventory-category-tabs button,.warehouse-main-tabs button{border-radius:8px!important;border:1px solid #65472f!important;background:linear-gradient(145deg,#291b16,#130d0c)!important;color:#dfc8a8!important;transition:all .16s ease}
+.inventory-category-tabs button.active,.warehouse-main-tabs button.active{border-color:#e1ad60!important;background:linear-gradient(145deg,#624124,#342014)!important;color:#fff0c9!important;box-shadow:inset 0 0 0 1px rgba(255,220,150,.12)}
+.inventory-grid-wrap,.warehouse-pane{border:1px solid #65472f!important;border-radius:10px!important;background:linear-gradient(155deg,rgba(43,27,21,.92),rgba(15,9,9,.96))!important}
+#modal-body.bestiary-v3{color:#ead9c4}
+#modal-body.bestiary-v3 .bestiary-tabs button{border-radius:8px}
+
 </style>
 
 
@@ -15636,7 +15656,14 @@ function getCombatVisualCycleDuration(actionPath) {
             document.getElementById('modal-body').innerHTML = `
                 <h3>🛒 雜貨鋪</h3>
                 <p>現有魂幣: <span id="shop-g">${currentPlayer.gold}</span></p>
-                <h4 style="color:#ffaa66;margin:8px 0 4px;">🧺 購買物品</h4>
+                <nav class="shop-tabs" aria-label="雜貨鋪分類">
+                    <button type="button" class="shop-tab active" data-shop-tab="buy" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">🧺 購買物品</button>
+                    <button type="button" class="shop-tab" data-shop-tab="gear" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">⚔️ 裝備收購</button>
+                    <button type="button" class="shop-tab" data-shop-tab="books" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">📖 技能書</button>
+                    <button type="button" class="shop-tab" data-shop-tab="sets" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">💎 套裝</button>
+                    <button type="button" class="shop-tab" data-shop-tab="fish" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">🐟 魚獲</button>
+                </nav>
+                <section class="shop-tab-pane" data-shop-pane="buy"><h4 style="color:#ffaa66;margin:8px 0 4px;">🧺 購買物品</h4>
                 <div class="shop-buy-grid">${[
                     ['potion', '❤️ 補血藥水', 50, `恢復 ${getHpPotionRestoreAmount()} 生命（依體質加成）`],
                     ['mpPotion', '🔮 補魔藥水', 150, `恢復 ${getMpPotionRestoreAmount()} 魔力（依精神加成）`],
@@ -15646,7 +15673,7 @@ function getCombatVisualCycleDuration(actionPath) {
                     ['fishingRod', '🎣 釣魚竿', 800, '釣魚必備工具，可重複使用'],
                     ['fishingWorm', '🪱 蚯蚓魚餌', 20, '每次釣魚消耗 1 條蚯蚓']
                  ].map(([key, label, cost, effect]) => { const icon = label.split(' ')[0]; const name = label.substring(label.indexOf(' ') + 1); return `<div class="shop-buy-card"><div class="shop-buy-icon" aria-hidden="true">${SHOP_SCROLL_I體質_ASSETS[key] ? `<img src="${SHOP_SCROLL_I體質_ASSETS[key]}" alt="${name}" draggable="false">` : icon}</div><div class="shop-buy-content"><strong class="shop-buy-title">${name}</strong><small class="shop-buy-desc">${effect}</small><small class="shop-buy-price">單價：${cost} 魂幣</small><small class="shop-buy-total">本次總價：<span id="shop-total-${key}" data-cost="${cost}">${cost}</span> 魂幣</small></div><div class="shop-buy-actions"><div class="quantity-control"><button class="modal-btn" aria-label="減少${name}數量" onclick="changeShopQuantity('${key}', -1)">−</button><input id="shop-qty-${key}" type="number" min="1" max="9999" value="${getRememberedShopQuantity(key)}" aria-label="${name}購買數量（最多9999個）" oninput="updateShopTotal('${key}')"><button class="modal-btn" aria-label="增加${name}數量" onclick="changeShopQuantity('${key}', 1)">＋</button></div><button class="modal-btn" onclick="buyItem('${key}', ${cost})">購買</button></div></div>`; }).join('')}</div>
-                <h4 style="color:#ffaa66;margin-bottom:4px;">💰 收購各品質未裝備武器與防具</h4>
+                </section><section class="shop-tab-pane" data-shop-pane="gear"><h4 style="color:#ffaa66;margin-bottom:4px;">💰 收購各品質未裝備武器與防具</h4>
                 <small style="color:#a08080;">收購公式：基礎價 × 品質倍率 × 等級倍率。品質：普通 ×1、稀有 ×2、黃金 ×4、特殊 ×8；裝備每高 1 級，等級倍率增加 10%（等級 1 為 ×1.0、等級 10 為 ×1.9）。裝備中的物品不會出現在這裡。</small>
                 <button type="button" class="modal-btn" style="display:block;width:100%;margin:10px 0;background:linear-gradient(135deg,#8b3f25,#b86b32);border-color:#ffbd75;font-weight:bold;" onclick="bulkSellAllEquipment()" ${getAllEquipmentSalePlan().count > 0 ? '' : 'disabled'}>💰 一鍵全賣所有品質未裝備裝備（${getAllEquipmentSalePlan().count} 件｜預估 ${getAllEquipmentSalePlan().total.toLocaleString()} 魂幣）</button>
                 <div class="shop-quality-bulk-grid">${qualityBulkButtons}</div>
@@ -15654,18 +15681,18 @@ function getCombatVisualCycleDuration(actionPath) {
                 <div class="shop-equipment-grid">${equipmentSellCards || '<p style="color:#a08080;">目前沒有可出售的未裝備裝備。</p>'}</div>
                 
 
-                <h4 style="color:#d6bbff;margin:18px 0 4px;">📖 收購重複職業技能書</h4>
+                </section><section class="shop-tab-pane" data-shop-pane="books"><h4 style="color:#d6bbff;margin:18px 0 4px;">📖 收購重複職業技能書</h4>
                 <small style="color:#b8a4c9;">中等收購價：等級 1 起 7,500 魂幣，每高 1 級增加 2,500 魂幣。尚未學會技能的第一本會保留，不會出現在出售清單；已學會或多出的重複技能書可出售。</small>
                 <div class="shop-equipment-grid">${duplicateSkillBookRows || '<p style="color:#a08080;">目前沒有可出售的重複技能書。打怪取得重複技能書後，就能在這裡換取魂幣。</p>'}</div>
-                <h4 style="color:#e5c2ff;margin:18px 0 4px;">💎 收購空城島套裝</h4>
+                </section><section class="shop-tab-pane" data-shop-pane="sets"><h4 style="color:#e5c2ff;margin:18px 0 4px;">💎 收購空城島套裝</h4>
                 <small style="color:#b8a4c9;">套裝收購價已降為原收購價的十分之一（約原售價 9%）；點擊套裝小圖示可查看詳細能力數值。已裝備套裝不會出現在出售清單。</small>
                 <button type="button" class="modal-btn" style="display:block;width:100%;margin:8px 0 10px;background:linear-gradient(135deg,#68439a,#40285f);border-color:#c7a0ff;font-weight:bold;" onclick="bulkSellSetEquipment()" ${(currentPlayer.items.setEquipment || []).some(item => !isSetEquipmentEquipped(item.instanceId)) ? '' : 'disabled'}>💎 一鍵出售全部未裝備套裝（${(currentPlayer.items.setEquipment || []).filter(item => !isSetEquipmentEquipped(item.instanceId)).length} 件｜預估 ${((currentPlayer.items.setEquipment || []).filter(item => !isSetEquipmentEquipped(item.instanceId)).reduce((sum,item)=>sum+getSetEquipmentShopSellPrice(item),0)).toLocaleString()} 魂幣）</button>
                 <div class="shop-equipment-grid">${(currentPlayer.items.setEquipment || []).filter(item => !isSetEquipmentEquipped(item.instanceId)).map(item => `<div class="shop-equipment-card"><button type="button" class="shop-equipment-icon" style="cursor:pointer;color:inherit;" title="點擊查看套裝能力" onclick="showShopEquipmentPreview('set','${item.instanceId}')"><img class="set-equipment-icon" src="${(window.SHENLONG_I體質_ASSETS || SET_EQUIPMENT_I體質_ASSETS)[item.asset]}" alt="${item.name}"></button><div class="shop-equipment-info"><strong role="button" tabindex="0" style="color:#d9b6ff;font-size:12px;cursor:pointer;" title="點擊查看套裝能力" onclick="showShopEquipmentPreview('set','${item.instanceId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showShopEquipmentPreview('set','${item.instanceId}');}">${item.name}</strong><small>${item.setName}${item.setId==='shenlong_dragon_v1'?'｜九神龍專屬掉落 22%':''}｜十分之一收購價 ${getSetEquipmentShopSellPrice(item).toLocaleString()} 魂幣</small></div><button class="modal-btn" onclick="sellSetEquipment('${item.instanceId}')">賣出</button></div>`).join('') || '<p style="color:#a08080;">目前沒有可出售的空城島套裝。</p>'}</div>
-                <h4 style="color:#8edcff;margin:18px 0 4px;">🐟 收購釣魚成果</h4>
+                </section><section class="shop-tab-pane" data-shop-pane="fish"><h4 style="color:#8edcff;margin:18px 0 4px;">🐟 收購釣魚成果</h4>
                 <small style="color:#a0b9c9;">魚的品質由白、綠、藍、紫到橘，品質越高收購價越高。</small>
                 <button type="button" class="modal-btn" style="display:block;width:100%;margin:8px 0 12px;background:linear-gradient(135deg,#176b82,#245d70);border-color:#65d8f2;font-weight:bold;" onclick="bulkSellAllFishingFish()" ${getFishingFishSalePlan().count > 0 ? '' : 'disabled'}>🐟 一鍵全賣釣魚魚獲（${getFishingFishSalePlan().count} 條｜預估 ${getFishingFishSalePlan().total.toLocaleString()} 魂幣）</button>
                 ${fishSellRows || '<p style="color:#a08080;">目前沒有可以出售的魚。到釣魚場試試手氣吧！</p>'}
-                <button class="modal-btn" onclick="closeModal()">離開</button>
+                </section><button class="modal-btn" onclick="closeModal()">離開</button>
             `;
             modal.style.display = 'flex';
         }
