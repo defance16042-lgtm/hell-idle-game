@@ -13,12 +13,13 @@ ALPHA_THRESHOLD = 8
 PADDING = 4
 
 
-def largest_alpha_component_bbox(image: Image.Image) -> tuple[int, int, int, int]:
+def isolate_largest_alpha_component(image: Image.Image) -> tuple[Image.Image, tuple[int, int, int, int]]:
+    """Keep only the main connected opaque subject, then crop to its tight bounds."""
     alpha = image.getchannel("A")
     width, height = image.size
     pixels = alpha.load()
     visited = bytearray(width * height)
-    best_size = 0
+    best_pixels: list[int] = []
     best_bbox = None
 
     for y in range(height):
@@ -29,13 +30,13 @@ def largest_alpha_component_bbox(image: Image.Image) -> tuple[int, int, int, int
 
             queue = deque([(x, y)])
             visited[offset] = 1
-            size = 0
+            component: list[int] = []
             min_x = max_x = x
             min_y = max_y = y
 
             while queue:
                 cx, cy = queue.popleft()
-                size += 1
+                component.append(cy * width + cx)
                 min_x = min(min_x, cx)
                 max_x = max(max_x, cx)
                 min_y = min(min_y, cy)
@@ -54,43 +55,47 @@ def largest_alpha_component_bbox(image: Image.Image) -> tuple[int, int, int, int
                     visited[neighbor] = 1
                     queue.append((nx, ny))
 
-            if size > best_size:
-                best_size = size
+            if len(component) > len(best_pixels):
+                best_pixels = component
                 best_bbox = (min_x, min_y, max_x + 1, max_y + 1)
 
     if not best_bbox:
         raise ValueError("找不到人物主體透明區")
 
+    # Remove detached neighboring objects/effects instead of merely cropping around them.
+    isolated = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    source_pixels = image.load()
+    target_pixels = isolated.load()
+    for offset in best_pixels:
+        target_pixels[offset % width, offset // width] = source_pixels[offset % width, offset // width]
+
     left, top, right, bottom = best_bbox
-    return (
+    bbox = (
         max(0, left - PADDING),
         max(0, top - PADDING),
         min(width, right + PADDING),
         min(height, bottom + PADDING),
     )
+    return isolated.crop(bbox), bbox
+
+
+def trim_file(path: Path) -> None:
+    with Image.open(path) as opened:
+        image = opened.convert("RGBA")
+        cropped, bbox = isolate_largest_alpha_component(image)
+    cropped.save(path, format="PNG", optimize=True)
+    print(f"{path.relative_to(ROOT)}: {image.size} -> {cropped.size} bbox={bbox}")
 
 
 def main() -> None:
-    # 高順站立圖也使用同一套透明主體裁切，避免人物被原圖留白縮小。
+    # 高順站立圖與六張攻擊影格使用相同的主體輪廓隔離及緊密裁切。
     for filename in STANDING_IMAGES:
-        path = ROOT / filename
-        with Image.open(path) as opened:
-            image = opened.convert("RGBA")
-            bbox = largest_alpha_component_bbox(image)
-            cropped = image.crop(bbox)
-        cropped.save(path, format="PNG", optimize=True)
-        print(f"{path.relative_to(ROOT)}: {image.size} -> {cropped.size} bbox={bbox}")
+        trim_file(ROOT / filename)
 
     for hero in HEROES:
         directory = ROOT / f"{hero}_attack"
         for index in range(1, FRAME_COUNT + 1):
-            path = directory / f"frame_{index:02d}.png"
-            with Image.open(path) as opened:
-                image = opened.convert("RGBA")
-                bbox = largest_alpha_component_bbox(image)
-                cropped = image.crop(bbox)
-            cropped.save(path, format="PNG", optimize=True)
-            print(f"{path.relative_to(ROOT)}: {image.size} -> {cropped.size} bbox={bbox}")
+            trim_file(directory / f"frame_{index:02d}.png")
 
 
 if __name__ == "__main__":
