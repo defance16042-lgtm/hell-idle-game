@@ -36,9 +36,9 @@
     },
     {
       names: ['高順將軍', '高順'], bodyDir: 'gao_shun_attack', waveDir: 'gao_shun_attack_wave',
-      // 高順攻擊分鏡的原圖是 768x768 正方形，人物上下留白比例比呂布多；
-      // 提高顯示倍率後，實際人物高度與呂布的 1.2 倍攻擊分鏡一致。
-      waveScale: .44, waveCurve: -.012, waveLift: -.02, spriteScale: 1.28,
+      // 高順站立圖與六張攻擊影格會先依透明主體外框裁切，
+      // 因此使用與其他武將一致的顯示倍率，不再靠放大補償原圖留白。
+      waveScale: .44, waveCurve: -.012, waveLift: -.02, spriteScale: 1.2,
       frameMs: [140, 120, 105, 92, 125, 185],
       waveStops: [0.01, 0.06, 0.30, 0.64, 0.90, 1],
       waveAlpha: [.24, .55, .94, 1, .90, .30]
