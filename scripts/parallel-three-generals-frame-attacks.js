@@ -217,139 +217,6 @@
     return true;
   }
 
-  let yuanmenCanvas = null;
-  let yuanmenRaf = 0;
-  let yuanmenPoseRaf = 0;
-  let yuanmenPoseRunId = 0;
-  const yuanmenBowSource = 'assets/monsters/parallel_three_kingdoms/lu_bu-bow-boss.png';
-
-  function setYuanmenBowPose(sprite, progress) {
-    // 六段弓將攻擊分鏡：站立蓄力、拉弓、滿弦、放箭、回身、復位。
-    // 使用同一張高解析弓將站立圖，透過姿勢位移與旋轉保持人物大小不變，
-    // 避免攻擊時又換回第一階段的方天畫戟人物。
-    const poses = [
-      [0, 0, 0, 1], [3, -2, -2, 1.02], [7, -4, -4, 1.04],
-      [13, -1, 2, 1.01], [6, 1, 1, 1.02], [0, 0, 0, 1]
-    ];
-    const scaled = Math.min(0.999, Math.max(0, progress)) * (poses.length - 1);
-    const index = Math.floor(scaled);
-    const next = Math.min(poses.length - 1, index + 1);
-    const mix = scaled - index;
-    const pose = poses[index].map((value, i) => value + (poses[next][i] - value) * mix);
-    const [x, y, rotate, scale] = pose;
-    sprite.style.setProperty('transform', `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,0) rotate(${rotate.toFixed(2)}deg) scale(${scale.toFixed(3)})`, 'important');
-    sprite.style.setProperty('transform-origin', 'center bottom', 'important');
-  }
-
-  function playLuBuYuanmenShootingVfx() {
-    const stage = document.getElementById('battle-stage');
-    const sprite = document.querySelector('#monster-icon .monster-sprite');
-    const player = document.getElementById('player-icon');
-    if (!stage || !sprite || !player) return false;
-    if (yuanmenPoseRaf) cancelAnimationFrame(yuanmenPoseRaf);
-    const poseRunId = ++yuanmenPoseRunId;
-    sprite.setAttribute('src', typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(yuanmenBowSource) : yuanmenBowSource);
-    const poseStarted = performance.now();
-    const poseDuration = 1150;
-    const drawPose = now => {
-      if (!sprite.isConnected || poseRunId !== yuanmenPoseRunId) {
-        sprite.style.removeProperty('transform');
-        sprite.style.removeProperty('transform-origin');
-        yuanmenPoseRaf = 0;
-        return;
-      }
-      setYuanmenBowPose(sprite, (now - poseStarted) / poseDuration);
-      if (now - poseStarted < poseDuration) yuanmenPoseRaf = requestAnimationFrame(drawPose);
-      else yuanmenPoseRaf = 0;
-    };
-    yuanmenPoseRaf = requestAnimationFrame(drawPose);
-    if (!yuanmenCanvas || yuanmenCanvas.parentElement !== stage) {
-      yuanmenCanvas?.remove();
-      yuanmenCanvas = document.createElement('canvas');
-      yuanmenCanvas.className = 'lu-bu-yuanmen-vfx';
-      yuanmenCanvas.setAttribute('aria-hidden', 'true');
-      yuanmenCanvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:96';
-      if (getComputedStyle(stage).position === 'static') stage.style.position = 'relative';
-      stage.appendChild(yuanmenCanvas);
-    }
-    if (yuanmenRaf) cancelAnimationFrame(yuanmenRaf);
-    const ctx = yuanmenCanvas.getContext('2d');
-    const sr = stage.getBoundingClientRect(), mr = sprite.getBoundingClientRect(), pr = player.getBoundingClientRect();
-    const from = { x: mr.left - sr.left + mr.width * .18, y: mr.top - sr.top + mr.height * .42 };
-    const to = { x: pr.left - sr.left + pr.width * .50, y: pr.top - sr.top + pr.height * .48 };
-    const dx = to.x - from.x, dy = to.y - from.y, distance = Math.max(1, Math.hypot(dx, dy));
-    const angle = Math.atan2(dy, dx), started = performance.now(), duration = 1150;
-    const draw = now => {
-      const rect = stage.getBoundingClientRect();
-      if (!yuanmenCanvas?.isConnected) return;
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
-      if (yuanmenCanvas.width !== Math.round(rect.width * dpr) || yuanmenCanvas.height !== Math.round(rect.height * dpr)) { yuanmenCanvas.width = Math.round(rect.width * dpr); yuanmenCanvas.height = Math.round(rect.height * dpr); }
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, rect.width, rect.height);
-      const t = Math.min(1, Math.max(0, (now - started) / duration));
-      // 明確畫出「抬弓／拉弦／放箭」三段姿勢，避免只換站立圖看不出攻擊動作。
-      const bowProgress = Math.min(1, t / .48);
-      const release = t >= .48;
-      ctx.save();
-      ctx.translate(from.x, from.y);
-      ctx.rotate(angle);
-      const bowWidth = 34 + bowProgress * 8;
-      const drawBack = release ? 0 : -bowProgress * 28;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.strokeStyle = 'rgba(255,224,133,.98)';
-      ctx.shadowColor = '#ff9d35';
-      ctx.shadowBlur = 12;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(4, -bowWidth);
-      ctx.quadraticCurveTo(-18 - bowProgress * 10, 0, 4, bowWidth);
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = 'rgba(255,247,197,.92)';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(4, -bowWidth);
-      ctx.lineTo(drawBack, 0);
-      ctx.lineTo(4, bowWidth);
-      ctx.stroke();
-      if (!release) {
-        ctx.strokeStyle = '#fff1a8';
-        ctx.shadowColor = '#ffd15c';
-        ctx.shadowBlur = 10;
-        ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(drawBack - 4, 0); ctx.lineTo(46, 0); ctx.stroke();
-        ctx.shadowBlur = 0;
-      }
-      ctx.restore();
-      // 放弦前箭矢留在弓上；只有蓄力滿弦後才飛向玩家。
-      const travel = t < .49 ? 0 : Math.min(1, (t - .49) / .34);
-      const ease = 1 - Math.pow(1 - travel, 2.1);
-      const x = from.x + dx * ease, y = from.y + dy * ease;
-      if (t < .25) {
-        const r = 10 + t / .25 * 28, g = ctx.createRadialGradient(from.x, from.y, 0, from.x, from.y, r);
-        g.addColorStop(0, 'rgba(255,248,190,.95)'); g.addColorStop(.32, 'rgba(255,180,56,.65)'); g.addColorStop(1, 'rgba(147,43,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(from.x, from.y, r, 0, Math.PI * 2); ctx.fill();
-      }
-      if (t >= .49 && t < .84) {
-        ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.globalAlpha = t > .72 ? Math.max(0, 1 - (t - .72) / .14) : 1;
-        const tail = ctx.createLinearGradient(-120, 0, 12, 0); tail.addColorStop(0, 'rgba(117,33,242,0)'); tail.addColorStop(.34, 'rgba(183,47,232,.48)'); tail.addColorStop(.72, 'rgba(255,91,35,.86)'); tail.addColorStop(1, 'rgba(255,238,153,1)');
-        ctx.fillStyle = tail; ctx.beginPath(); ctx.moveTo(-120, -7); ctx.quadraticCurveTo(-48, -18, 18, -3); ctx.lineTo(30, 0); ctx.lineTo(18, 3); ctx.quadraticCurveTo(-48, 18, -120, 7); ctx.closePath(); ctx.fill();
-        ctx.strokeStyle = '#fff4b0'; ctx.shadowColor = '#ffad37'; ctx.shadowBlur = 13; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(26, 0); ctx.stroke(); ctx.shadowBlur = 0;
-        ctx.fillStyle = '#fff7cf'; ctx.beginPath(); ctx.moveTo(31, 0); ctx.lineTo(18, -7); ctx.lineTo(21, 0); ctx.lineTo(18, 7); ctx.closePath(); ctx.fill(); ctx.restore();
-        for (let i = 0; i < 6; i++) { const f = (i / 6 + t * 1.7) % 1, px = x - dx * .18 * f, py = y - dy * .18 * f + Math.sin(now * .02 + i) * 5; ctx.fillStyle = i % 2 ? '#c46cff' : '#ffe28b'; ctx.fillRect(px, py, 3, 3); }
-      }
-      if (t >= .82) {
-        const q = Math.min(1, (t - .82) / .18), alpha = 1 - q, r = 12 + q * 52;
-        ctx.globalAlpha = alpha; ctx.strokeStyle = '#ffe89a'; ctx.shadowColor = '#b64cff'; ctx.shadowBlur = 18; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(to.x, to.y, r, 0, Math.PI * 2); ctx.stroke(); ctx.shadowBlur = 0;
-        ctx.strokeStyle = '#9a46e8'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(to.x - r * .7, to.y + r * .45); ctx.lineTo(to.x + r * .7, to.y - r * .45); ctx.stroke();
-        for (let i = 0; i < 10; i++) { const a = i * Math.PI * 2 / 10 + angle, inner = 8 + q * 8, outer = 24 + q * 38; ctx.strokeStyle = i % 2 ? '#ffbf50' : '#c56bff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(to.x + Math.cos(a) * inner, to.y + Math.sin(a) * inner); ctx.lineTo(to.x + Math.cos(a) * outer, to.y + Math.sin(a) * outer); ctx.stroke(); }
-        ctx.globalAlpha = 1;
-      }
-      if (t < 1) yuanmenRaf = requestAnimationFrame(draw); else { ctx.clearRect(0, 0, rect.width, rect.height); yuanmenRaf = 0; }
-    };
-    yuanmenRaf = requestAnimationFrame(draw);
-    return true;
-  }
-
   const previous = window.playParallelThreeKingdomsBossAttackStoryboard;
   window.playParallelThreeKingdomsBossAttackStoryboard = (name, skillName) => {
     const cleanName = String(name || '').trim();
@@ -368,7 +235,7 @@
       skill.includes('轅門射戟')
     );
     // 第二階段只保留目前的呂布站立圖，不切換弓將圖，也不播放弓箭分鏡。
-    if (isLuBuPhase2) return playLuBuYuanmenShootingVfx();
+    if (isLuBuPhase2) return true;
     const definition = definitionByName.get(cleanName);
     if (definition) return playFrameSequence(definition);
     return previous?.(name, skillName) || false;

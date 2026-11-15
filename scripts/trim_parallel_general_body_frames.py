@@ -79,8 +79,6 @@ def trim_file(path: Path, isolate_subject: bool = False) -> None:
 def main() -> None:
     # 高順站立圖與攻擊影格都做主體輪廓隔離，避免人物過小及鄰格物件殘留。
     trim_file(ROOT / "gao_shun-general.png", isolate_subject=True)
-    # 呂布第二階段弓將：保留原始 alpha 輪廓，只依透明像素外緣收緊畫布，不做方形切格。
-    trim_file(ROOT / "lu_bu-bow-boss.png", isolate_subject=False)
     for index in range(1, FRAME_COUNT + 1):
         trim_file(ROOT / "gao_shun_attack" / f"frame_{index:02d}.png", isolate_subject=True)
 
