@@ -6,7 +6,8 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1] / "assets" / "monsters" / "parallel_three_kingdoms"
-HEROES = ("li_ru", "lu_bu", "fan_chou", "zhang_ji")
+HEROES = ("li_ru", "lu_bu", "fan_chou", "zhang_ji", "gao_shun")
+STANDING_IMAGES = ("gao_shun-general.png",)
 FRAME_COUNT = 6
 ALPHA_THRESHOLD = 8
 PADDING = 4
@@ -70,6 +71,16 @@ def largest_alpha_component_bbox(image: Image.Image) -> tuple[int, int, int, int
 
 
 def main() -> None:
+    # 高順站立圖也使用同一套透明主體裁切，避免人物被原圖留白縮小。
+    for filename in STANDING_IMAGES:
+        path = ROOT / filename
+        with Image.open(path) as opened:
+            image = opened.convert("RGBA")
+            bbox = largest_alpha_component_bbox(image)
+            cropped = image.crop(bbox)
+        cropped.save(path, format="PNG", optimize=True)
+        print(f"{path.relative_to(ROOT)}: {image.size} -> {cropped.size} bbox={bbox}")
+
     for hero in HEROES:
         directory = ROOT / f"{hero}_attack"
         for index in range(1, FRAME_COUNT + 1):
