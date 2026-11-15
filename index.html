@@ -924,6 +924,35 @@
 .pet-phase2-progress>i{display:block;height:100%;background:linear-gradient(90deg,#6bd9c5,#ffd36b);border-radius:99px}
 .pet-phase2-battle-note{color:#9fe5d5;font-size:11px;margin-top:4px}
 .pet-phase2-skill-box{margin-top:6px;padding:6px 8px;border:1px solid rgba(117,190,205,.28);border-radius:6px;background:rgba(12,28,35,.5);color:#cbe9e8;font-size:11px;line-height:1.5}.pet-phase2-skill-box strong{color:#8ee0dc}
+
+/* === Desktop RPG interface unification === */
+.shop-tabs{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding:10px 2px 12px;margin:0 0 12px;border-bottom:1px solid #67482f;position:sticky;top:0;z-index:5;background:linear-gradient(180deg,#160e0d 0%,rgba(16,9,9,.96) 100%)}
+.shop-tab{flex:1 0 auto;min-width:112px;padding:10px 14px;border:1px solid #63452f;border-radius:8px;background:linear-gradient(145deg,#2a1b17,#140d0c);color:#d9c2a8;font-weight:700;cursor:pointer;transition:all .16s ease}
+.shop-tab:hover{border-color:#c18a4d;color:#ffe0a2;transform:translateY(-1px)}
+.shop-tab.active{border-color:#f0bd69;background:linear-gradient(145deg,#674322,#352012);color:#fff0c9;box-shadow:inset 0 0 0 1px rgba(255,220,150,.15),0 3px 12px rgba(0,0,0,.35)}
+.shop-tab-pane[hidden]{display:none!important}
+.shop-tab-pane{min-height:220px;animation:shopPaneIn .16s ease}
+@keyframes shopPaneIn{from{opacity:.55;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+#modal-body:has(.shop-tabs){max-height:calc(100vh - 90px);overflow-y:auto;scrollbar-color:#765337 #170f0d}
+#modal-body:has(.shop-tabs)>h3{color:#ffd28b;text-shadow:0 2px 10px #000}
+#modal-body:has(.shop-tabs)>p{display:inline-block;padding:7px 13px;border:1px solid #63452f;border-radius:7px;background:#170f0d;color:#e9d5b9}
+.inventory-tab-shell,.warehouse-horizontal-layout{color:#ead9c4}
+.inventory-toolbar,.warehouse-tabs-header{border-color:#755237}
+.inventory-category-tabs button,.warehouse-main-tabs button{border-radius:8px!important;border:1px solid #65472f!important;background:linear-gradient(145deg,#291b16,#130d0c)!important;color:#dfc8a8!important;transition:all .16s ease}
+.inventory-category-tabs button.active,.inventory-category-tabs button[aria-selected="true"],.warehouse-main-tabs button.active,.warehouse-main-tabs button[aria-selected="true"]{border-color:#e1ad60!important;background:linear-gradient(145deg,#624124,#342014)!important;color:#fff0c9!important;box-shadow:inset 0 0 0 1px rgba(255,220,150,.12)}
+.inventory-grid-wrap,.warehouse-pane{border:1px solid #65472f!important;border-radius:10px!important;background:linear-gradient(155deg,rgba(43,27,21,.92),rgba(15,9,9,.96))!important}
+#modal-body.bestiary-v3{color:#ead9c4}
+#modal-body.bestiary-v3 .bestiary-tabs button{border-radius:8px}
+
+
+/* Shop category panes: show only the selected section on first open. */
+#modal-body:has(.shop-tabs) .shop-tabs{position:sticky;top:0}
+#modal-body:has(.shop-tabs) .shop-tab-pane{padding:2px 2px 14px}
+#modal-body:has(.shop-tabs) .shop-tab-pane h4{padding-bottom:7px;border-bottom:1px solid rgba(180,132,79,.3)}
+#modal-body:has(.shop-tabs) .shop-tab-pane small{line-height:1.65}
+#modal-body:has(.shop-tabs) .shop-equipment-grid{gap:9px}
+#modal-body:has(.shop-tabs) .shop-buy-card,#modal-body:has(.shop-tabs) .shop-equipment-card{border-color:#65472f;box-shadow:inset 0 0 0 1px rgba(255,205,130,.035),0 4px 12px rgba(0,0,0,.18)}
+
 </style>
 
 
@@ -5258,6 +5287,34 @@ html body #shenlong-aura-overlay .shenlong-real-coil{display:none!important}
 #player-icon.shenlong-aura-active,#player-icon.shenlong-awakened{isolation:auto!important;overflow:visible!important}
 #player-icon.shenlong-aura-active::before{display:none!important}
 #player-icon.shenlong-aura-active .fighter-sprite{filter:none!important}
+</style>
+<style id="warehouse-category-tabs-redesign-v1">
+#modal-body.warehouse-horizontal-modal{box-sizing:border-box!important;width:min(1160px,96vw)!important;max-width:min(1160px,96vw)!important;min-width:0!important;height:min(900px,94dvh)!important;max-height:94dvh!important;padding:15px 17px!important;overflow:hidden!important;background:radial-gradient(ellipse at 50% 0%,rgba(112,67,38,.2),transparent 55%),linear-gradient(155deg,#1b1110,#0c0808 72%)!important;border:1px solid #755137!important;border-radius:14px!important;display:flex!important;flex-direction:column!important;gap:10px!important}
+.warehouse-tabs-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:2px 2px 11px;border-bottom:1px solid #725039}.warehouse-heading{display:flex;flex-direction:column;gap:4px}.warehouse-heading h3{margin:0!important;color:#ffd28b!important;font-size:clamp(21px,2.1vw,28px)!important}.warehouse-heading small{color:#c7ad91;font-size:12px}.warehouse-header-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.warehouse-capacity{padding:6px 11px;border:1px solid #795b36;border-radius:999px;background:#120d0b;color:#f8d78d;font-size:13px;font-weight:700}
+.warehouse-main-tabs{display:flex;gap:8px;padding:0 0 9px;border-bottom:1px solid #51382b}.warehouse-main-tabs button,.warehouse-category-tab{display:flex;align-items:center;justify-content:center;gap:7px;min-height:37px;padding:7px 13px;border:1px solid #60412f;border-radius:8px;background:linear-gradient(180deg,#2b1b16,#17100e);color:#d7c1aa;font:700 13px inherit;cursor:pointer}.warehouse-main-tabs button[aria-selected=true],.warehouse-category-tab[aria-selected=true]{border-color:#e1b56e;background:linear-gradient(180deg,#81512b,#4b2c1d);color:#fff1d0}.warehouse-main-tabs button span,.warehouse-category-tab span{padding:1px 6px;border-radius:999px;background:#0b0807;color:#e9c88e;font-size:10px}
+#modal-body.warehouse-horizontal-modal .warehouse-horizontal-layout{display:block!important;flex:1 1 auto!important;height:auto!important;min-height:0!important;overflow:hidden!important}#modal-body.warehouse-horizontal-modal .warehouse-pane{display:flex!important;flex-direction:column!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;gap:8px!important}#modal-body.warehouse-horizontal-modal .warehouse-pane[hidden]{display:none!important}
+#modal-body.warehouse-horizontal-modal .warehouse-pane-title{display:block!important;flex:none!important;padding:9px 12px!important;border-left:4px solid #d49a54!important;border-radius:5px!important;background:linear-gradient(90deg,#6b3c24aa,#2b1a14aa)!important;color:#ffcf8a!important;font-size:14px!important}
+.warehouse-category-tabs{display:flex;gap:7px;flex-wrap:wrap;flex:none;padding:1px 0 7px;border-bottom:1px solid #51382b}.warehouse-category-tab{min-height:32px;padding:5px 10px;font-size:12px}
+#modal-body.warehouse-horizontal-modal .warehouse-source-grid,#modal-body.warehouse-horizontal-modal .warehouse-storage-grid{flex:1 1 auto!important;min-height:0!important;min-width:0!important;width:min(100%,min(62vh,680px))!important;height:auto!important;max-height:100%!important;aspect-ratio:1/1!important;margin:0 auto!important;overflow:auto!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;grid-template-rows:repeat(8,minmax(0,1fr))!important}#modal-body.warehouse-horizontal-modal .grid-page-controls{flex:none!important;margin:0 auto!important;padding:4px 0!important}
+
+</style>
+<style id="inventory-category-tabs-redesign-v1">
+.inventory-float{width:min(920px,96vw)!important;height:min(88vh,980px)!important;max-height:88vh!important;border:1px solid #755137!important;border-radius:14px!important;background:radial-gradient(ellipse at 50% 0%,rgba(112,67,38,.22),transparent 55%),linear-gradient(155deg,#1b1110,#0c0808 72%)!important;box-shadow:0 18px 60px #000b,inset 0 0 0 1px #d9a45a18!important}
+.inventory-float-header{padding:13px 16px!important;background:linear-gradient(90deg,#3b2118,#21130f)!important;color:#ffd28b!important;border-bottom:1px solid #725039!important;font-size:17px}
+.inventory-float-body{display:flex!important;flex-direction:column!important;min-height:0!important;padding:12px!important;overflow:hidden!important}
+.inventory-tab-shell{display:flex;flex-direction:column;gap:10px;min-height:0;height:100%;color:#f5e8d6}
+.inventory-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:2px 1px 10px;border-bottom:1px solid #51382b}
+.inventory-summary{display:flex;flex-direction:column;gap:4px}.inventory-summary strong{color:#ffd28b;font-size:18px}.inventory-summary small{color:#c7ad91;font-size:12px}
+.inventory-sort-btn{margin:0!important;padding:7px 12px!important;font-size:12px!important}
+.inventory-category-tabs{display:flex;gap:7px;flex-wrap:wrap;flex:none;padding:0 0 9px;border-bottom:1px solid #51382b}
+.inventory-category-tab{display:flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:6px 11px;border:1px solid #60412f;border-radius:8px;background:linear-gradient(180deg,#2b1b16,#17100e);color:#d7c1aa;font:700 12px inherit;cursor:pointer}
+.inventory-category-tab[aria-selected=true]{border-color:#e1b56e;background:linear-gradient(180deg,#81512b,#4b2c1d);color:#fff1d0;box-shadow:0 0 0 1px #e9b96733,0 4px 16px #0005}
+.inventory-category-tab span{min-width:17px;padding:1px 5px;border-radius:999px;background:#0b0807;color:#e9c88e;font-size:10px;text-align:center}
+.inventory-grid-wrap{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#a87949 #170f0c}
+.inventory-grid-wrap .set-bonus-panel{flex:none}
+.inventory-grid-wrap .inventory-grid{flex:none;width:min(100%,min(68vh,720px))!important;min-width:0!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;grid-template-rows:repeat(8,minmax(0,1fr))!important;grid-auto-rows:auto!important;margin:0 auto!important;gap:6px!important}
+.inventory-grid-wrap .grid-page-controls{flex:none;margin:0 auto!important;padding:5px 0!important}
+
 </style>
 </head>
 <body>
@@ -14569,6 +14626,13 @@ function getCombatVisualCycleDuration(actionPath) {
             });
         }
 
+        function setInventoryCategory(category) {
+            const allowed = new Set(['all','gear','sets','consumables','scrolls','books','gold']);
+            window.inventoryCategory = allowed.has(category) ? category : 'all';
+            inventoryGridPage = 1;
+            renderInventory();
+        }
+
         function renderInventory() {
             if (!currentPlayer) return;
             ensurePlayerArmor(currentPlayer);
@@ -14585,46 +14649,57 @@ function getCombatVisualCycleDuration(actionPath) {
                 ['armorScrollHigh', '🛡️', '高階防具強化卷軸', '紫光卷軸；強化成功率 +40%']
             ];
             const slots = [];
+            const addInventorySlot = (category, html) => slots.push({ category, html });
             // 大量物品時避免在每個格子上預先產生昂貴的完整能力提示；詳細能力仍可點擊物品查看。
             const gold = Math.max(0, Math.floor(Number(currentPlayer.gold) || 0));
-            slots.push(`<button class="inventory-slot" title="點擊查看魂幣數量" aria-label="魂幣，點擊查看數量" onclick="showGoldAmount()"><span class="item-icon item-gold">${window.chibiConsumableIcon?.('coin') || '🪙'}</span></button>`);
+            addInventorySlot('gold', `<button class="inventory-slot" title="點擊查看魂幣數量" aria-label="魂幣，點擊查看數量" onclick="showGoldAmount()"><span class="item-icon item-gold">${window.chibiConsumableIcon?.('coin') || '🪙'}</span></button>`);
             inventoryRows.forEach(([key, icon, label, desc]) => {
                 const count = Number(items[key]) || 0;
                 const canUse = count > 0;
                 const scrollGlow = key.endsWith('ScrollHigh') ? 'box-shadow:0 0 9px 3px rgba(173,92,255,.9);border:1px solid #b66aff;' : key.endsWith('ScrollAdvanced') ? 'box-shadow:0 0 8px 2px rgba(255,211,70,.9);border:1px solid #ffd84d;' : '';
-                slots.push(`<button class="inventory-slot" style="${scrollGlow}" title="${label}｜${desc}｜持有 ${count}｜點擊查看說明" aria-label="${label}，持有 ${count} 個，點擊查看說明" onclick="showInventoryItemDetails('${key}')"><span class="item-icon item-${key}">${SHOP_SCROLL_I體質_ASSETS[key] ? `<img src="${SHOP_SCROLL_I體質_ASSETS[key]}" alt="${label}" draggable="false">` : (window.chibiConsumableIcon?.(key === 'potion' ? 'hp' : key === 'mpPotion' ? 'mp' : key === 'returnScroll' ? 'scroll' : '') || icon)}</span><span class="item-count">${count}</span></button>`);
+                addInventorySlot(key.includes('Scroll') ? 'scrolls' : 'consumables', `<button class="inventory-slot" style="${scrollGlow}" title="${label}｜${desc}｜持有 ${count}｜點擊查看說明" aria-label="${label}，持有 ${count} 個，點擊查看說明" onclick="showInventoryItemDetails('${key}')"><span class="item-icon item-${key}">${SHOP_SCROLL_I體質_ASSETS[key] ? `<img src="${SHOP_SCROLL_I體質_ASSETS[key]}" alt="${label}" draggable="false">` : (window.chibiConsumableIcon?.(key === 'potion' ? 'hp' : key === 'mpPotion' ? 'mp' : key === 'returnScroll' ? 'scroll' : '') || icon)}</span><span class="item-count">${count}</span></button>`);
             });
             (items.weapons || []).forEach(item => {
                 const equipped = item.instanceId === currentPlayer.equipment.weaponId || item.instanceId === currentPlayer.equipment.leftHandAxeId || item.instanceId === currentPlayer.equipment.rightHandAxeId;
-                slots.push(`<button class="inventory-slot ${equipped ? 'is-equipped' : ''} ${getEquipmentQualityClass(item)}" style="--equipment-quality:${getEquipmentQualityColor(item)};border-color:${getEquipmentQualityColor(item)};box-shadow:inset 0 0 10px ${getEquipmentQualityColor(item)}22,0 0 7px ${getEquipmentQualityColor(item)}44;" data-ordinary-compare-kind="weapon" data-ordinary-compare-id="${item.instanceId}" data-game-tooltip="${getEquipmentDisplayName(item)}" aria-label="${item.rarity} ${getEquipmentDisplayName(item)}${equipped ? '，已裝備' : ''}，查看能力與操作" onclick="showEquipmentDetails('weapon','${item.instanceId}')">${getEquipmentIconMarkup(item, 'weapon')}${equipped ? '<span class="equipped-badge">已裝備</span>' : ''}<span class="item-count">⚔</span></button>`);
+                addInventorySlot('gear', `<button class="inventory-slot ${equipped ? 'is-equipped' : ''} ${getEquipmentQualityClass(item)}" style="--equipment-quality:${getEquipmentQualityColor(item)};border-color:${getEquipmentQualityColor(item)};box-shadow:inset 0 0 10px ${getEquipmentQualityColor(item)}22,0 0 7px ${getEquipmentQualityColor(item)}44;" data-ordinary-compare-kind="weapon" data-ordinary-compare-id="${item.instanceId}" data-game-tooltip="${getEquipmentDisplayName(item)}" aria-label="${item.rarity} ${getEquipmentDisplayName(item)}${equipped ? '，已裝備' : ''}，查看能力與操作" onclick="showEquipmentDetails('weapon','${item.instanceId}')">${getEquipmentIconMarkup(item, 'weapon')}${equipped ? '<span class="equipped-badge">已裝備</span>' : ''}<span class="item-count">⚔</span></button>`);
             });
             (items.armors || []).forEach(item => {
                 const equipped = isArmorItemEquipped(item, currentPlayer);
-                slots.push(`<button class="inventory-slot ${equipped ? 'is-equipped' : ''} ${getEquipmentQualityClass(item)}" style="--equipment-quality:${getEquipmentQualityColor(item)};border-color:${getEquipmentQualityColor(item)};box-shadow:inset 0 0 10px ${getEquipmentQualityColor(item)}22,0 0 7px ${getEquipmentQualityColor(item)}44;" data-ordinary-compare-kind="armor" data-ordinary-compare-id="${item.instanceId}" data-game-tooltip="${getEquipmentDisplayName(item)}" aria-label="${item.rarity} ${getEquipmentDisplayName(item)}${equipped ? '，已裝備' : ''}，查看能力與操作" onclick="showEquipmentDetails('armor','${item.instanceId}')">${getEquipmentIconMarkup(item, 'armor')}${equipped ? '<span class="equipped-badge">已裝備</span>' : ''}<span class="item-count">${item.enhancementLevel ? `+${item.enhancementLevel}` : item.slotLabel}</span></button>`);
+                addInventorySlot('gear', `<button class="inventory-slot ${equipped ? 'is-equipped' : ''} ${getEquipmentQualityClass(item)}" style="--equipment-quality:${getEquipmentQualityColor(item)};border-color:${getEquipmentQualityColor(item)};box-shadow:inset 0 0 10px ${getEquipmentQualityColor(item)}22,0 0 7px ${getEquipmentQualityColor(item)}44;" data-ordinary-compare-kind="armor" data-ordinary-compare-id="${item.instanceId}" data-game-tooltip="${getEquipmentDisplayName(item)}" aria-label="${item.rarity} ${getEquipmentDisplayName(item)}${equipped ? '，已裝備' : ''}，查看能力與操作" onclick="showEquipmentDetails('armor','${item.instanceId}')">${getEquipmentIconMarkup(item, 'armor')}${equipped ? '<span class="equipped-badge">已裝備</span>' : ''}<span class="item-count">${item.enhancementLevel ? `+${item.enhancementLevel}` : item.slotLabel}</span></button>`);
             });
-            (items.skillBooks || []).forEach((book, index) => slots.push(`<button class="inventory-slot" title="${book.name}技能書｜等級 ${book.level}｜點擊查看說明" aria-label="${book.name}技能書，點擊查看說明" onclick="showInventorySkillBookDetails(${index})"><span class="item-icon">📖</span><span class="item-count">1</span></button>`));
+            (items.skillBooks || []).forEach((book, index) => addInventorySlot('books', `<button class="inventory-slot" title="${book.name}技能書｜等級 ${book.level}｜點擊查看說明" aria-label="${book.name}技能書，點擊查看說明" onclick="showInventorySkillBookDetails(${index})"><span class="item-icon">📖</span><span class="item-count">1</span></button>`));
             ensureSetEquipmentStorage(currentPlayer);
             (items.setEquipment || []).forEach(item => {
                 const def = SET_GEAR_DEFS[item.classKey] || SET_GEAR_DEFS[currentPlayer.key];
                 const equipped = Object.values(currentPlayer.equipment?.setGearSlots || {}).includes(item.instanceId);
-                slots.push(`<button class="inventory-slot quality-gold ${equipped ? 'is-equipped' : ''}" style="--equipment-quality:${def?.color || '#ffe34d'};border-color:${def?.color || '#ffe34d'};box-shadow:inset 0 0 10px ${def?.color || '#ffe34d'}33,0 0 8px ${def?.color || '#ffe34d'}66;" data-set-compare-id="${item.classKey === currentPlayer.key ? item.instanceId : ''}" data-game-tooltip="${getEquipmentTooltipText(item, 'set').replace(/"/g, '&quot;')}" aria-label="${item.name}，套裝裝備${equipped ? '，已裝備' : ''}，滑鼠移入查看能力，點擊查看詳細" onclick="showSetEquipmentDetails('${item.instanceId}')">${`<img class="set-equipment-icon" src="${(window.SHENLONG_I體質_ASSETS || SET_EQUIPMENT_I體質_ASSETS)[item.asset]}" alt="${item.name}">`}${equipped ? '<span class="equipped-badge">已裝備</span>' : ''}<span class="item-count" style="color:${def?.color || '#ffd27c'};${ORIGINAL_CLASS_SET_IDS.has(item.setId) ? 'font-size:9px;min-width:0;padding:1px 3px;' : ''}">${ORIGINAL_CLASS_SET_IDS.has(item.setId) ? `${CLASS_SET_REQUIRED_LEVEL}等` : '套'}</span></button>`);
+                addInventorySlot('sets', `<button class="inventory-slot quality-gold ${equipped ? 'is-equipped' : ''}" style="--equipment-quality:${def?.color || '#ffe34d'};border-color:${def?.color || '#ffe34d'};box-shadow:inset 0 0 10px ${def?.color || '#ffe34d'}33,0 0 8px ${def?.color || '#ffe34d'}66;" data-set-compare-id="${item.classKey === currentPlayer.key ? item.instanceId : ''}" data-game-tooltip="${getEquipmentTooltipText(item, 'set').replace(/"/g, '&quot;')}" aria-label="${item.name}，套裝裝備${equipped ? '，已裝備' : ''}，滑鼠移入查看能力，點擊查看詳細" onclick="showSetEquipmentDetails('${item.instanceId}')">${`<img class="set-equipment-icon" src="${(window.SHENLONG_I體質_ASSETS || SET_EQUIPMENT_I體質_ASSETS)[item.asset]}" alt="${item.name}">`}${equipped ? '<span class="equipped-badge">已裝備</span>' : ''}<span class="item-count" style="color:${def?.color || '#ffd27c'};${ORIGINAL_CLASS_SET_IDS.has(item.setId) ? 'font-size:9px;min-width:0;padding:1px 3px;' : ''}">${ORIGINAL_CLASS_SET_IDS.has(item.setId) ? `${CLASS_SET_REQUIRED_LEVEL}等` : '套'}</span></button>`);
             });
             // 整理背包後，將所有已裝備物品跨類別集中排在最前面。
             // 依照目前 slots 的生成順序穩定排序，不改變物品資料、數量或裝備狀態。
-            slots.sort((a, b) => Number(b.includes('is-equipped')) - Number(a.includes('is-equipped')));
-            const inventoryTotalPages = Math.max(1, Math.ceil(slots.length / 64));
+            slots.sort((a, b) => Number(b.html.includes('is-equipped')) - Number(a.html.includes('is-equipped')));
+            const inventoryCategory = window.inventoryCategory || 'all';
+            const categoryDefs = [['all','全部'],['gear','一般裝備'],['sets','職業套裝'],['consumables','消耗品'],['scrolls','強化卷'],['books','技能書'],['gold','魂幣']];
+            const categoryCount = id => id === 'all' ? slots.length : slots.filter(slot => slot.category === id).length;
+            const filteredSlots = inventoryCategory === 'all' ? slots : slots.filter(slot => slot.category === inventoryCategory);
+            const inventoryTotalPages = Math.max(1, Math.ceil(filteredSlots.length / 64));
             inventoryGridPage = Math.min(inventoryGridPage, inventoryTotalPages);
             const inventoryStart = (inventoryGridPage - 1) * 64;
-            const visibleSlots = slots.slice(inventoryStart, inventoryStart + 64);
+            const visibleSlots = filteredSlots.slice(inventoryStart, inventoryStart + 64).map(slot => slot.html);
             while (visibleSlots.length < 64) visibleSlots.push('<div class="inventory-slot empty-slot" aria-hidden="true"></div>');
+            const categoryTabs = categoryDefs.map(([id,label]) => '<button type="button" class="inventory-category-tab" role="tab" aria-selected="' + (inventoryCategory === id ? 'true' : 'false') + '" onclick="setInventoryCategory(\'' + id + '\')">' + label + '<span>' + categoryCount(id) + '</span></button>').join('');
             document.getElementById('inventory-content').innerHTML = `
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 5px;">
-                    <small style="color:#a08080;">背包｜每頁 64 格（8×8；圖示放大約 2 倍）；點物品查看能力</small>
-                    <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end;"><button type="button" class="modal-btn" style="margin:0;padding:3px 10px;font-size:12px;white-space:nowrap;" onclick="event.stopPropagation(); sortInventoryItems()" title="依裝備品質、強化等級整理背包">整理背包</button></div>
+                <div class="inventory-tab-shell">
+                    <div class="inventory-toolbar">
+                        <div class="inventory-summary"><strong>🎒 冒險者背包</strong><small>每頁 64 格｜點擊物品查看能力與操作</small></div>
+                        <button type="button" class="modal-btn inventory-sort-btn" onclick="event.stopPropagation(); sortInventoryItems()" title="依裝備品質、強化等級整理背包">整理背包</button>
+                    </div>
+                    <div class="inventory-category-tabs" role="tablist" aria-label="背包物品分類">${categoryTabs}</div>
+                    <div class="inventory-grid-wrap">
+                        ${inventoryCategory === 'all' || inventoryCategory === 'sets' ? getSetBonusHtml(currentPlayer.key) : ''}
+                        <div class="inventory-grid">${visibleSlots.join('')}</div>
+                        ${gridPageControls('inventory', inventoryGridPage, inventoryTotalPages)}
+                    </div>
                 </div>
-                ${getSetBonusHtml(currentPlayer.key)}
-                <div class="inventory-grid">${visibleSlots.join('')}</div>
-                ${gridPageControls('inventory', inventoryGridPage, inventoryTotalPages)}
             `;
         }
 
@@ -14905,6 +14980,18 @@ function getCombatVisualCycleDuration(actionPath) {
             updateGameUI(); saveGame(); renderInventory();
         }
 
+        function setWarehouseCategory(side, category) {
+            if (side === 'source') { window.warehouseSourceCategory = category; warehouseSourceGridPage = 1; }
+            else { window.warehouseStorageCategory = category; warehouseStorageGridPage = 1; }
+            openWarehouse();
+        }
+        function setWarehousePane(pane) {
+            window.warehouseActivePane = pane === 'storage' ? 'storage' : 'source';
+            const body = document.getElementById('modal-body');
+            if (!body) return;
+            body.querySelectorAll('[data-warehouse-pane]').forEach(el => { el.hidden = el.dataset.warehousePane !== window.warehouseActivePane; });
+            body.querySelectorAll('[data-warehouse-main-tab]').forEach(el => el.setAttribute('aria-selected', el.dataset.warehouseMainTab === window.warehouseActivePane ? 'true' : 'false'));
+        }
         function openWarehouse() {
             if (!requireVillageForService('村莊倉庫')) return;
             normalizeWarehousePlayerStorage(currentPlayer);
@@ -14925,7 +15012,25 @@ function getCombatVisualCycleDuration(actionPath) {
             const carriedGold = Math.max(0, Math.floor(Number(currentPlayer.gold) || 0));
             if (carriedGold > 0) stackItems.unshift({ kind: 'stack', key: 'gold', label: '魂幣', icon: '🪙', count: carriedGold });
             const books = (currentPlayer.items.skillBooks || []).map((book, index) => ({ kind: 'skillbook', index, label: `${book.name}技能書 等級 ${book.level}`, icon: '📖' }));
-            const sourceEntries = [...gear, ...stackItems, ...books];
+            const warehouseCategoryOf = entry => {
+                if (entry.kind === 'weapon' || entry.kind === 'armor') return 'gear';
+                if (entry.kind === 'setEquipment') return 'set';
+                if (entry.kind === 'skillbook') return 'books';
+                if (entry.kind === 'stack' && entry.key === 'gold') return 'gold';
+                if (entry.kind === 'stack' && /scroll/i.test(String(entry.key || ''))) return 'scrolls';
+                if (entry.kind === 'stack') return 'consumables';
+                return 'other';
+            };
+            const warehouseCategoryTabs = (side, entries, selected) => {
+                const cats = [['all','全部'],['gear','一般裝備'],['set','職業套裝'],['consumables','消耗品'],['scrolls','強化卷'],['books','技能書'],['gold','魂幣']];
+                return '<div class="warehouse-category-tabs" role="tablist">' + cats.map(([id,label]) => {
+                    const count = id === 'all' ? entries.length : entries.filter(e => warehouseCategoryOf(e) === id).length;
+                    return '<button type="button" class="warehouse-category-tab" role="tab" aria-selected="' + (selected === id ? 'true' : 'false') + '" onclick="setWarehouseCategory(\'' + side + '\',\'' + id + '\')">' + label + '<span>' + count + '</span></button>';
+                }).join('') + '</div>';
+            };
+            const sourceEntriesAll = [...gear, ...stackItems, ...books];
+            const sourceCategory = window.warehouseSourceCategory || 'all';
+            const sourceEntries = sourceCategory === 'all' ? sourceEntriesAll : sourceEntriesAll.filter(e => warehouseCategoryOf(e) === sourceCategory);
             const warehouseSourceTotalPages = Math.max(1, Math.ceil(sourceEntries.length / 64));
             warehouseSourceGridPage = Math.min(warehouseSourceGridPage, warehouseSourceTotalPages);
             const sourceStart = (warehouseSourceGridPage - 1) * 64;
@@ -14943,11 +15048,13 @@ function getCombatVisualCycleDuration(actionPath) {
                 return `<button class="warehouse-tile" title="${entry.label}｜點擊存入" onclick="storeSkillBookToWarehouse(${entry.index})" ${storage.length >= warehouseCapacity && !storage.some(stored => stored.kind === 'skillbook' && stored.stackKey === warehouseSkillBookKey(currentPlayer.items.skillBooks[entry.index])) ? 'disabled' : ''}><span class="item-icon">${entry.icon}</span><span class="warehouse-tile-action">存入</span></button>`;
             });
             while (visibleWarehouseSource.length < 64) visibleWarehouseSource.push('<div class="warehouse-tile" aria-hidden="true" style="opacity:.22;"></div>');
-            const warehouseStorageTotalPages = Math.max(1, Math.ceil(Math.max(storage.length, 1) / 64));
+            const storageCategory = window.warehouseStorageCategory || 'all';
+            const storageEntriesAll = storage.map((entry, index) => ({entry, index}));
+            const filteredStorageEntries = storageCategory === 'all' ? storageEntriesAll : storageEntriesAll.filter(row => warehouseCategoryOf(row.entry) === storageCategory);
+            const warehouseStorageTotalPages = Math.max(1, Math.ceil(Math.max(filteredStorageEntries.length, 1) / 64));
             warehouseStorageGridPage = Math.min(warehouseStorageGridPage, warehouseStorageTotalPages);
             const storageStart = (warehouseStorageGridPage - 1) * 64;
-            const visibleStorageRows = storage.slice(storageStart, storageStart + 64).map((entry, pageIndex) => {
-                const index = storageStart + pageIndex;
+            const visibleStorageRows = filteredStorageEntries.slice(storageStart, storageStart + 64).map(({entry, index}) => {
                 const storedSkillBook = entry.kind === 'skillbook' ? entry.items?.[0] : null;
                 const quantity = entry.kind === 'stack' ? entry.quantity : entry.kind === 'skillbook' ? (entry.items || []).length : 1;
                 const detail = entry.kind === 'skillbook' ? `技能書 等級 ${storedSkillBook?.level || 0}` : entry.kind === 'stack' ? (entry.key === 'gold' ? '魂幣' : '消耗品') : '點圖示查看能力';
@@ -14968,7 +15075,8 @@ function getCombatVisualCycleDuration(actionPath) {
                 if (entry.kind === 'setEquipment') return `<div class="warehouse-tile quality-gold" style="--equipment-quality:${getEquipmentQualityColor(entry.item)};border-color:${getEquipmentQualityColor(entry.item)};box-shadow:inset 0 0 10px ${getEquipmentQualityColor(entry.item)}22,0 0 7px ${getEquipmentQualityColor(entry.item)}44;" data-game-tooltip="${getEquipmentTooltipText(entry.item, 'set').replace(/"/g, '&quot;')}">${icon}<button class="warehouse-tile-detail" aria-label="查看${label}" onclick="showStoredSetEquipmentDetails(${index})"></button><button class="warehouse-tile-action" onclick="takeWarehouseItem(${index})">取出</button></div>`;
                 return `<button class="warehouse-tile" title="${label}${quantity > 1 ? ` ×${quantity}` : ''}｜點擊選擇取出數量" onclick="takeWarehouseItem(${index})"><span class="item-icon ${entry.key === 'gold' ? 'item-gold' : ''}">${icon}</span><span class="warehouse-tile-count">${quantity}</span><span class="warehouse-tile-action">取出</span></button>`;
             });
-            body.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px;"><h3 style="margin:0;">📦 職業共通倉庫</h3><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end;"><small style="color:#d8b78a;">自動分類排列，不會丟棄物品</small><button class="modal-btn" style="margin:0;" onclick="sortWarehouseItems()">整理倉庫</button><button class="modal-btn" style="margin:0;" onclick="closeModal()">離開</button></div></div><div class="warehouse-horizontal-layout"><section class="warehouse-pane"><strong class="warehouse-pane-title">背包可存入｜每頁 8 × 8 格（64 格）</strong><div class="warehouse-source-grid">${visibleWarehouseSource.join('')}</div>${gridPageControls('warehouse-source', warehouseSourceGridPage, warehouseSourceTotalPages)}</section><section class="warehouse-pane"><strong class="warehouse-pane-title">共通倉庫內容｜8 × 8 格（每頁 64 格）</strong><div class="warehouse-storage-grid">${visibleStorageRows.join('')}</div>${gridPageControls('warehouse-storage', warehouseStorageGridPage, warehouseStorageTotalPages)}</section></div>`;
+            const activeWarehousePane = window.warehouseActivePane || 'source';
+            body.innerHTML = `<div class="warehouse-tabs-header"><div class="warehouse-heading"><h3>📦 職業共通倉庫</h3><small>分類收納｜存取安全｜不會丟棄物品</small></div><div class="warehouse-header-actions"><span class="warehouse-capacity">📦 ${storage.length} / ${warehouseCapacity} 格</span><button class="modal-btn" style="margin:0;" onclick="sortWarehouseItems()">整理倉庫</button><button class="modal-btn" style="margin:0;" onclick="closeModal()">離開</button></div></div><div class="warehouse-main-tabs" role="tablist"><button type="button" data-warehouse-main-tab="source" aria-selected="${activeWarehousePane==='source'?'true':'false'}" onclick="setWarehousePane('source')">🎒 背包存入</button><button type="button" data-warehouse-main-tab="storage" aria-selected="${activeWarehousePane==='storage'?'true':'false'}" onclick="setWarehousePane('storage')">📦 共通倉庫 <span>${storage.length}</span></button></div><div class="warehouse-horizontal-layout"><section class="warehouse-pane" data-warehouse-pane="source" ${activeWarehousePane==='source'?'':'hidden'}><strong class="warehouse-pane-title">背包可存入｜每頁 8 × 8 格（64 格）</strong>${warehouseCategoryTabs('source',sourceEntriesAll,sourceCategory)}<div class="warehouse-source-grid">${visibleWarehouseSource.join('')}</div>${gridPageControls('warehouse-source',warehouseSourceGridPage,warehouseSourceTotalPages)}</section><section class="warehouse-pane" data-warehouse-pane="storage" ${activeWarehousePane==='storage'?'':'hidden'}><strong class="warehouse-pane-title">共通倉庫內容｜每頁 8 × 8 格（64 格）</strong>${warehouseCategoryTabs('storage',storage,storageCategory)}<div class="warehouse-storage-grid">${visibleStorageRows.join('')}</div>${gridPageControls('warehouse-storage',warehouseStorageGridPage,warehouseStorageTotalPages)}</section></div>`;
             body.classList.add('warehouse-horizontal-modal');
             document.getElementById('modal-window').style.display = 'flex';
             if (typeof setupWarehouseGameTooltips === 'function') setupWarehouseGameTooltips();
@@ -15557,7 +15665,14 @@ function getCombatVisualCycleDuration(actionPath) {
             document.getElementById('modal-body').innerHTML = `
                 <h3>🛒 雜貨鋪</h3>
                 <p>現有魂幣: <span id="shop-g">${currentPlayer.gold}</span></p>
-                <h4 style="color:#ffaa66;margin:8px 0 4px;">🧺 購買物品</h4>
+                <nav class="shop-tabs" aria-label="雜貨鋪分類">
+                    <button type="button" class="shop-tab active" data-shop-tab="buy" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">🧺 購買物品</button>
+                    <button type="button" class="shop-tab" data-shop-tab="gear" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">⚔️ 裝備收購</button>
+                    <button type="button" class="shop-tab" data-shop-tab="books" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">📖 技能書</button>
+                    <button type="button" class="shop-tab" data-shop-tab="sets" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">💎 套裝</button>
+                    <button type="button" class="shop-tab" data-shop-tab="fish" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">🐟 魚獲</button>
+                </nav>
+                <section class="shop-tab-pane" data-shop-pane="buy"><h4 style="color:#ffaa66;margin:8px 0 4px;">🧺 購買物品</h4>
                 <div class="shop-buy-grid">${[
                     ['potion', '❤️ 補血藥水', 50, `恢復 ${getHpPotionRestoreAmount()} 生命（依體質加成）`],
                     ['mpPotion', '🔮 補魔藥水', 150, `恢復 ${getMpPotionRestoreAmount()} 魔力（依精神加成）`],
@@ -15567,7 +15682,7 @@ function getCombatVisualCycleDuration(actionPath) {
                     ['fishingRod', '🎣 釣魚竿', 800, '釣魚必備工具，可重複使用'],
                     ['fishingWorm', '🪱 蚯蚓魚餌', 20, '每次釣魚消耗 1 條蚯蚓']
                  ].map(([key, label, cost, effect]) => { const icon = label.split(' ')[0]; const name = label.substring(label.indexOf(' ') + 1); return `<div class="shop-buy-card"><div class="shop-buy-icon" aria-hidden="true">${SHOP_SCROLL_I體質_ASSETS[key] ? `<img src="${SHOP_SCROLL_I體質_ASSETS[key]}" alt="${name}" draggable="false">` : icon}</div><div class="shop-buy-content"><strong class="shop-buy-title">${name}</strong><small class="shop-buy-desc">${effect}</small><small class="shop-buy-price">單價：${cost} 魂幣</small><small class="shop-buy-total">本次總價：<span id="shop-total-${key}" data-cost="${cost}">${cost}</span> 魂幣</small></div><div class="shop-buy-actions"><div class="quantity-control"><button class="modal-btn" aria-label="減少${name}數量" onclick="changeShopQuantity('${key}', -1)">−</button><input id="shop-qty-${key}" type="number" min="1" max="9999" value="${getRememberedShopQuantity(key)}" aria-label="${name}購買數量（最多9999個）" oninput="updateShopTotal('${key}')"><button class="modal-btn" aria-label="增加${name}數量" onclick="changeShopQuantity('${key}', 1)">＋</button></div><button class="modal-btn" onclick="buyItem('${key}', ${cost})">購買</button></div></div>`; }).join('')}</div>
-                <h4 style="color:#ffaa66;margin-bottom:4px;">💰 收購各品質未裝備武器與防具</h4>
+                </section><section class="shop-tab-pane" data-shop-pane="gear" hidden><h4 style="color:#ffaa66;margin-bottom:4px;">💰 收購各品質未裝備武器與防具</h4>
                 <small style="color:#a08080;">收購公式：基礎價 × 品質倍率 × 等級倍率。品質：普通 ×1、稀有 ×2、黃金 ×4、特殊 ×8；裝備每高 1 級，等級倍率增加 10%（等級 1 為 ×1.0、等級 10 為 ×1.9）。裝備中的物品不會出現在這裡。</small>
                 <button type="button" class="modal-btn" style="display:block;width:100%;margin:10px 0;background:linear-gradient(135deg,#8b3f25,#b86b32);border-color:#ffbd75;font-weight:bold;" onclick="bulkSellAllEquipment()" ${getAllEquipmentSalePlan().count > 0 ? '' : 'disabled'}>💰 一鍵全賣所有品質未裝備裝備（${getAllEquipmentSalePlan().count} 件｜預估 ${getAllEquipmentSalePlan().total.toLocaleString()} 魂幣）</button>
                 <div class="shop-quality-bulk-grid">${qualityBulkButtons}</div>
@@ -15575,18 +15690,18 @@ function getCombatVisualCycleDuration(actionPath) {
                 <div class="shop-equipment-grid">${equipmentSellCards || '<p style="color:#a08080;">目前沒有可出售的未裝備裝備。</p>'}</div>
                 
 
-                <h4 style="color:#d6bbff;margin:18px 0 4px;">📖 收購重複職業技能書</h4>
+                </section><section class="shop-tab-pane" data-shop-pane="books" hidden><h4 style="color:#d6bbff;margin:18px 0 4px;">📖 收購重複職業技能書</h4>
                 <small style="color:#b8a4c9;">中等收購價：等級 1 起 7,500 魂幣，每高 1 級增加 2,500 魂幣。尚未學會技能的第一本會保留，不會出現在出售清單；已學會或多出的重複技能書可出售。</small>
                 <div class="shop-equipment-grid">${duplicateSkillBookRows || '<p style="color:#a08080;">目前沒有可出售的重複技能書。打怪取得重複技能書後，就能在這裡換取魂幣。</p>'}</div>
-                <h4 style="color:#e5c2ff;margin:18px 0 4px;">💎 收購空城島套裝</h4>
+                </section><section class="shop-tab-pane" data-shop-pane="sets" hidden><h4 style="color:#e5c2ff;margin:18px 0 4px;">💎 收購空城島套裝</h4>
                 <small style="color:#b8a4c9;">套裝收購價已降為原收購價的十分之一（約原售價 9%）；點擊套裝小圖示可查看詳細能力數值。已裝備套裝不會出現在出售清單。</small>
                 <button type="button" class="modal-btn" style="display:block;width:100%;margin:8px 0 10px;background:linear-gradient(135deg,#68439a,#40285f);border-color:#c7a0ff;font-weight:bold;" onclick="bulkSellSetEquipment()" ${(currentPlayer.items.setEquipment || []).some(item => !isSetEquipmentEquipped(item.instanceId)) ? '' : 'disabled'}>💎 一鍵出售全部未裝備套裝（${(currentPlayer.items.setEquipment || []).filter(item => !isSetEquipmentEquipped(item.instanceId)).length} 件｜預估 ${((currentPlayer.items.setEquipment || []).filter(item => !isSetEquipmentEquipped(item.instanceId)).reduce((sum,item)=>sum+getSetEquipmentShopSellPrice(item),0)).toLocaleString()} 魂幣）</button>
                 <div class="shop-equipment-grid">${(currentPlayer.items.setEquipment || []).filter(item => !isSetEquipmentEquipped(item.instanceId)).map(item => `<div class="shop-equipment-card"><button type="button" class="shop-equipment-icon" style="cursor:pointer;color:inherit;" title="點擊查看套裝能力" onclick="showShopEquipmentPreview('set','${item.instanceId}')"><img class="set-equipment-icon" src="${(window.SHENLONG_I體質_ASSETS || SET_EQUIPMENT_I體質_ASSETS)[item.asset]}" alt="${item.name}"></button><div class="shop-equipment-info"><strong role="button" tabindex="0" style="color:#d9b6ff;font-size:12px;cursor:pointer;" title="點擊查看套裝能力" onclick="showShopEquipmentPreview('set','${item.instanceId}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showShopEquipmentPreview('set','${item.instanceId}');}">${item.name}</strong><small>${item.setName}${item.setId==='shenlong_dragon_v1'?'｜九神龍專屬掉落 22%':''}｜十分之一收購價 ${getSetEquipmentShopSellPrice(item).toLocaleString()} 魂幣</small></div><button class="modal-btn" onclick="sellSetEquipment('${item.instanceId}')">賣出</button></div>`).join('') || '<p style="color:#a08080;">目前沒有可出售的空城島套裝。</p>'}</div>
-                <h4 style="color:#8edcff;margin:18px 0 4px;">🐟 收購釣魚成果</h4>
+                </section><section class="shop-tab-pane" data-shop-pane="fish" hidden><h4 style="color:#8edcff;margin:18px 0 4px;">🐟 收購釣魚成果</h4>
                 <small style="color:#a0b9c9;">魚的品質由白、綠、藍、紫到橘，品質越高收購價越高。</small>
                 <button type="button" class="modal-btn" style="display:block;width:100%;margin:8px 0 12px;background:linear-gradient(135deg,#176b82,#245d70);border-color:#65d8f2;font-weight:bold;" onclick="bulkSellAllFishingFish()" ${getFishingFishSalePlan().count > 0 ? '' : 'disabled'}>🐟 一鍵全賣釣魚魚獲（${getFishingFishSalePlan().count} 條｜預估 ${getFishingFishSalePlan().total.toLocaleString()} 魂幣）</button>
                 ${fishSellRows || '<p style="color:#a08080;">目前沒有可以出售的魚。到釣魚場試試手氣吧！</p>'}
-                <button class="modal-btn" onclick="closeModal()">離開</button>
+                </section><button class="modal-btn" onclick="closeModal()">離開</button>
             `;
             modal.style.display = 'flex';
         }
