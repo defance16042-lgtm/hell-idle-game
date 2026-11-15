@@ -14720,10 +14720,14 @@ function getCombatVisualCycleDuration(actionPath) {
             equipmentModalBody.dataset.modalType = from === 'inventory' ? 'inventory-equipment' : from === 'warehouse' ? 'warehouse-equipment' : 'equipment-details';
             equipmentModalBody.classList.remove('warehouse-horizontal-modal', 'character-stats-modal', 'readable-modal', 'battle-log-modal', 'set-equipment-detail-modal');
             const isWeapon = kind === 'weapon';
+            const targetInstanceId = String(instanceId ?? '');
             const item = isWeapon
-                ? (currentPlayer.items.weapons || []).find(entry => entry.instanceId === instanceId)
-                : (currentPlayer.items.armors || []).find(entry => entry.instanceId === instanceId);
-            if (!item) return;
+                ? (currentPlayer.items.weapons || []).find(entry => String(entry?.instanceId ?? '') === targetInstanceId)
+                : (currentPlayer.items.armors || []).find(entry => String(entry?.instanceId ?? '') === targetInstanceId);
+            if (!item) {
+                console.warn('[裝備詳情] 找不到裝備資料', { kind, instanceId, from });
+                return;
+            }
             if (isWeapon && item.templateId === 'li_ru_poison_wine_staff_v1') {
                 item.enhancementLevel = Math.max(0, Math.floor(Number(item.enhancementLevel) || 0));
                 item.baseAttackBonus = Math.max(0, Number(item.baseAttackBonus) || 250);
@@ -14756,7 +14760,8 @@ function getCombatVisualCycleDuration(actionPath) {
                 syncLuBuGoldenArmorEnhancementProperties(item);
             }
             const equipped = isWeapon
-                ? currentPlayer.equipment.weaponId === item.instanceId
+                ? [currentPlayer.equipment.weaponId, currentPlayer.equipment.leftHandAxeId, currentPlayer.equipment.rightHandAxeId]
+                    .some(id => String(id ?? '') !== '' && String(id) === String(item.instanceId))
                 : isArmorItemEquipped(item, currentPlayer);
             const level = Number(item.enhancementLevel) || 0;
             const enhancedForDelete = isEnhancedEquipmentForDeletion(item);
@@ -14818,9 +14823,14 @@ function getCombatVisualCycleDuration(actionPath) {
         function showEquippedEquipmentBonus(kind, instanceId) {
             if (!currentPlayer) return;
             const isWeapon = kind === 'weapon';
+            const targetInstanceId = String(instanceId ?? '');
             const item = isWeapon
-                ? (currentPlayer.items.weapons || []).find(entry => entry.instanceId === instanceId && currentPlayer.equipment.weaponId === instanceId)
-                : (currentPlayer.items.armors || []).find(entry => entry.instanceId === instanceId && isArmorItemEquipped(entry, currentPlayer));
+                ? (currentPlayer.items.weapons || []).find(entry =>
+                    String(entry?.instanceId ?? '') === targetInstanceId &&
+                    [currentPlayer.equipment.weaponId, currentPlayer.equipment.leftHandAxeId, currentPlayer.equipment.rightHandAxeId]
+                        .some(id => String(id ?? '') !== '' && String(id) === targetInstanceId))
+                : (currentPlayer.items.armors || []).find(entry =>
+                    String(entry?.instanceId ?? '') === targetInstanceId && isArmorItemEquipped(entry, currentPlayer));
             if (!item) return;
             const isInverseRing = !isWeapon && item.templateId === 'inverse_ring_v1';
             const isLuBuGoldenArmor = !isWeapon && item.templateId === 'golden_armor_v1';
@@ -28633,3 +28643,22 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 </style>
 </body>
 </html>
+
+<style id="equipment-detail-actions-scroll-fix-v1">
+/* 裝備能力或詞條很多時，讓詳情視窗本身可捲動，底部裝備／卸下／強化按鈕不再被裁切。 */
+#modal-window:has(#modal-body[data-modal-type="inventory-equipment"]) .modal-content,
+#modal-window:has(#modal-body[data-modal-type="warehouse-equipment"]) .modal-content,
+#modal-window:has(#modal-body[data-modal-type="equipment-details"]) .modal-content {
+  max-height:90vh!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+  box-sizing:border-box!important;
+}
+#modal-body[data-modal-type="inventory-equipment"],
+#modal-body[data-modal-type="warehouse-equipment"],
+#modal-body[data-modal-type="equipment-details"] {
+  max-height:none!important;
+  overflow:visible!important;
+}
+</style>
