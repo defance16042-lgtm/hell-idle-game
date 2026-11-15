@@ -5259,6 +5259,16 @@ html body #shenlong-aura-overlay .shenlong-real-coil{display:none!important}
 #player-icon.shenlong-aura-active::before{display:none!important}
 #player-icon.shenlong-aura-active .fighter-sprite{filter:none!important}
 </style>
+<style id="warehouse-category-tabs-redesign-v1">
+#modal-body.warehouse-horizontal-modal{box-sizing:border-box!important;width:min(1160px,96vw)!important;max-width:min(1160px,96vw)!important;min-width:0!important;height:min(900px,94dvh)!important;max-height:94dvh!important;padding:15px 17px!important;overflow:hidden!important;background:radial-gradient(ellipse at 50% 0%,rgba(112,67,38,.2),transparent 55%),linear-gradient(155deg,#1b1110,#0c0808 72%)!important;border:1px solid #755137!important;border-radius:14px!important;display:flex!important;flex-direction:column!important;gap:10px!important}
+.warehouse-tabs-header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:2px 2px 11px;border-bottom:1px solid #725039}.warehouse-heading{display:flex;flex-direction:column;gap:4px}.warehouse-heading h3{margin:0!important;color:#ffd28b!important;font-size:clamp(21px,2.1vw,28px)!important}.warehouse-heading small{color:#c7ad91;font-size:12px}.warehouse-header-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.warehouse-capacity{padding:6px 11px;border:1px solid #795b36;border-radius:999px;background:#120d0b;color:#f8d78d;font-size:13px;font-weight:700}
+.warehouse-main-tabs{display:flex;gap:8px;padding:0 0 9px;border-bottom:1px solid #51382b}.warehouse-main-tabs button,.warehouse-category-tab{display:flex;align-items:center;justify-content:center;gap:7px;min-height:37px;padding:7px 13px;border:1px solid #60412f;border-radius:8px;background:linear-gradient(180deg,#2b1b16,#17100e);color:#d7c1aa;font:700 13px inherit;cursor:pointer}.warehouse-main-tabs button[aria-selected=true],.warehouse-category-tab[aria-selected=true]{border-color:#e1b56e;background:linear-gradient(180deg,#81512b,#4b2c1d);color:#fff1d0}.warehouse-main-tabs button span,.warehouse-category-tab span{padding:1px 6px;border-radius:999px;background:#0b0807;color:#e9c88e;font-size:10px}
+#modal-body.warehouse-horizontal-modal .warehouse-horizontal-layout{display:block!important;flex:1 1 auto!important;height:auto!important;min-height:0!important;overflow:hidden!important}#modal-body.warehouse-horizontal-modal .warehouse-pane{display:flex!important;flex-direction:column!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;gap:8px!important}#modal-body.warehouse-horizontal-modal .warehouse-pane[hidden]{display:none!important}
+#modal-body.warehouse-horizontal-modal .warehouse-pane-title{display:block!important;flex:none!important;padding:9px 12px!important;border-left:4px solid #d49a54!important;border-radius:5px!important;background:linear-gradient(90deg,#6b3c24aa,#2b1a14aa)!important;color:#ffcf8a!important;font-size:14px!important}
+.warehouse-category-tabs{display:flex;gap:7px;flex-wrap:wrap;flex:none;padding:1px 0 7px;border-bottom:1px solid #51382b}.warehouse-category-tab{min-height:32px;padding:5px 10px;font-size:12px}
+#modal-body.warehouse-horizontal-modal .warehouse-source-grid,#modal-body.warehouse-horizontal-modal .warehouse-storage-grid{flex:1 1 auto!important;min-height:0!important;min-width:0!important;width:min(100%,min(62vh,680px))!important;height:auto!important;max-height:100%!important;aspect-ratio:1/1!important;margin:0 auto!important;overflow:auto!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;grid-template-rows:repeat(8,minmax(0,1fr))!important}#modal-body.warehouse-horizontal-modal .grid-page-controls{flex:none!important;margin:0 auto!important;padding:4px 0!important}
+@media(max-width:700px){#modal-body.warehouse-horizontal-modal{width:100vw!important;max-width:100vw!important;height:100dvh!important;max-height:100dvh!important;border-radius:0!important;padding:10px!important}.warehouse-tabs-header{align-items:flex-start}.warehouse-main-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.warehouse-category-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}.warehouse-category-tab{padding:5px 3px;font-size:11px;min-width:0}#modal-body.warehouse-horizontal-modal .warehouse-source-grid,#modal-body.warehouse-horizontal-modal .warehouse-storage-grid{width:min(100%,min(56vh,560px))!important}}
+</style>
 </head>
 <body>
 <script id="electron-save-storage-bridge">
@@ -14905,6 +14915,18 @@ function getCombatVisualCycleDuration(actionPath) {
             updateGameUI(); saveGame(); renderInventory();
         }
 
+        function setWarehouseCategory(side, category) {
+            if (side === 'source') { window.warehouseSourceCategory = category; warehouseSourceGridPage = 1; }
+            else { window.warehouseStorageCategory = category; warehouseStorageGridPage = 1; }
+            openWarehouse();
+        }
+        function setWarehousePane(pane) {
+            window.warehouseActivePane = pane === 'storage' ? 'storage' : 'source';
+            const body = document.getElementById('modal-body');
+            if (!body) return;
+            body.querySelectorAll('[data-warehouse-pane]').forEach(el => { el.hidden = el.dataset.warehousePane !== window.warehouseActivePane; });
+            body.querySelectorAll('[data-warehouse-main-tab]').forEach(el => el.setAttribute('aria-selected', el.dataset.warehouseMainTab === window.warehouseActivePane ? 'true' : 'false'));
+        }
         function openWarehouse() {
             if (!requireVillageForService('村莊倉庫')) return;
             normalizeWarehousePlayerStorage(currentPlayer);
@@ -14925,7 +14947,25 @@ function getCombatVisualCycleDuration(actionPath) {
             const carriedGold = Math.max(0, Math.floor(Number(currentPlayer.gold) || 0));
             if (carriedGold > 0) stackItems.unshift({ kind: 'stack', key: 'gold', label: '魂幣', icon: '🪙', count: carriedGold });
             const books = (currentPlayer.items.skillBooks || []).map((book, index) => ({ kind: 'skillbook', index, label: `${book.name}技能書 等級 ${book.level}`, icon: '📖' }));
-            const sourceEntries = [...gear, ...stackItems, ...books];
+            const warehouseCategoryOf = entry => {
+                if (entry.kind === 'weapon' || entry.kind === 'armor') return 'gear';
+                if (entry.kind === 'setEquipment') return 'set';
+                if (entry.kind === 'skillbook') return 'books';
+                if (entry.kind === 'stack' && entry.key === 'gold') return 'gold';
+                if (entry.kind === 'stack' && /scroll/i.test(String(entry.key || ''))) return 'scrolls';
+                if (entry.kind === 'stack') return 'consumables';
+                return 'other';
+            };
+            const warehouseCategoryTabs = (side, entries, selected) => {
+                const cats = [['all','全部'],['gear','一般裝備'],['set','職業套裝'],['consumables','消耗品'],['scrolls','強化卷'],['books','技能書'],['gold','魂幣']];
+                return '<div class="warehouse-category-tabs" role="tablist">' + cats.map(([id,label]) => {
+                    const count = id === 'all' ? entries.length : entries.filter(e => warehouseCategoryOf(e) === id).length;
+                    return '<button type="button" class="warehouse-category-tab" role="tab" aria-selected="' + (selected === id ? 'true' : 'false') + '" onclick="setWarehouseCategory(\'' + side + '\',\'' + id + '\')">' + label + '<span>' + count + '</span></button>';
+                }).join('') + '</div>';
+            };
+            const sourceEntriesAll = [...gear, ...stackItems, ...books];
+            const sourceCategory = window.warehouseSourceCategory || 'all';
+            const sourceEntries = sourceCategory === 'all' ? sourceEntriesAll : sourceEntriesAll.filter(e => warehouseCategoryOf(e) === sourceCategory);
             const warehouseSourceTotalPages = Math.max(1, Math.ceil(sourceEntries.length / 64));
             warehouseSourceGridPage = Math.min(warehouseSourceGridPage, warehouseSourceTotalPages);
             const sourceStart = (warehouseSourceGridPage - 1) * 64;
@@ -14943,11 +14983,13 @@ function getCombatVisualCycleDuration(actionPath) {
                 return `<button class="warehouse-tile" title="${entry.label}｜點擊存入" onclick="storeSkillBookToWarehouse(${entry.index})" ${storage.length >= warehouseCapacity && !storage.some(stored => stored.kind === 'skillbook' && stored.stackKey === warehouseSkillBookKey(currentPlayer.items.skillBooks[entry.index])) ? 'disabled' : ''}><span class="item-icon">${entry.icon}</span><span class="warehouse-tile-action">存入</span></button>`;
             });
             while (visibleWarehouseSource.length < 64) visibleWarehouseSource.push('<div class="warehouse-tile" aria-hidden="true" style="opacity:.22;"></div>');
-            const warehouseStorageTotalPages = Math.max(1, Math.ceil(Math.max(storage.length, 1) / 64));
+            const storageCategory = window.warehouseStorageCategory || 'all';
+            const storageEntriesAll = storage.map((entry, index) => ({entry, index}));
+            const filteredStorageEntries = storageCategory === 'all' ? storageEntriesAll : storageEntriesAll.filter(row => warehouseCategoryOf(row.entry) === storageCategory);
+            const warehouseStorageTotalPages = Math.max(1, Math.ceil(Math.max(filteredStorageEntries.length, 1) / 64));
             warehouseStorageGridPage = Math.min(warehouseStorageGridPage, warehouseStorageTotalPages);
             const storageStart = (warehouseStorageGridPage - 1) * 64;
-            const visibleStorageRows = storage.slice(storageStart, storageStart + 64).map((entry, pageIndex) => {
-                const index = storageStart + pageIndex;
+            const visibleStorageRows = filteredStorageEntries.slice(storageStart, storageStart + 64).map(({entry, index}) => {
                 const storedSkillBook = entry.kind === 'skillbook' ? entry.items?.[0] : null;
                 const quantity = entry.kind === 'stack' ? entry.quantity : entry.kind === 'skillbook' ? (entry.items || []).length : 1;
                 const detail = entry.kind === 'skillbook' ? `技能書 等級 ${storedSkillBook?.level || 0}` : entry.kind === 'stack' ? (entry.key === 'gold' ? '魂幣' : '消耗品') : '點圖示查看能力';
@@ -14968,7 +15010,8 @@ function getCombatVisualCycleDuration(actionPath) {
                 if (entry.kind === 'setEquipment') return `<div class="warehouse-tile quality-gold" style="--equipment-quality:${getEquipmentQualityColor(entry.item)};border-color:${getEquipmentQualityColor(entry.item)};box-shadow:inset 0 0 10px ${getEquipmentQualityColor(entry.item)}22,0 0 7px ${getEquipmentQualityColor(entry.item)}44;" data-game-tooltip="${getEquipmentTooltipText(entry.item, 'set').replace(/"/g, '&quot;')}">${icon}<button class="warehouse-tile-detail" aria-label="查看${label}" onclick="showStoredSetEquipmentDetails(${index})"></button><button class="warehouse-tile-action" onclick="takeWarehouseItem(${index})">取出</button></div>`;
                 return `<button class="warehouse-tile" title="${label}${quantity > 1 ? ` ×${quantity}` : ''}｜點擊選擇取出數量" onclick="takeWarehouseItem(${index})"><span class="item-icon ${entry.key === 'gold' ? 'item-gold' : ''}">${icon}</span><span class="warehouse-tile-count">${quantity}</span><span class="warehouse-tile-action">取出</span></button>`;
             });
-            body.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 0 10px;"><h3 style="margin:0;">📦 職業共通倉庫</h3><div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end;"><small style="color:#d8b78a;">自動分類排列，不會丟棄物品</small><button class="modal-btn" style="margin:0;" onclick="sortWarehouseItems()">整理倉庫</button><button class="modal-btn" style="margin:0;" onclick="closeModal()">離開</button></div></div><div class="warehouse-horizontal-layout"><section class="warehouse-pane"><strong class="warehouse-pane-title">背包可存入｜每頁 8 × 8 格（64 格）</strong><div class="warehouse-source-grid">${visibleWarehouseSource.join('')}</div>${gridPageControls('warehouse-source', warehouseSourceGridPage, warehouseSourceTotalPages)}</section><section class="warehouse-pane"><strong class="warehouse-pane-title">共通倉庫內容｜8 × 8 格（每頁 64 格）</strong><div class="warehouse-storage-grid">${visibleStorageRows.join('')}</div>${gridPageControls('warehouse-storage', warehouseStorageGridPage, warehouseStorageTotalPages)}</section></div>`;
+            const activeWarehousePane = window.warehouseActivePane || 'source';
+            body.innerHTML = `<div class="warehouse-tabs-header"><div class="warehouse-heading"><h3>📦 職業共通倉庫</h3><small>分類收納｜存取安全｜不會丟棄物品</small></div><div class="warehouse-header-actions"><span class="warehouse-capacity">📦 ${storage.length} / ${warehouseCapacity} 格</span><button class="modal-btn" style="margin:0;" onclick="sortWarehouseItems()">整理倉庫</button><button class="modal-btn" style="margin:0;" onclick="closeModal()">離開</button></div></div><div class="warehouse-main-tabs" role="tablist"><button type="button" data-warehouse-main-tab="source" aria-selected="${activeWarehousePane==='source'?'true':'false'}" onclick="setWarehousePane('source')">🎒 背包存入</button><button type="button" data-warehouse-main-tab="storage" aria-selected="${activeWarehousePane==='storage'?'true':'false'}" onclick="setWarehousePane('storage')">📦 共通倉庫 <span>${storage.length}</span></button></div><div class="warehouse-horizontal-layout"><section class="warehouse-pane" data-warehouse-pane="source" ${activeWarehousePane==='source'?'':'hidden'}><strong class="warehouse-pane-title">背包可存入｜每頁 8 × 8 格（64 格）</strong>${warehouseCategoryTabs('source',sourceEntriesAll,sourceCategory)}<div class="warehouse-source-grid">${visibleWarehouseSource.join('')}</div>${gridPageControls('warehouse-source',warehouseSourceGridPage,warehouseSourceTotalPages)}</section><section class="warehouse-pane" data-warehouse-pane="storage" ${activeWarehousePane==='storage'?'':'hidden'}><strong class="warehouse-pane-title">共通倉庫內容｜每頁 8 × 8 格（64 格）</strong>${warehouseCategoryTabs('storage',storage,storageCategory)}<div class="warehouse-storage-grid">${visibleStorageRows.join('')}</div>${gridPageControls('warehouse-storage',warehouseStorageGridPage,warehouseStorageTotalPages)}</section></div>`;
             body.classList.add('warehouse-horizontal-modal');
             document.getElementById('modal-window').style.display = 'flex';
             if (typeof setupWarehouseGameTooltips === 'function') setupWarehouseGameTooltips();
