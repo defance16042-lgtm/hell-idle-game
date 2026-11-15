@@ -250,7 +250,7 @@
     const poseRunId = ++yuanmenPoseRunId;
     sprite.setAttribute('src', typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(yuanmenBowSource) : yuanmenBowSource);
     const poseStarted = performance.now();
-    const poseDuration = 920;
+    const poseDuration = 1150;
     const drawPose = now => {
       if (!sprite.isConnected || poseRunId !== yuanmenPoseRunId) {
         sprite.style.removeProperty('transform');
@@ -278,7 +278,7 @@
     const from = { x: mr.left - sr.left + mr.width * .18, y: mr.top - sr.top + mr.height * .42 };
     const to = { x: pr.left - sr.left + pr.width * .50, y: pr.top - sr.top + pr.height * .48 };
     const dx = to.x - from.x, dy = to.y - from.y, distance = Math.max(1, Math.hypot(dx, dy));
-    const angle = Math.atan2(dy, dx), started = performance.now(), duration = 920;
+    const angle = Math.atan2(dy, dx), started = performance.now(), duration = 1150;
     const draw = now => {
       const rect = stage.getBoundingClientRect();
       if (!yuanmenCanvas?.isConnected) return;
@@ -287,8 +287,8 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, rect.width, rect.height);
       const t = Math.min(1, Math.max(0, (now - started) / duration));
       // 明確畫出「抬弓／拉弦／放箭」三段姿勢，避免只換站立圖看不出攻擊動作。
-      const bowProgress = Math.min(1, t / .58);
-      const release = t >= .52;
+      const bowProgress = Math.min(1, t / .48);
+      const release = t >= .48;
       ctx.save();
       ctx.translate(from.x, from.y);
       ctx.rotate(angle);
@@ -321,23 +321,24 @@
         ctx.shadowBlur = 0;
       }
       ctx.restore();
-      const travel = t < .18 ? 0 : Math.min(1, (t - .18) / .57);
+      // 放弦前箭矢留在弓上；只有蓄力滿弦後才飛向玩家。
+      const travel = t < .49 ? 0 : Math.min(1, (t - .49) / .34);
       const ease = 1 - Math.pow(1 - travel, 2.1);
       const x = from.x + dx * ease, y = from.y + dy * ease;
       if (t < .25) {
         const r = 10 + t / .25 * 28, g = ctx.createRadialGradient(from.x, from.y, 0, from.x, from.y, r);
         g.addColorStop(0, 'rgba(255,248,190,.95)'); g.addColorStop(.32, 'rgba(255,180,56,.65)'); g.addColorStop(1, 'rgba(147,43,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(from.x, from.y, r, 0, Math.PI * 2); ctx.fill();
       }
-      if (t >= .13 && t < .86) {
+      if (t >= .49 && t < .84) {
         ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.globalAlpha = t > .72 ? Math.max(0, 1 - (t - .72) / .14) : 1;
-        const tail = ctx.createLinearGradient(-120, 0, 12, 0); tail.addColorStop(0, 'rgba(117,33,242,0)'); tail.addColorStop(.55, 'rgba(167,57,255,.45)'); tail.addColorStop(1, 'rgba(255,213,91,.95)');
+        const tail = ctx.createLinearGradient(-120, 0, 12, 0); tail.addColorStop(0, 'rgba(117,33,242,0)'); tail.addColorStop(.34, 'rgba(183,47,232,.48)'); tail.addColorStop(.72, 'rgba(255,91,35,.86)'); tail.addColorStop(1, 'rgba(255,238,153,1)');
         ctx.fillStyle = tail; ctx.beginPath(); ctx.moveTo(-120, -7); ctx.quadraticCurveTo(-48, -18, 18, -3); ctx.lineTo(30, 0); ctx.lineTo(18, 3); ctx.quadraticCurveTo(-48, 18, -120, 7); ctx.closePath(); ctx.fill();
         ctx.strokeStyle = '#fff4b0'; ctx.shadowColor = '#ffad37'; ctx.shadowBlur = 13; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(26, 0); ctx.stroke(); ctx.shadowBlur = 0;
         ctx.fillStyle = '#fff7cf'; ctx.beginPath(); ctx.moveTo(31, 0); ctx.lineTo(18, -7); ctx.lineTo(21, 0); ctx.lineTo(18, 7); ctx.closePath(); ctx.fill(); ctx.restore();
         for (let i = 0; i < 6; i++) { const f = (i / 6 + t * 1.7) % 1, px = x - dx * .18 * f, py = y - dy * .18 * f + Math.sin(now * .02 + i) * 5; ctx.fillStyle = i % 2 ? '#c46cff' : '#ffe28b'; ctx.fillRect(px, py, 3, 3); }
       }
-      if (t >= .72) {
-        const q = Math.min(1, (t - .72) / .28), alpha = 1 - q, r = 12 + q * 52;
+      if (t >= .82) {
+        const q = Math.min(1, (t - .82) / .18), alpha = 1 - q, r = 12 + q * 52;
         ctx.globalAlpha = alpha; ctx.strokeStyle = '#ffe89a'; ctx.shadowColor = '#b64cff'; ctx.shadowBlur = 18; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(to.x, to.y, r, 0, Math.PI * 2); ctx.stroke(); ctx.shadowBlur = 0;
         ctx.strokeStyle = '#9a46e8'; ctx.lineWidth = 5; ctx.beginPath(); ctx.moveTo(to.x - r * .7, to.y + r * .45); ctx.lineTo(to.x + r * .7, to.y - r * .45); ctx.stroke();
         for (let i = 0; i < 10; i++) { const a = i * Math.PI * 2 / 10 + angle, inner = 8 + q * 8, outer = 24 + q * 38; ctx.strokeStyle = i % 2 ? '#ffbf50' : '#c56bff'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(to.x + Math.cos(a) * inner, to.y + Math.sin(a) * inner); ctx.lineTo(to.x + Math.cos(a) * outer, to.y + Math.sin(a) * outer); ctx.stroke(); }
