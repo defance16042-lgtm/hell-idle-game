@@ -42,7 +42,7 @@
     if (!monster || monster.name !== '呂布') return false;
     const icon = document.querySelector('#monster-icon');
     const sprite = icon?.querySelector('.monster-sprite');
-    const stage = icon?.closest('.battle-stage');
+    const stage = icon?.closest('.battle-stage') || document.getElementById('battle-stage');
     if (!sprite || !stage) return false;
 
     clearAnimation();
