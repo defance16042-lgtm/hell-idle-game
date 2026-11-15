@@ -5316,6 +5316,68 @@ html body #shenlong-aura-overlay .shenlong-real-coil{display:none!important}
 .inventory-grid-wrap .grid-page-controls{flex:none;margin:0 auto!important;padding:5px 0!important}
 
 </style>
+
+<style id="shop-gear-compact-v1">
+/* 1.0.78：僅縮小雜貨鋪「裝備收購」分頁的品質批售格與裝備卡片 */
+#modal-body .shop-tab-pane[data-shop-pane="gear"] .shop-quality-bulk-grid{
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:5px;
+  margin:6px 0;
+}
+#modal-body .shop-tab-pane[data-shop-pane="gear"] .shop-quality-bulk-btn{
+  min-width:0;
+  gap:2px;
+  padding:6px 2px;
+  border-radius:6px;
+  font-size:11px;
+  line-height:1.2;
+}
+#modal-body .shop-tab-pane[data-shop-pane="gear"] .shop-quality-bulk-btn .quality-bulk-icon{
+  font-size:17px;
+}
+#modal-body .shop-tab-pane[data-shop-pane="gear"] .shop-quality-bulk-btn small{
+  font-size:9px;
+  line-height:1.2;
+}
+#modal-body .shop-tab-pane[data-shop-pane="gear"] .shop-equipment-grid{
+  grid-template-columns:repeat(auto-fill,minmax(155px,1fr));
+  gap:6px;
+  margin:7px 0 10px;
+}
+#modal-body .shop-tab-pane[data-shop-pane="gear"] .shop-equipment-card{
+  gap:6px;
+  padding:5px;
+  border-radius:6px;
+}
+#modal-body .shop-tab-pane[data-shop-pane="gear"] .shop-equipment-card .shop-equipment-icon{
+  width:34px;
+  height:34px;
+  border-radius:5px;
+}
+#modal-body .shop-tab-pane[data-shop-pane="gear"] .shop-equipment-card .shop-equipment-icon img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+}
+#modal-body .shop-tab-pane[data-shop-pane="gear"] .shop-equipment-card .shop-equipment-info small{
+  margin-top:2px;
+  font-size:10px;
+  line-height:1.25;
+}
+#modal-body .shop-tab-pane[data-shop-pane="gear"] .shop-equipment-card .modal-btn{
+  padding:4px 6px;
+  font-size:10px;
+  line-height:1.2;
+}
+@media(max-width:760px){
+  #modal-body .shop-tab-pane[data-shop-pane="gear"] .shop-quality-bulk-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+  }
+  #modal-body .shop-tab-pane[data-shop-pane="gear"] .shop-equipment-grid{
+    grid-template-columns:repeat(auto-fill,minmax(135px,1fr));
+  }
+}
+</style>
 </head>
 <body>
 <script id="electron-save-storage-bridge">
