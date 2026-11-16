@@ -7330,6 +7330,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             weapon.classKeys = ['knight'];
             weapon.classKey = 'knight';
             weapon.weaponType = 'melee';
+            weapon.iconAsset = 'assets/items/fangtian_halberd_icon.svg';
             weapon.baseAttackBonus = 520;
             weapon.attackBonus = expectedAttack;
             weapon.baseAttackSpeedBonus = Number.isFinite(Number(weapon.baseAttackSpeedBonus)) ? Number(weapon.baseAttackSpeedBonus) : 0;
@@ -7433,7 +7434,7 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
                     return;
                 }
                 if (weapon.templateId === 'baodiao_bow_v1') {
-                    weapon.name = '寶雕弓'; weapon.classKey = 'elf'; weapon.classKeys = ['elf']; weapon.weaponType = 'ranged';
+                    weapon.name = '寶雕弓'; weapon.classKey = 'elf'; weapon.classKeys = ['elf']; weapon.weaponType = 'ranged'; weapon.iconAsset = 'assets/items/parallel_lu_bu_baodiao_bow.png';
                     weapon.baseAttackBonus = Math.max(0, Number(weapon.baseAttackBonus) || 500);
                     weapon.attackBonus = weapon.baseAttackBonus + enhancementLevel * 4;
                     weapon.baseAttackSpeedBonus = Number.isFinite(Number(weapon.baseAttackSpeedBonus)) ? Number(weapon.baseAttackSpeedBonus) : 0.01;
@@ -28006,7 +28007,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     },
     fangtian_halberd_v1: {
       id: 'fangtian_halberd_v1', name: '方天畫戟', kind: 'weapon', slot: 'weapon', slotLabel: '武器',
-      icon: '🔱', weaponType: 'melee',
+      icon: '🔱', iconAsset: 'assets/items/fangtian_halberd_icon.svg', weaponType: 'melee',
       level: 100, requiredLevel: 100, rarity: '神話', quality: '神話', qualityColor: '#c879ff',
       classKeys: ['knight'], classKey: 'knight', dropChance: 0.02, sourceMonster: '呂布',
       attackBonus: 520, baseAttackBonus: 520, attackSpeedBonus: 0, baseAttackSpeedBonus: 0,
