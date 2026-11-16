@@ -26860,9 +26860,9 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   const ZONE = '平行三國';
   if (typeof zoneMonsters === 'undefined' || !zoneMonsters) return;
   const monster = {
-    name: '高順將軍', icon: '🛡️',
-    image: 'assets/monsters/parallel_three_kingdoms/gao_shun-general.png',
-    battleImage: 'assets/monsters/parallel_three_kingdoms/gao_shun-general.png',
+    name: '高順將軍', icon: null,
+    image: 'assets/monsters/parallel_three_kingdoms/gao_shun_dark_chibi_left.svg',
+    battleImage: 'assets/monsters/parallel_three_kingdoms/gao_shun_dark_chibi_left.svg',
     level: 80, levelRange: '80', attackSpeed: 1.16,
     hp: 344000, maxHp: 344000, atk: 6540, def: 2640, magicDefense: 1790,
     attackType: '陷陣斬盾', basicAttackName: '陷陣斬盾', attackRange: 'melee', damageType: 'physical',
@@ -27864,11 +27864,11 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   const ZONE = '平行三國';
   if (typeof zoneMonsters === 'undefined' || !zoneMonsters) return;
   const monster = {
-    name: '呂布', icon: '🔱',
-    image: 'assets/monsters/parallel_three_kingdoms/lu_bu-boss.png',
-    phase1Image: 'assets/monsters/parallel_three_kingdoms/lu_bu-boss.png',
-    battleImage: 'assets/monsters/parallel_three_kingdoms/lu_bu-boss.png',
-    phase2Image: 'assets/monsters/parallel_three_kingdoms/lu_bu-bow-boss.png',
+    name: '呂布', icon: null,
+    image: 'assets/monsters/parallel_three_kingdoms/lu_bu_dark_chibi_cavalry.svg',
+    phase1Image: 'assets/monsters/parallel_three_kingdoms/lu_bu_dark_chibi_cavalry.svg',
+    battleImage: 'assets/monsters/parallel_three_kingdoms/lu_bu_dark_chibi_cavalry.svg',
+    phase2Image: 'assets/monsters/parallel_three_kingdoms/lu_bu_dark_chibi_mounted_archer.svg',
     level: 100, levelRange: '100', attackSpeed: 0.88,
     // 呂布是兩段獨立血條：第一階段與第二階段各 2,480,000 HP。
     // 第一階段血量歸零時攔截死亡，立即重置第二條血並切換弓將。
@@ -28572,7 +28572,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     const defenseSkills = asList(m.defenseSkills);
     const bossPhases = Array.isArray(m.bossPhases) ? m.bossPhases : [];
     const luBuPhases = isLuBu ? `<div class="ptk-lubu-phase-intro"><strong>⚔️ 呂布雙階段戰鬥流程</strong><span>第一階段血條歸零後才會變身；第二階段重新開始一條完整血條，兩段不共用血量。</span></div><div class="ptk-lubu-phase-grid">
-      ${luBuPhaseCard('第一階段', m.phase1Image || 'assets/monsters/parallel_three_kingdoms/lu_bu-boss.png', m.phase1Title || '赤紫鬼神', m.phase1Weapon || '方天畫戟', m.phase1HpLabel || `${fmt(m.phase1Hp)} HP`, '戰鬥開始時進入；必須先將第一條血打到 0。', m.phase1AttackLabel || m.attackType || '近戰攻擊', '騎乘赤兔馬揮動方天畫戟，施放赤紫刃光與震地攻擊。', 'phase-one')}
+      ${luBuPhaseCard('第一階段', m.phase1Image || 'assets/monsters/parallel_three_kingdoms/lu_bu_dark_chibi_cavalry.svg', m.phase1Title || '赤紫鬼神', m.phase1Weapon || '方天畫戟', m.phase1HpLabel || `${fmt(m.phase1Hp)} HP`, '戰鬥開始時進入；必須先將第一條血打到 0。', m.phase1AttackLabel || m.attackType || '近戰攻擊', '騎乘赤兔馬揮動方天畫戟，施放赤紫刃光與震地攻擊。', 'phase-one')}
       ${luBuPhaseCard('第二階段', m.phase2Image, m.phase2Title || '轅門弓將', m.phase2Weapon || '寶雕弓', m.phase2HpLabel || `${fmt(m.phase2Hp)} HP`, '第一階段 2,480,000 HP 歸零後觸發變身，重新建立第二條血。', m.phase2AttackLabel || m.phase2AttackType || '遠距離攻擊', '卸下方天畫戟、取出寶雕弓，以唯一大招「轅門射戟」射出金色箭矢與紅紫戟影。', 'phase-two')}
     </div><div class="ptk-lubu-phase-rule"><b>📌 重要規則</b><span>第一段打完才變身，不會在第一條血剩一半時變身；第二段是獨立的 2,480,000 HP 血條。</span></div>` : '';
     const level = m.levelRange || m.level || '—';
