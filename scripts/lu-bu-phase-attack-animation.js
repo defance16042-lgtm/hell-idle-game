@@ -48,11 +48,14 @@
     clearAnimation();
     const id = ++runId;
     const requestedAttack = String(attackName || '').trim();
-    const phase2 = Number(monster._parallelLuBuPhase) === 2
-      || window.__parallelLuBuPhase2Active === true
-      || monster.attackType === '轅門射戟'
-      || monster.basicAttackName === '轅門射戟'
-      || requestedAttack.includes('轅門射戟');
+    // 明確階段值優先：第一階段不可被殘留的全域旗標、弓形態攻擊資料或上次技能名稱覆蓋。
+    const hasExplicitPhase = monster._parallelLuBuPhase !== undefined && monster._parallelLuBuPhase !== null;
+    const phase2 = hasExplicitPhase
+      ? Number(monster._parallelLuBuPhase) === 2
+      : (window.__parallelLuBuPhase2Active === true
+        || monster.attackType === '轅門射戟'
+        || monster.basicAttackName === '轅門射戟'
+        || requestedAttack.includes('轅門射戟'));
     const root = makeRoot(stage);
     activeRoot = root;
     activeSprite = sprite;
