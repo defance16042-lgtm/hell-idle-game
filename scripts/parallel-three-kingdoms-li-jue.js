@@ -28,11 +28,11 @@
       { name: '紫魘鬼神爆', phase: 'lowHp', chance: 0.36, damageType: 'magic', attackRange: 'melee', powerMultiplier: 2.08 }
     ],
     description: '平行三國的李傕將軍，身披黑紅金紫鬼將重甲，揮舞鬼刃巨斧。戰旗獵獵、紫色鬼火纏身，外表兇悍卻保留圓臉短腿的可愛黑暗 Q 版比例。',
-    dropTable: ['李傕鬼王盔（需求等級 80，獨立掉落率 5%）', '李傕破軍戰甲（需求等級 80，獨立掉落率 5%）', '鬼神斬月斧（需求等級 80，獨立掉落率 5%）', '暗紅兵符', '鬼將殘頁'],
+    dropTable: ['李傕鬼王盔（戰士專屬一般頭盔，可強化｜需求等級 80｜獨立掉落率 5%）', '李傕破軍戰甲（戰士專屬一般胸甲，可強化｜需求等級 80｜獨立掉落率 5%）', '鬼神斬月斧（戰士專屬一般雙手斧，可強化｜需求等級 80｜獨立掉落率 5%）', '暗紅兵符', '鬼將殘頁'],
     uniqueDrops: [
-      '李傕鬼王盔｜特殊頭盔｜需求等級 80｜全職業可穿戴｜獨立掉落率 5%｜物理防禦 +142｜魔法防禦 +96｜力量 +28、體質 +24、精神 +18',
-      '李傕破軍戰甲｜特殊胸甲｜需求等級 80｜全職業可穿戴｜獨立掉落率 5%｜物理防禦 +236｜魔法防禦 +158｜力量 +32、體質 +48、精神 +20',
-      '鬼神斬月斧｜特殊雙手斧｜需求等級 80｜騎士、戰士可裝備｜獨立掉落率 5%｜攻擊力 +292｜力量 +42、體質 +18｜暴擊率 +4%'
+      '李傕鬼王盔｜一般頭盔｜戰士專屬、可強化｜需求等級 80｜獨立掉落率 5%｜物理防禦 +142｜魔法防禦 +96｜力量 +28、體質 +24、精神 +18｜生命 +900｜物理減傷 +3%',
+      '李傕破軍戰甲｜一般胸甲｜戰士專屬、可強化｜需求等級 80｜獨立掉落率 5%｜物理防禦 +236｜魔法防禦 +158｜力量 +32、體質 +48、精神 +20｜生命 +1800｜物理減傷 +5%',
+      '鬼神斬月斧｜一般雙手斧｜戰士專屬、可強化｜需求等級 80｜獨立掉落率 5%｜攻擊力 +292｜力量 +42、體質 +18｜暴擊率 +4%｜命中 +18｜攻擊速度 +6%'
     ],
     zone: ZONE, threatTier: 'parallel-three-kingdoms-special'
   };
@@ -44,13 +44,13 @@
   const dropDefs = [
     { id:'parallel_li_jue_ghost_helm_v1', name:'李傕鬼王盔', kind:'armor', slot:'head', slotLabel:'頭盔',
       icon:ARMOR+'li-jue-war-helm.svg', physicalDefenseBonus:142, magicDefenseBonus:96,
-      statBonuses:{str:28,con:24,wis:18}, classKeys:['knight','warrior','elf','mage','monk'] },
+      statBonuses:{str:28,con:24,wis:18}, extraBonuses:{hpBonus:900,physicalDamageReduction:0.03}, classKeys:['warrior'] },
     { id:'parallel_li_jue_broken_army_armor_v1', name:'李傕破軍戰甲', kind:'armor', slot:'chest', slotLabel:'胸甲',
       icon:ARMOR+'li-jue-破軍戰甲.svg', physicalDefenseBonus:236, magicDefenseBonus:158,
-      statBonuses:{str:32,con:48,wis:20}, classKeys:['knight','warrior','elf','mage','monk'] },
+      statBonuses:{str:32,con:48,wis:20}, extraBonuses:{hpBonus:1800,physicalDamageReduction:0.05}, classKeys:['warrior'] },
     { id:'parallel_li_jue_ghost_moon_axe_v1', name:'鬼神斬月斧', kind:'weapon', slot:'weapon', slotLabel:'武器',
       icon:ARMOR+'li-jue-ghost-axe.svg', attackBonus:292, statBonuses:{str:42,con:18,meleeCritRate:0.04},
-      classKeys:['knight','warrior'], type:'雙手斧', weaponType:'melee', damageType:'physical' }
+      extraBonuses:{accuracyBonus:18,attackSpeedBonus:0.06}, classKeys:['warrior'], type:'雙手斧', weaponType:'two-handed-axe', handType:'two-handed', damageType:'physical' }
   ];
   window.awardParallelThreeKingdomsLiJueDrops = function(target) {
     const player = typeof currentPlayer !== 'undefined' ? currentPlayer : window.currentPlayer;
@@ -67,12 +67,12 @@
         id:def.id, templateId:def.id, kind:def.kind, name:def.name,
         slot:def.slot, slotLabel:def.slotLabel, icon:def.icon, iconAsset:def.icon, image:def.icon,
         level:80, requiredLevel:80, requiredMonsterLevel:80,
-        rarity:'特殊', quality:'特殊', qualityColor:'#c46cff',
-        classKeys:[...def.classKeys], enhancementLevel:0, cannotEnhance:false,
+        rarity:'普通', quality:'普通', qualityColor:'#ffffff',
+        classKeys:[...def.classKeys], enhancementLevel:0, enhanceable:true, canEnhance:true, cannotEnhance:false,
         sourceMonster:monster.name, sourceDropChance:0.05,
         uniqueDropType:'parallel_three_kingdoms_li_jue_unique',
-        obtainedAt:Date.now(), statBonuses:{...def.statBonuses}, stats:{...def.statBonuses},
-        properties:[monster.name+'專屬掉落｜獨立掉落率 5%','需求等級 80｜'+(def.kind==='weapon'?'騎士、戰士可裝備':'全職業可穿戴')],
+        obtainedAt:Date.now(), statBonuses:{...def.statBonuses}, stats:{...def.statBonuses}, bonusStats:{...def.extraBonuses}, ...def.extraBonuses,
+        properties:[monster.name+'專屬掉落｜一般裝備｜可強化｜獨立掉落率 5%','需求等級 80｜僅戰士可裝備'], 
         ...(def.kind==='armor' ? {
           armorType:'physical',
           physicalDefenseBonus:def.physicalDefenseBonus, basePhysicalDefenseBonus:def.physicalDefenseBonus,
@@ -83,15 +83,16 @@
         })
       };
       if (def.kind==='weapon') {
-        item.properties.push('攻擊力 +292','力量 +42｜體質 +18','暴擊率 +4%');
+        item.properties.push('攻擊力 +292','力量 +42｜體質 +18','暴擊率 +4%','命中 +18','攻擊速度 +6%');
         player.items.weapons.push(item);
       } else {
         item.properties.push('物理防禦 +'+def.physicalDefenseBonus,'魔法防禦 +'+def.magicDefenseBonus,
-          ...Object.entries(def.statBonuses).map(([key,value]) => ({str:'力量',dex:'敏捷',con:'體質',wis:'精神',int:'智力',cha:'魅力'}[key]+' +'+value)));
+          ...Object.entries(def.statBonuses).map(([key,value]) => ({str:'力量',dex:'敏捷',con:'體質',wis:'精神',int:'智力',cha:'魅力'}[key]+' +'+value)),
+          '生命 +'+def.extraBonuses.hpBonus,'物理減傷 +'+Math.round(def.extraBonuses.physicalDamageReduction*100)+'%');
         player.items.armors.push(item);
       }
       count++;
-      if (typeof addBattleLog==='function') addBattleLog('👑 <strong style="color:#d6a0ff">'+monster.name+'掉落【特殊 '+def.name+'】！</strong>（需求等級 80｜獨立掉落率 5%）');
+      if (typeof addBattleLog==='function') addBattleLog('👑 <strong style="color:#d6a0ff">'+monster.name+'掉落【一般裝備 '+def.name+'】！</strong>（戰士專屬｜可強化｜需求等級 80｜獨立掉落率 5%）');
     }
     if (typeof saveGame==='function') saveGame();
     if (document.getElementById('inventory-float')?.style.display==='flex' && typeof renderInventory==='function') renderInventory();
