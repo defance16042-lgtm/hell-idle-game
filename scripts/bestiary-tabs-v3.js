@@ -47,7 +47,7 @@
     if (!body) return;
     body.querySelectorAll('[data-b3-action="close"]').forEach(button => button.addEventListener('click', () => window.closeModal?.()));
     body.querySelectorAll('[data-b3-zone]').forEach(button => button.addEventListener('click', () => openZone(button.dataset.b3Zone)));
-    body.querySelectorAll('[data-b3-layer]').forEach(button => button.addEventListener('click', () => openZone(button.dataset.b3Layer)));
+    body.querySelectorAll('[data-b3-layer]').forEach(button => button.addEventListener('click', () => openZone(button.dataset.b3Layer, false)));
     body.querySelectorAll('[data-b3-type]').forEach(button => button.addEventListener('click', () => {
       state.type = button.dataset.b3Type || 'all';
       state.page = 1;
@@ -88,11 +88,11 @@
     { key: 'boss', label: 'BOSS', matches: monster => monster?.type === 'boss' }
   ];
 
-  function openZone(zone) {
+  function openZone(zone, showCaveLayerPicker = true) {
     const changedZone = state.zone !== zone;
     state.zone = zone;
     if (changedZone) { state.type = 'all'; state.page = 1; }
-    if (zone === CAVE) return openCaveLayers();
+    if (zone === CAVE && showCaveLayerPicker) return openCaveLayers();
     const entry = zoneList().find(item => item.zone === zone);
     const source = entry || { zone, list: layerList(zone) };
     if (!source.list.length) return openHome();
