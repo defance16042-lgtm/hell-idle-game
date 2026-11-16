@@ -8865,6 +8865,12 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
         });
         let petPanelTimer = null;
         let petPanelReturnScrollTop = 0;
+        let petPanelActiveTab = 'formation';
+        function setPetPanelTab(tab) {
+            if (!['formation', 'eggs', 'collection'].includes(tab)) return;
+            petPanelActiveTab = tab;
+            renderPetSystem();
+        }
         const petNextAttackAtById = Object.create(null);
         let battlePetFormationRenderKey = '';
         let lastBattleSaveAt = 0;
@@ -9309,10 +9315,10 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             }).join('');
             const petModalBody = document.getElementById('modal-body');
             const petScrollTop = petModalBody.scrollTop;
-            petModalBody.innerHTML = `<div class="pet-phase1-panel"><div class="pet-phase1-head"><h3>🐾 寵物系統｜出戰與收容</h3><button class="modal-btn" type="button" onclick="closePetSystem()">關閉</button></div><div class="pet-capacity-summary${fullClass}"><span>寵物蛋倉：<strong>${capacity.eggs} / ${capacity.eggLimit}</strong></span><span>已孵化寵物：<strong>${capacity.hatched} / ${capacity.hatchedLimit}</strong></span><span>${capacity.eggFull ? '蛋倉已滿：不再掉落寵物蛋' : `蛋倉尚有 ${capacity.eggFree} 格`}${capacity.hatchedFull ? '｜寵物欄已滿' : ''}</span></div><div class="pet-phase1-summary"><span class="pet-phase1-chip">蛋倉 ${eggs.length} / ${capacity.eggLimit} 顆</span><span class="pet-phase1-chip">寵物欄 ${hatched.length} / ${capacity.hatchedLimit} 隻</span></div><div class="pet-phase1-note">已啟用：寵物蛋掉落、孵化倒數、多寵物出戰、自動攻擊、經驗分潤與升等。每名角色有獨立蛋倉 10 格與已孵化寵物欄 10 格，兩者分開計算；出戰上限：所有職業皆可同時出戰最多 4 隻寵物。出戰中的寵物受到保護，不可拋棄，請先收回出戰；鎖定的寵物也不會被單隻或一鍵拋棄。</div><div class="pet-phase2-battle-summary">⚔️ 目前出戰：<strong>${pets.activeIds.length} / ${getPetBattleLimit(currentPlayer)}</strong>｜每隻寵物獨立攻擊冷卻。<br>各寵物卡會列出魅力加成後的實際技能數值；同類效果相加，坦寵減傷總上限 40%。</div><section class="pet-phase1-section"><h4>🥚 孵化中的寵物蛋</h4><div class="pet-egg-list">${eggHtml}</div></section><section class="pet-phase1-section"><div class="pet-hatched-toolbar"><h4>🐣 已孵化寵物</h4><div class="pet-bulk-discard-actions"><button class="pet-bulk-discard-btn" type="button" onclick="requestDiscardPetsByGrade('normal')" ${normalBabyCount ? '' : 'disabled'}>🗑️ 拋棄普通（${normalBabyCount}）</button><button class="pet-bulk-discard-btn rare" type="button" onclick="requestDiscardPetsByGrade('rare')" ${rareBabyCount ? '' : 'disabled'}>🗑️ 拋棄稀有（${rareBabyCount}）</button><button class="pet-bulk-discard-btn mutant" type="button" onclick="requestDiscardPetsByGrade('mutant')" ${mutantBabyCount ? '' : 'disabled'}>🗑️ 拋棄變異（${mutantBabyCount}）</button></div></div><div class="pet-hatched-list">${petHtml}</div></section></div>`;
+            petModalBody.innerHTML = `<div class="pet-phase1-panel pet-tabbed-panel"><div class="pet-phase1-head"><h3>🐾 寵物系統｜出戰與收容</h3><button class="modal-btn" type="button" onclick="closePetSystem()">關閉</button></div><div class="pet-capacity-summary${fullClass}"><span>寵物蛋倉：<strong>${capacity.eggs} / ${capacity.eggLimit}</strong></span><span>已孵化寵物：<strong>${capacity.hatched} / ${capacity.hatchedLimit}</strong></span><span>${capacity.eggFull ? '蛋倉已滿：不再掉落寵物蛋' : `蛋倉尚有 ${capacity.eggFree} 格`}${capacity.hatchedFull ? '｜寵物欄已滿' : ''}</span></div><nav class="pet-main-tabs" aria-label="寵物介面分頁"><button type="button" data-pet-tab="formation" aria-selected="${petPanelActiveTab === 'formation'}" onclick="setPetPanelTab('formation')">⚔️ 出戰陣型</button><button type="button" data-pet-tab="eggs" aria-selected="${petPanelActiveTab === 'eggs'}" onclick="setPetPanelTab('eggs')">🥚 孵化寵物蛋 <span>${eggs.length}</span></button><button type="button" data-pet-tab="collection" aria-selected="${petPanelActiveTab === 'collection'}" onclick="setPetPanelTab('collection')">🐣 已孵化寵物 <span>${hatched.length}</span></button></nav><section class="pet-tab-pane" data-pet-pane="formation" ${petPanelActiveTab === 'formation' ? '' : 'hidden'}><div class="pet-phase1-note">已啟用：寵物蛋掉落、孵化倒數、多寵物出戰、自動攻擊、經驗分潤與升等。每名角色有獨立蛋倉 10 格與已孵化寵物欄 10 格，兩者分開計算；所有職業最多同時出戰 4 隻。出戰中的寵物與鎖定寵物受到保護，不可拋棄。</div><div class="pet-phase2-battle-summary">⚔️ 目前出戰：<strong>${pets.activeIds.length} / ${getPetBattleLimit(currentPlayer)}</strong>｜每隻寵物獨立攻擊冷卻。<br>各寵物卡會列出魅力加成後的實際技能數值；同類效果相加，坦寵減傷總上限 40%。</div></section><section class="pet-tab-pane" data-pet-pane="eggs" ${petPanelActiveTab === 'eggs' ? '' : 'hidden'}><section class="pet-phase1-section"><h4>🥚 孵化中的寵物蛋</h4><div class="pet-egg-list">${eggHtml}</div></section></section><section class="pet-tab-pane" data-pet-pane="collection" ${petPanelActiveTab === 'collection' ? '' : 'hidden'}><section class="pet-phase1-section"><div class="pet-hatched-toolbar"><h4>🐣 已孵化寵物</h4><div class="pet-bulk-discard-actions"><button class="pet-bulk-discard-btn" type="button" onclick="requestDiscardPetsByGrade('normal')" ${normalBabyCount ? '' : 'disabled'}>🗑️ 拋棄普通（${normalBabyCount}）</button><button class="pet-bulk-discard-btn rare" type="button" onclick="requestDiscardPetsByGrade('rare')" ${rareBabyCount ? '' : 'disabled'}>🗑️ 拋棄稀有（${rareBabyCount}）</button><button class="pet-bulk-discard-btn mutant" type="button" onclick="requestDiscardPetsByGrade('mutant')" ${mutantBabyCount ? '' : 'disabled'}>🗑️ 拋棄變異（${mutantBabyCount}）</button></div></div><div class="pet-hatched-list">${petHtml}</div></section></section></div>`;
             petModalBody.scrollTop = petScrollTop;
             petModalBody.querySelector('.pet-phase1-summary')?.remove();
-            petModalBody.querySelector('.pet-capacity-summary')?.insertAdjacentHTML('afterend', `<section class="pet-active-roster" aria-label="目前出戰陣型"><div class="pet-active-roster-title"><strong>⚔️ 出戰陣型</strong><small>${activePets.length} / ${getPetBattleLimit(currentPlayer)} 隻出戰；最多可同時出戰 4 隻</small></div><div class="pet-active-roster-slots">${activeSlotsHtml}</div></section>`);
+            petModalBody.querySelector('.pet-tab-pane[data-pet-pane="formation"]')?.insertAdjacentHTML('afterbegin', `<section class="pet-active-roster" aria-label="目前出戰陣型"><div class="pet-active-roster-title"><strong>⚔️ 出戰陣型</strong><small>${activePets.length} / ${getPetBattleLimit(currentPlayer)} 隻出戰；最多可同時出戰 4 隻</small></div><div class="pet-active-roster-slots">${activeSlotsHtml}</div></section>`);
             petModalBody.scrollTop = petScrollTop;
         }
         function loadGameData(key) {
@@ -29023,6 +29029,18 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   };
 })();
 </script>
+<style id="pet-tabbed-interface-v1">
+#modal-body[data-modal-type="pet-system"] .pet-tabbed-panel{max-width:920px}
+#modal-body[data-modal-type="pet-system"] .pet-main-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 14px;padding:0 0 10px;border-bottom:1px solid #654638}
+#modal-body[data-modal-type="pet-system"] .pet-main-tabs button{flex:1 1 150px;min-height:40px;padding:8px 12px;border:1px solid #60412f;border-radius:8px;background:linear-gradient(180deg,#2b1b16,#17100e);color:#d7c1aa;font:700 13px inherit;cursor:pointer}
+#modal-body[data-modal-type="pet-system"] .pet-main-tabs button[aria-selected="true"]{border-color:#e1b56e;background:linear-gradient(180deg,#81512b,#4b2c1d);color:#fff1d0;box-shadow:0 0 0 1px #e9b96733,0 4px 16px #0005}
+#modal-body[data-modal-type="pet-system"] .pet-main-tabs button span{display:inline-block;min-width:18px;margin-left:4px;padding:1px 6px;border-radius:999px;background:#0b0807;color:#e9c88e;font-size:10px}
+#modal-body[data-modal-type="pet-system"] .pet-tab-pane[hidden]{display:none!important}
+#modal-body[data-modal-type="pet-system"] .pet-tab-pane{min-height:120px}
+#modal-body[data-modal-type="pet-system"] .pet-tab-pane>.pet-phase1-section{margin-top:0}
+@media(max-width:560px){#modal-body[data-modal-type="pet-system"] .pet-main-tabs{gap:6px}#modal-body[data-modal-type="pet-system"] .pet-main-tabs button{flex-basis:100%;min-height:36px}}
+</style>
+
 </body>
 </html>
 
