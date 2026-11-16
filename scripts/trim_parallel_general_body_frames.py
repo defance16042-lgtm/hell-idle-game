@@ -76,16 +76,24 @@ def trim_file(path: Path, isolate_subject: bool = False) -> None:
     print(f"{path.relative_to(ROOT)}: {image.size} -> {cropped.size} bbox={bbox}")
 
 
+def trim_if_present(path: Path, isolate_subject: bool = False) -> None:
+    # 已改用原創 SVG 的武將不再保留舊 PNG；打包時略過不存在的舊素材。
+    if not path.is_file():
+        print(f"skip missing legacy asset: {path.relative_to(ROOT)}")
+        return
+    trim_file(path, isolate_subject=isolate_subject)
+
+
 def main() -> None:
-    # 高順站立圖與攻擊影格都做主體輪廓隔離，避免人物過小及鄰格物件殘留。
-    trim_file(ROOT / "gao_shun-general.png", isolate_subject=True)
+    # 舊版高順 PNG 已由原創 SVG 立繪與攻擊刀氣取代；僅在舊素材仍存在時才整理。
+    trim_if_present(ROOT / "gao_shun-general.png", isolate_subject=True)
     for index in range(1, FRAME_COUNT + 1):
-        trim_file(ROOT / "gao_shun_attack" / f"frame_{index:02d}.png", isolate_subject=True)
+        trim_if_present(ROOT / "gao_shun_attack" / f"frame_{index:02d}.png", isolate_subject=True)
 
     for hero in OTHER_HEROES:
         directory = ROOT / f"{hero}_attack"
         for index in range(1, FRAME_COUNT + 1):
-            trim_file(directory / f"frame_{index:02d}.png")
+            trim_if_present(directory / f"frame_{index:02d}.png")
 
 
 if __name__ == "__main__":
