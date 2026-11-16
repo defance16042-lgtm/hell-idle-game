@@ -35,18 +35,17 @@
       waveAlpha: [.30, .62, .98, 1, .96, .38]
     },
     {
-      names: ['高順將軍', '高順'], bodyDir: 'gao_shun_attack', bodySource: `${root}/gao_shun-general.png`, waveDir: 'gao_shun_attack_wave',
-      // 高順舊分鏡影格含相鄰畫格殘影且部分身體貼邊；改用完整立繪作人物底圖，
-      // 六段以位移、傾身與紅色氣勁變化呈現攻擊，避免人物被切成半身。
+      names: ['高順將軍', '高順'], bodySource: `${root}/gao_shun_dark_chibi_left.svg`, waveDir: 'gao_shun_dark_attack_wave', waveExtension: 'svg',
+      // 原創黑暗 Q 版高順全身左向立繪；六段姿勢配合赤紅陷陣刀氣斬擊。
       fullBodyMotion: [
-        { translate: '0 0', rotate: '0deg', filter: 'drop-shadow(0 0 0 rgba(255,35,35,0))' },
-        { translate: '-1.5% 0', rotate: '-3deg', filter: 'drop-shadow(0 0 5px rgba(220,35,35,.35))' },
-        { translate: '2% -1%', rotate: '-7deg', filter: 'drop-shadow(0 0 12px rgba(255,30,30,.70))' },
-        { translate: '4% 0', rotate: '4deg', filter: 'drop-shadow(0 0 18px rgba(255,20,20,.90))' },
-        { translate: '1% 0', rotate: '2deg', filter: 'drop-shadow(0 0 10px rgba(255,30,30,.55))' },
-        { translate: '0 0', rotate: '0deg', filter: 'drop-shadow(0 0 0 rgba(255,35,35,0))' }
+        { translate: '0 0', rotate: '0deg', filter: 'drop-shadow(0 0 2px rgba(255,65,45,.2))' },
+        { translate: '-2% 0', rotate: '-7deg', filter: 'drop-shadow(0 0 8px rgba(220,35,35,.55))' },
+        { translate: '2% -1%', rotate: '-12deg', filter: 'drop-shadow(0 0 14px rgba(255,45,35,.8))' },
+        { translate: '5% 0', rotate: '9deg', filter: 'drop-shadow(0 0 22px rgba(255,30,20,1))' },
+        { translate: '-1% -2%', rotate: '5deg', filter: 'drop-shadow(0 0 13px rgba(255,55,35,.75))' },
+        { translate: '0 0', rotate: '0deg', filter: 'drop-shadow(0 0 3px rgba(255,65,45,.25))' }
       ],
-      waveScale: .50, waveCurve: -.02, waveLift: -.02, spriteScale: 1.0,
+      waveScale: .56, waveCurve: -.025, waveLift: -.025, spriteScale: 1.08,
       frameMs: [140, 120, 105, 92, 125, 185],
       waveStops: [0.01, 0.06, 0.30, 0.64, 0.90, 1],
       waveAlpha: [.24, .55, .94, 1, .90, .30]
