@@ -50,6 +50,22 @@
       frameMs: [140, 120, 105, 92, 125, 185],
       waveStops: [0.01, 0.06, 0.30, 0.64, 0.90, 1],
       waveAlpha: [.24, .55, .94, 1, .90, .30]
+    },
+    {
+      names: ['李傕將軍', '李傕'], bodySource: `${root}/li-jue-general.svg`, waveDir: 'li_jue_attack_wave',
+      // 以人物完整輪廓立繪為底，六段連續位移與紅紫鬼刃斬擊波組成連續攻擊。
+      fullBodyMotion: [
+        { translate: '0 0', rotate: '0deg', filter: 'drop-shadow(0 0 2px rgba(160,55,255,.25))' },
+        { translate: '-2% 0', rotate: '-8deg', filter: 'drop-shadow(0 0 8px rgba(255,45,75,.65))' },
+        { translate: '3% -1%', rotate: '10deg', filter: 'drop-shadow(0 0 15px rgba(255,35,75,.9))' },
+        { translate: '5% 0', rotate: '-12deg', filter: 'drop-shadow(0 0 22px rgba(190,55,255,1))' },
+        { translate: '-1% -2%', rotate: '7deg', filter: 'drop-shadow(0 0 16px rgba(190,55,255,.85))' },
+        { translate: '0 0', rotate: '0deg', filter: 'drop-shadow(0 0 3px rgba(160,55,255,.3))' }
+      ],
+      waveScale: .58, waveCurve: -.035, waveLift: -.025, spriteScale: 1.12,
+      frameMs: [145, 120, 105, 95, 125, 190],
+      waveStops: [.02, .08, .30, .58, .84, 1],
+      waveAlpha: [.25, .58, .95, 1, .90, .32]
     }
   ];
 
