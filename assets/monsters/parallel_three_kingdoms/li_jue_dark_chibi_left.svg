@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 292 356" role="img" aria-label="李傕將軍可愛黑暗Q版左側身全身立繪">
+<defs>
+ <linearGradient id="ljArmor" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#50334f"/><stop offset=".48" stop-color="#211827"/><stop offset="1" stop-color="#090b13"/></linearGradient>
+ <linearGradient id="ljGold" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff0ae"/><stop offset=".45" stop-color="#e2aa4c"/><stop offset="1" stop-color="#805020"/></linearGradient>
+ <linearGradient id="ljCape" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e02b4c"/><stop offset="1" stop-color="#4b102b"/></linearGradient>
+ <linearGradient id="ljBlade" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0c5"/><stop offset=".45" stop-color="#b8a8d6"/><stop offset="1" stop-color="#4b2a70"/></linearGradient>
+ <filter id="ljGlow"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<!-- ghost-flame silhouette -->
+<path d="M188 120 Q265 92 267 183 Q300 246 249 321 L174 337 192 272 158 226Z" fill="url(#ljCape)" stroke="#6e183b" stroke-width="7"/>
+<path d="M211 150 Q252 135 246 194 Q267 236 225 285" fill="none" stroke="#ff5368" stroke-width="5" opacity=".65"/>
+<!-- legs and boots -->
+<path d="M104 260 155 263 151 321 119 333 88 319Z" fill="url(#ljArmor)" stroke="#090a11" stroke-width="8"/>
+<path d="M158 257 205 252 218 312 195 334 164 321Z" fill="url(#ljArmor)" stroke="#090a11" stroke-width="8"/>
+<path d="M83 313 143 314 151 341 69 344Z M164 312 217 307 244 339 164 344Z" fill="#10111a" stroke="url(#ljGold)" stroke-width="7"/>
+<path d="M92 325 133 326 139 335 84 337Z M178 324 211 321 225 334 174 335Z" fill="#8f263e"/>
+<!-- left-facing axe -->
+<path d="M75 191 28 137 18 151 53 212 22 258 42 270 87 218Z" fill="#211a2a" stroke="url(#ljGold)" stroke-width="6"/>
+<path d="M28 137 Q-2 120 7 91 Q34 101 49 82 Q71 112 48 145Z" fill="url(#ljBlade)" stroke="#211629" stroke-width="7"/>
+<path d="M7 91 35 113 48 82 41 128 18 126Z" fill="#fff0c4" opacity=".72"/>
+<path d="M42 250 9 288 48 282 70 260Z" fill="#25182b" stroke="url(#ljGold)" stroke-width="6"/>
+<!-- torso armor -->
+<path d="M83 174 Q139 150 203 176 L221 258 190 286 104 284 69 246Z" fill="url(#ljArmor)" stroke="#080910" stroke-width="10"/>
+<path d="M90 190 143 171 199 190 183 222 103 224Z" fill="url(#ljGold)" stroke="#25172b" stroke-width="6"/>
+<path d="M105 228 151 213 190 230 180 270 119 272Z" fill="#351b39" stroke="url(#ljGold)" stroke-width="7"/>
+<path d="M147 220 172 239 151 261 129 239Z" fill="#a42eae" stroke="#f3d17c" stroke-width="5"/>
+<path d="M79 202 47 232 70 265 108 245Z M196 198 235 220 219 258 184 242Z" fill="url(#ljArmor)" stroke="url(#ljGold)" stroke-width="7"/>
+<path d="M87 179 Q57 167 43 191 L62 216 99 204Z" fill="#241827" stroke="url(#ljGold)" stroke-width="6"/>
+<!-- neck -->
+<path d="M119 145 169 145 175 184 132 196 111 173Z" fill="#c98d78" stroke="#5a2835" stroke-width="5"/>
+<!-- head profile facing left -->
+<path d="M92 91 Q104 42 164 43 Q214 48 221 104 L211 148 Q194 176 151 172 L112 157 91 132Z" fill="#efc3a4" stroke="#512536" stroke-width="7"/>
+<path d="M94 112 Q75 104 71 122 Q81 139 105 137 L119 123Z" fill="#e5ae91" stroke="#512536" stroke-width="5"/>
+<!-- hair, side swept -->
+<path d="M86 112 Q78 54 133 39 Q188 22 219 73 L204 102 Q179 76 147 87 Q118 76 98 119Z" fill="#17121f" stroke="#080910" stroke-width="8"/>
+<path d="M104 73 Q142 37 190 62" fill="none" stroke="#69304c" stroke-width="7"/>
+<!-- helmet horns / crown -->
+<path d="M107 66 83 20 126 43 147 7 163 47 207 20 193 73Z" fill="url(#ljGold)" stroke="#251629" stroke-width="7"/>
+<path d="M145 48 159 25 172 53 159 69Z" fill="#8c28c2" stroke="#f4d47a" stroke-width="4"/>
+<!-- eye and brow: visible left profile -->
+<path d="M94 111 Q113 96 135 109" fill="none" stroke="#241522" stroke-width="9" stroke-linecap="round"/>
+<path d="M99 121 Q115 112 128 121" fill="none" stroke="#3b1424" stroke-width="5" stroke-linecap="round"/>
+<ellipse cx="115" cy="121" rx="5" ry="6" fill="#fff0b2" filter="url(#ljGlow)"/>
+<path d="M88 135 106 143 121 139" fill="none" stroke="#a64a54" stroke-width="4" stroke-linecap="round"/>
+<path d="M115 151 Q137 165 161 151" fill="none" stroke="#6e2639" stroke-width="5" stroke-linecap="round"/>
+<!-- cheek armor and side ornaments -->
+<path d="M94 142 122 151 116 171 89 160Z" fill="#8c263f" stroke="url(#ljGold)" stroke-width="5"/>
+<path d="M191 91 222 77 233 113 209 136Z" fill="#8c1e39" stroke="url(#ljGold)" stroke-width="5"/>
+<path d="M214 83 249 59 258 69 235 117Z" fill="#a51e3d" stroke="url(#ljGold)" stroke-width="5"/>
+<text x="235" y="96" font-size="19" font-weight="900" fill="#ffe5a0" text-anchor="middle">李</text>
+<!-- purple ghost flames -->
+<path d="M62 83 Q39 59 58 38 Q58 60 77 58 Q88 43 79 28 Q112 49 90 82Z" fill="#a936dc" opacity=".78" filter="url(#ljGlow)"/>
+<path d="M230 176 Q257 156 252 133 Q278 157 256 190" fill="none" stroke="#b94cff" stroke-width="8" stroke-linecap="round" filter="url(#ljGlow)"/>
+<!-- gold rivets -->
+<circle cx="102" cy="205" r="5" fill="#ffe39a"/><circle cx="190" cy="205" r="5" fill="#ffe39a"/><circle cx="119" cy="257" r="4" fill="#ffe39a"/><circle cx="181" cy="257" r="4" fill="#ffe39a"/>
+</svg>
