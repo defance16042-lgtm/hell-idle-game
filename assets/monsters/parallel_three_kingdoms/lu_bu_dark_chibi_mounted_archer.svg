@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 650">
+<defs>
+ <linearGradient id="armor" x2="0" y2="1"><stop stop-color="#5d1725"/><stop offset=".5" stop-color="#24131c"/><stop offset="1" stop-color="#080b12"/></linearGradient>
+ <linearGradient id="horse" x2=".2" y2="1"><stop stop-color="#a8323c"/><stop offset=".55" stop-color="#501923"/><stop offset="1" stop-color="#170d16"/></linearGradient>
+ <linearGradient id="gold" x2="0" y2="1"><stop stop-color="#fff0a6"/><stop offset=".5" stop-color="#c18a39"/><stop offset="1" stop-color="#60371d"/></linearGradient>
+ <linearGradient id="cape" x2="1" y2="1"><stop stop-color="#9e1d35"/><stop offset="1" stop-color="#260b19"/></linearGradient>
+ <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<ellipse cx="440" cy="586" rx="350" ry="30" fill="#08050b" opacity=".35"/>
+<!-- horse tail and mane -->
+<path d="M180 360 Q55 300 95 205 Q120 280 180 282 Q80 180 155 125 Q145 230 220 265" fill="#130d19" stroke="#6b1a2a" stroke-width="16"/>
+<path d="M250 325 Q165 220 210 125 Q225 205 292 225 Q260 125 320 82 Q305 188 365 225" fill="#17101c" stroke="#741b2d" stroke-width="17"/>
+<!-- horse body -->
+<path d="M180 350 Q245 270 420 288 Q535 292 620 382 Q655 455 575 520 Q445 560 275 520 Q175 475 180 350Z" fill="url(#horse)" stroke="#130b13" stroke-width="15"/>
+<path d="M195 370 Q120 310 145 245 Q190 270 230 315 L280 380Z" fill="#6e1d2c" stroke="#170c16" stroke-width="13"/>
+<path d="M170 280 Q120 230 145 175 Q185 205 203 252 L235 300Z" fill="#4b1624" stroke="#130b13" stroke-width="12"/>
+<!-- horse head -->
+<path d="M170 315 Q105 285 95 225 Q85 165 140 130 Q195 145 225 210 Q250 270 220 355Z" fill="url(#horse)" stroke="#100a12" stroke-width="16"/>
+<path d="M117 178 Q72 110 105 78 Q154 115 160 158Z" fill="#27101c" stroke="#100a12" stroke-width="11"/>
+<path d="M177 160 Q206 95 244 104 Q235 163 205 193Z" fill="#27101c" stroke="#100a12" stroke-width="11"/>
+<path d="M102 250 Q152 210 220 252 L231 302 Q168 338 116 292Z" fill="#24111b" stroke="#a9793a" stroke-width="9"/>
+<path d="M110 250 Q160 220 218 254" fill="none" stroke="#e0a34b" stroke-width="7"/>
+<path d="M127 221 Q160 196 193 222" fill="none" stroke="#b77d3a" stroke-width="10"/>
+<ellipse cx="166" cy="206" rx="13" ry="17" fill="#ff384b" filter="url(#glow)"/><circle cx="169" cy="204" r="5" fill="#fff2d0"/>
+<path d="M99 305 Q144 330 210 307 L205 352 Q150 383 111 348Z" fill="#100c14" stroke="#bb8a43" stroke-width="8"/>
+<!-- saddle and armor -->
+<path d="M285 350 Q400 300 530 365 L555 475 Q420 525 300 465Z" fill="#1a111b" stroke="#b27a36" stroke-width="12"/>
+<path d="M315 360 L520 385 L535 445 L330 435Z" fill="url(#armor)" stroke="#e0aa56" stroke-width="9"/>
+<path d="M365 365 L410 400 L455 366 L480 430 L420 460 L350 430Z" fill="#5b1b2c" stroke="#d5a052" stroke-width="8"/>
+<!-- legs -->
+<path d="M285 470 Q255 530 275 590 L325 590 Q345 535 355 485Z" fill="#35141e" stroke="#100b13" stroke-width="13"/>
+<path d="M475 470 Q485 530 455 590 L510 590 Q555 540 540 475Z" fill="#30131e" stroke="#100b13" stroke-width="13"/>
+<path d="M265 582 L340 582 L350 612 L250 612Z M445 582 L520 582 L540 612 L430 612Z" fill="#11101a" stroke="#c08b43" stroke-width="8"/>
+<!-- rider cape -->
+<path d="M405 215 Q530 205 620 285 Q680 355 630 480 Q575 420 520 430 Q540 330 405 285Z" fill="url(#cape)" stroke="#230c19" stroke-width="13"/>
+<path d="M520 280 Q610 310 625 430" fill="none" stroke="#d23b4c" stroke-width="9"/>
+<!-- rider body -->
+<path d="M330 210 Q370 165 450 185 Q520 215 525 315 L485 400 L350 390 L300 300Z" fill="url(#armor)" stroke="#100b13" stroke-width="15"/>
+<path d="M330 240 L480 230 L500 330 L355 350Z" fill="#431522" stroke="#c08c43" stroke-width="9"/>
+<path d="M355 255 L390 285 L425 250 L460 290 L440 350 L370 345Z" fill="#17121c" stroke="#e3b35f" stroke-width="8"/>
+<path d="M375 300 L430 300 L445 365 L360 365Z" fill="#671b2c" stroke="#c08c43" stroke-width="8"/>
+<!-- head -->
+<path d="M340 115 Q355 55 430 55 Q505 62 510 145 L485 220 Q425 260 365 210Z" fill="#f0c5a6" stroke="#160e17" stroke-width="14"/>
+<path d="M340 140 Q320 60 390 35 Q470 5 515 90 L500 145 Q450 110 405 130Z" fill="#17101b" stroke="#c18b42" stroke-width="12"/>
+<path d="M360 88 Q315 25 350 5 Q405 35 405 70 M430 62 Q440 5 485 15 Q480 70 460 92" fill="none" stroke="#a91f36" stroke-width="20" stroke-linecap="round"/>
+<!-- brows eyes -->
+<path d="M365 145 L410 135 M440 135 L482 145" stroke="#28121b" stroke-width="13" stroke-linecap="round"/>
+<ellipse cx="392" cy="158" rx="12" ry="16" fill="#e52e45"/><ellipse cx="460" cy="158" rx="12" ry="16" fill="#e52e45"/>
+<circle cx="395" cy="154" r="4" fill="#fff"/><circle cx="463" cy="154" r="4" fill="#fff"/>
+<path d="M410 190 Q430 202 450 188" fill="none" stroke="#6d2330" stroke-width="8" stroke-linecap="round"/>
+<!-- helmet crest -->
+<path d="M365 95 Q350 50 390 24 L430 4 L470 30 L500 92 L460 82 L430 58 L400 90Z" fill="#16111b" stroke="url(#gold)" stroke-width="11"/>
+<path d="M430 12 Q405 -18 380 10 M440 10 Q470 -20 495 6" fill="none" stroke="#b72b41" stroke-width="18" stroke-linecap="round"/>
+<path d="M400 88 L430 52 L460 88 L448 112 L412 112Z" fill="url(#gold)" stroke="#28121b" stroke-width="7"/>
+<path d="M430 72 L439 91 L430 103 L421 91Z" fill="#a51c36"/>
+<!-- left-facing mounted archer bow and arrow -->
+<g id="bow-arm">
+ <path d="M345 265 Q300 270 270 325 L305 350 Q350 330 385 300Z" fill="#23131d" stroke="#c18b42" stroke-width="11"/>
+ <path d="M475 270 Q420 275 375 315 L395 350 Q445 340 490 310Z" fill="#25131d" stroke="#c18b42" stroke-width="11"/>
+ <path d="M292 145 Q210 210 292 330 Q320 250 292 145Z" fill="#17101b" stroke="url(#gold)" stroke-width="12"/>
+ <path d="M292 145 Q260 238 292 330" fill="none" stroke="#e4bd79" stroke-width="5"/>
+ <path d="M292 240 L110 240" stroke="#35151f" stroke-width="8" stroke-linecap="round"/>
+ <path d="M110 240 L135 228 L135 252Z" fill="#f4c36c" stroke="#9e2639" stroke-width="4"/>
+ <path d="M290 145 L110 240 L290 330" fill="none" stroke="#e7c78e" stroke-width="3"/>
+ <path d="M285 235 L118 235" stroke="#f03b51" stroke-width="4" filter="url(#glow)"/>
+</g>
+<!-- small armor studs -->
+<g fill="#f0c46b"><circle cx="365" cy="385" r="8"/><circle cx="420" cy="390" r="8"/><circle cx="475" cy="385" r="8"/><circle cx="310" cy="430" r="7"/><circle cx="535" cy="430" r="7"/></g>
+</svg>
