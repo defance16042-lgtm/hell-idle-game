@@ -34,6 +34,21 @@
     activeSprite = null;
   }
 
+  function syncLuBuIdleArtwork() {
+    const monster = typeof currentMonster !== 'undefined' ? currentMonster : window.currentMonster;
+    if (!monster || monster.name !== '呂布') return;
+    const phase = Number(monster._parallelLuBuPhase || 1);
+    if (phase !== 1) return;
+    const sprite = document.querySelector('#monster-icon .monster-sprite');
+    if (sprite && !sprite.src.endsWith('/lu_bu_dark_chibi_cavalry.svg')) {
+      sprite.setAttribute('src', asset(PHASE1_IDLE));
+    }
+  }
+
+  const luBuArtworkObserver = new MutationObserver(syncLuBuIdleArtwork);
+  luBuArtworkObserver.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src', 'class'] });
+  syncLuBuIdleArtwork();
+
   function makeRoot(stage) {
     const root = document.createElement('div');
     root.className = 'lu-bu-attack-overlay';
