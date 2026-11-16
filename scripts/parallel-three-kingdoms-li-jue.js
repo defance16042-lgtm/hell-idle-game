@@ -9,7 +9,7 @@
 
   const monster = {
     name: '李傕將軍',
-    icon: '',
+    icon: null,
     image: ROOT + 'li_jue_dark_chibi_left.svg',
     battleImage: ROOT + 'li_jue_dark_chibi_left.svg',
     level: 80, levelRange: '80', attackSpeed: 1.18,
