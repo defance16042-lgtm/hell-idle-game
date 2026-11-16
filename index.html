@@ -28973,6 +28973,56 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 })();
 </script>
 
+
+<script id="shop-return-tab-preserver-v1">
+(function(){
+  if (window.__shopReturnTabPreserverV1) return;
+  window.__shopReturnTabPreserverV1 = true;
+  let rememberedTab = 'buy';
+  let rememberedScrollTop = 0;
+  const body = () => document.getElementById('modal-body');
+  function captureShopState(){
+    const root = body();
+    if (!root || !root.querySelector('.shop-tabs')) return false;
+    const active = root.querySelector('.shop-tab.active[data-shop-tab]');
+    if (active) rememberedTab = active.dataset.shopTab || 'buy';
+    rememberedScrollTop = root.scrollTop || 0;
+    return true;
+  }
+  document.addEventListener('click', function(event){
+    const tab = event.target && event.target.closest ? event.target.closest('.shop-tab[data-shop-tab]') : null;
+    if (tab) rememberedTab = tab.dataset.shopTab || 'buy';
+  }, true);
+  document.addEventListener('scroll', function(event){
+    if (event.target && event.target.id === 'modal-body' && event.target.querySelector('.shop-tabs')) {
+      rememberedScrollTop = event.target.scrollTop || 0;
+    }
+  }, true);
+  const originalOpenShop = window.openShop;
+  if (typeof originalOpenShop !== 'function') return;
+  window.openShop = function(){
+    const wasInShop = captureShopState();
+    if (!wasInShop) {
+      rememberedTab = 'buy';
+      rememberedScrollTop = 0;
+    }
+    const result = originalOpenShop.apply(this, arguments);
+    const root = body();
+    if (root && root.querySelector('.shop-tabs')) {
+      const tabs = Array.from(root.querySelectorAll('.shop-tab[data-shop-tab]'));
+      const panes = Array.from(root.querySelectorAll('.shop-tab-pane[data-shop-pane]'));
+      const targetTab = tabs.find(tab => tab.dataset.shopTab === rememberedTab) || tabs[0];
+      if (targetTab) {
+        rememberedTab = targetTab.dataset.shopTab || 'buy';
+        tabs.forEach(tab => tab.classList.toggle('active', tab === targetTab));
+        panes.forEach(pane => { pane.hidden = pane.dataset.shopPane !== rememberedTab; });
+      }
+      root.scrollTop = rememberedScrollTop;
+    }
+    return result;
+  };
+})();
+</script>
 </body>
 </html>
 
