@@ -10680,7 +10680,7 @@ function getCombatVisualCycleDuration(actionPath) {
         function updateMonsterHealthUI() {
             const panel = document.getElementById('monster-hp-panel');
             if (!panel) return;
-            if (!currentMonster) { panel.style.display = 'none'; panel.querySelector('.fallen-heaven-phase-bars')?.remove(); return; }
+            if (!currentMonster) { panel.style.display = 'none'; panel.querySelector('.fallen-heaven-phase-bars')?.remove(); panel.querySelector('.parallel-lubu-phase-bars')?.remove(); return; }
             panel.style.display = 'block';
             const name = document.getElementById('monster-hp-name');
             const value = document.getElementById('monster-hp-value');
@@ -10690,6 +10690,7 @@ function getCombatVisualCycleDuration(actionPath) {
                 if (name) name.textContent = '生命';
                 if (value) value.textContent = '???（不會死亡）';
                 window.updateFallenHeavenBossBars?.(panel, null);
+                window.updateParallelLuBuBossBars?.(panel, null);
                 panel.classList.remove('is-low');
                 if (bar) bar.style.display = 'none';
                 return;
@@ -10703,6 +10704,7 @@ function getCombatVisualCycleDuration(actionPath) {
             if (fill) fill.style.width = `${percent}%`;
             panel.classList.toggle('is-low', percent <= 30);
             window.updateFallenHeavenBossBars?.(panel, currentMonster);
+            window.updateParallelLuBuBossBars?.(panel, currentMonster);
             if (bar) {
                 bar.setAttribute('aria-valuemin', '0');
                 bar.setAttribute('aria-valuemax', String(Math.floor(maxHp)));
@@ -28932,6 +28934,44 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   }
 })();
 </script>
+
+<style id="parallel-lubu-phase-hp-style-v1">
+  #monster-hp-panel .parallel-lubu-phase-bars{margin-top:4px;padding-top:3px;border-top:1px solid rgba(255,205,125,.28)}
+  #monster-hp-panel .parallel-lubu-phase-row{display:flex;align-items:center;gap:4px;margin-top:3px;font-size:9px;line-height:1.25;color:#e9d9f4;text-shadow:0 1px 2px #000}
+  #monster-hp-panel .parallel-lubu-phase-name{width:49px;flex:0 0 49px;white-space:nowrap}
+  #monster-hp-panel .parallel-lubu-phase-track{height:5px;flex:1;min-width:25px;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:4px;background:#211326;box-shadow:inset 0 1px 2px #000}
+  #monster-hp-panel .parallel-lubu-phase-fill{display:block;height:100%;border-radius:3px;transition:width .18s ease}
+  #monster-hp-panel .parallel-lubu-phase-value{width:76px;flex:0 0 76px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+</style>
+<script id="parallel-lubu-phase-hp-v1">
+(() => {
+  if (window.__parallelLuBuPhaseHpV1) return;
+  window.__parallelLuBuPhaseHpV1 = true;
+  window.updateParallelLuBuBossBars = function(panel, monster) {
+    if (!panel) return;
+    let box = panel.querySelector('.parallel-lubu-phase-bars');
+    if (!monster || monster.name !== '呂布') { box?.remove(); return; }
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'parallel-lubu-phase-bars';
+      panel.appendChild(box);
+    }
+    const phases = [
+      {name:'赤紫鬼神', max:Number(monster.phase1Hp)||2480000, color:'linear-gradient(90deg,#8f234f,#ff647f)'},
+      {name:'轅門弓將', max:Number(monster.phase2Hp)||2480000, color:'linear-gradient(90deg,#a66a16,#ffd66b)'}
+    ];
+    const active = Number(monster._parallelLuBuPhase) === 2 ? 1 : 0;
+    box.innerHTML = phases.map((phase,i) => {
+      const hp = i < active ? 0 : i > active ? phase.max : Math.max(0,Math.min(phase.max,Number(monster.hp)||0));
+      const pct = i < active ? 100 : Math.max(0,Math.min(100,hp/phase.max*100));
+      const state = i < active ? '✓' : i === active ? '▶' : '○';
+      const status = i < active ? '已擊破' : i === active ? Math.floor(hp).toLocaleString()+'/'+Math.floor(phase.max).toLocaleString() : '待命';
+      return '<div class="parallel-lubu-phase-row"><span class="parallel-lubu-phase-name">'+state+' '+phase.name+'</span><span class="parallel-lubu-phase-track"><i class="parallel-lubu-phase-fill" style="width:'+pct+'%;background:'+phase.color+'"></i></span><span class="parallel-lubu-phase-value">'+status+'</span></div>';
+    }).join('');
+  };
+})();
+</script>
+
 </body>
 </html>
 
