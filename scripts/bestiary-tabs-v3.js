@@ -73,7 +73,7 @@
       return `<button type="button" class="b3-zone-card" data-b3-zone="${esc(zone)}"><span class="b3-zone-icon">${zoneIcon}</span><strong>${esc(zone)}</strong><span>${isCave ? '第一層・第二層・第三層' : `${list.length} 筆怪物資料`}</span><small>${isCave ? '進入後選擇樓層' : (levels.length ? `等級 ${Math.min(...levels)}–${Math.max(...levels)}` : '尚無等級資料')}</small></button>`;
     }).join('');
     const total = zones.reduce((sum, item) => sum + item.list.length, 0);
-    render(shell('📖 怪物全圖鑑', `共收錄 ${total} 筆資料；圖鑑只依區域分類，請選擇要查看的區域。`, `<section class="b3-page"><div class="b3-page-title"><strong>區域分類</strong><span>每個區域獨立分頁顯示怪物資料</span></div><div class="b3-zone-grid">${cards || '<p class="b3-empty">目前尚無圖鑑資料。</p>'}</div></section>`));
+    render(shell('📖 怪物全圖鑑', `共收錄 ${total} 筆資料；圖鑑只依區域分類，請選擇要查看的區域。`, `<section class="b3-page b3-region-home"><div class="b3-page-title"><strong>區域分類</strong><span>每個區域獨立分頁顯示怪物資料</span></div><div class="b3-zone-grid">${cards || '<p class="b3-empty">目前尚無圖鑑資料。</p>'}</div></section>`));
     bind();
   }
 
