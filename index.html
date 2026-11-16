@@ -12048,6 +12048,7 @@ function getCombatVisualCycleDuration(actionPath) {
                 window.awardLiRuStaffDrop?.(currentMonster, zoneName);
                 window.awardParallelThreeKingdomsChestArmorDrop?.(currentMonster);
                 window.awardParallelThreeKingdomsShieldDrop?.(currentMonster);
+                window.awardParallelThreeKingdomsLiJueDrops?.(currentMonster);
             }
             if (!isTrainingDummy && currentMonster?.type === 'boss' && /逆神.*熾天墮龍|熾天墮龍.*逆神/.test(String(currentMonster.name || '')) && Math.random() < 0.01) {
                 const skill = Math.random() < 0.5 ? 'light' : 'dark';
