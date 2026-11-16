@@ -36,7 +36,7 @@
     return root;
   }
 
-  function createBowShotOverlay(root, centerX, centerY) {
+  function createBowShotOverlay(root, centerX, centerY, impactX) {
     const layer = document.createElement('div');
     layer.style.cssText = `position:absolute;left:${centerX - 130}px;top:${centerY - 130}px;width:260px;height:260px;overflow:visible;pointer-events:none;filter:drop-shadow(0 0 7px rgba(255,175,45,.8));`;
     layer.innerHTML = `
@@ -64,6 +64,8 @@
         </g>
       </svg>`;
     root.appendChild(layer);
+    const impact = layer.querySelector('#luBuImpact');
+    impact.setAttribute('transform', `translate(${impactX - 20} 0)`);
     return {
       layer,
       string: layer.querySelector('#luBuBowString'),
@@ -115,7 +117,12 @@
     const durations = DURATIONS;
     let lastSpriteFrame = -1;
     let startedAt = 0;
-    const bow = phase2 ? createBowShotOverlay(root, centerX, centerY) : null;
+    const playerIcon = document.getElementById('player-icon');
+    const playerRect = playerIcon?.getBoundingClientRect();
+    const targetX = playerRect ? playerRect.left - stageRect.left + playerRect.width * 0.5 : 36;
+    const arrowStartX = centerX - 82;
+    const impactX = Math.max(15, Math.min(245, targetX - (centerX - 130)));
+    const bow = phase2 ? createBowShotOverlay(root, centerX, centerY, impactX) : null;
     const phase2FinishAt = 1080;
     const phase1FinishAt = durations.reduce((a, b) => a + b, 0) + 120;
 
@@ -142,7 +149,7 @@
         const easePull = pullProgress * pullProgress * (3 - 2 * pullProgress);
         const released = elapsed >= releaseAt;
         const travelProgress = Math.max(0, Math.min(1, (elapsed - releaseAt) / (hitAt - releaseAt)));
-        const travel = Math.max(0, centerX - 118) * (travelProgress * travelProgress * (3 - 2 * travelProgress));
+        const travel = Math.max(0, arrowStartX - targetX) * (travelProgress * travelProgress * (3 - 2 * travelProgress));
         const drawBack = released ? 0 : easePull * 30;
 
         bow.string.setAttribute('d', `M145 48 Q${145 + drawBack} 130 145 212`);
