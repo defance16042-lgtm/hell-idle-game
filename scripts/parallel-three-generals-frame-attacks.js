@@ -286,7 +286,9 @@
           || luBuMonster?.basicAttackName === '轅門射戟'
           || skill.includes('轅門射戟'))
     );
-    // 第二階段交由前置載入的呂布專用動畫處理器播放；不可只回報 true，否則畫面不會有動畫。
+    // 呂布第一階段改用原創黑暗 Q 版騎戰 SVG 動畫，不再讀取舊人物影格。
+    if (cleanName === '呂布' && !isLuBuPhase2) return typeof window.playLuBuDarkChibiAttack === 'function' ? window.playLuBuDarkChibiAttack() : false;
+    // 第二階段仍沿用既有弓形態動畫。
     if (isLuBuPhase2) return typeof previous === 'function' ? previous(name, skillName) : false;
     const definition = definitionByName.get(cleanName);
     if (definition) return playFrameSequence(definition);
