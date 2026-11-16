@@ -10680,7 +10680,7 @@ function getCombatVisualCycleDuration(actionPath) {
         function updateMonsterHealthUI() {
             const panel = document.getElementById('monster-hp-panel');
             if (!panel) return;
-            if (!currentMonster) { panel.style.display = 'none'; panel.querySelector('.fallen-heaven-phase-bars')?.remove(); return; }
+            if (!currentMonster) { panel.style.display = 'none'; panel.querySelector('.fallen-heaven-phase-bars')?.remove(); panel.querySelector('.parallel-lubu-phase-bars')?.remove(); return; }
             panel.style.display = 'block';
             const name = document.getElementById('monster-hp-name');
             const value = document.getElementById('monster-hp-value');
@@ -10690,6 +10690,7 @@ function getCombatVisualCycleDuration(actionPath) {
                 if (name) name.textContent = '生命';
                 if (value) value.textContent = '???（不會死亡）';
                 window.updateFallenHeavenBossBars?.(panel, null);
+                window.updateParallelLuBuBossBars?.(panel, null);
                 panel.classList.remove('is-low');
                 if (bar) bar.style.display = 'none';
                 return;
@@ -10703,6 +10704,7 @@ function getCombatVisualCycleDuration(actionPath) {
             if (fill) fill.style.width = `${percent}%`;
             panel.classList.toggle('is-low', percent <= 30);
             window.updateFallenHeavenBossBars?.(panel, currentMonster);
+            window.updateParallelLuBuBossBars?.(panel, currentMonster);
             if (bar) {
                 bar.setAttribute('aria-valuemin', '0');
                 bar.setAttribute('aria-valuemax', String(Math.floor(maxHp)));
@@ -27863,6 +27865,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   const monster = {
     name: '呂布', icon: '🔱',
     image: 'assets/monsters/parallel_three_kingdoms/lu_bu-boss.png',
+    phase1Image: 'assets/monsters/parallel_three_kingdoms/lu_bu-boss.png',
     battleImage: 'assets/monsters/parallel_three_kingdoms/lu_bu-boss.png',
     phase2Image: 'assets/monsters/parallel_three_kingdoms/lu_bu-bow-boss.png',
     level: 100, levelRange: '100', attackSpeed: 0.88,
@@ -28568,7 +28571,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     const defenseSkills = asList(m.defenseSkills);
     const bossPhases = Array.isArray(m.bossPhases) ? m.bossPhases : [];
     const luBuPhases = isLuBu ? `<div class="ptk-lubu-phase-intro"><strong>⚔️ 呂布雙階段戰鬥流程</strong><span>第一階段血條歸零後才會變身；第二階段重新開始一條完整血條，兩段不共用血量。</span></div><div class="ptk-lubu-phase-grid">
-      ${luBuPhaseCard('第一階段', m.image, m.phase1Title || '赤紫鬼神', m.phase1Weapon || '方天畫戟', m.phase1HpLabel || `${fmt(m.phase1Hp)} HP`, '戰鬥開始時進入；必須先將第一條血打到 0。', m.phase1AttackLabel || m.attackType || '近戰攻擊', '騎乘赤兔馬揮動方天畫戟，施放赤紫刃光與震地攻擊。', 'phase-one')}
+      ${luBuPhaseCard('第一階段', m.phase1Image || 'assets/monsters/parallel_three_kingdoms/lu_bu-boss.png', m.phase1Title || '赤紫鬼神', m.phase1Weapon || '方天畫戟', m.phase1HpLabel || `${fmt(m.phase1Hp)} HP`, '戰鬥開始時進入；必須先將第一條血打到 0。', m.phase1AttackLabel || m.attackType || '近戰攻擊', '騎乘赤兔馬揮動方天畫戟，施放赤紫刃光與震地攻擊。', 'phase-one')}
       ${luBuPhaseCard('第二階段', m.phase2Image, m.phase2Title || '轅門弓將', m.phase2Weapon || '寶雕弓', m.phase2HpLabel || `${fmt(m.phase2Hp)} HP`, '第一階段 2,480,000 HP 歸零後觸發變身，重新建立第二條血。', m.phase2AttackLabel || m.phase2AttackType || '遠距離攻擊', '卸下方天畫戟、取出寶雕弓，以唯一大招「轅門射戟」射出金色箭矢與紅紫戟影。', 'phase-two')}
     </div><div class="ptk-lubu-phase-rule"><b>📌 重要規則</b><span>第一段打完才變身，不會在第一條血剩一半時變身；第二段是獨立的 2,480,000 HP 血條。</span></div>` : '';
     const level = m.levelRange || m.level || '—';
@@ -28931,6 +28934,45 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   }
 })();
 </script>
+
+<style id="parallel-lubu-phase-hp-style-v1">
+  #monster-hp-panel .parallel-lubu-phase-bars{margin-top:4px;padding-top:3px;border-top:1px solid rgba(255,205,125,.28)}
+  #monster-hp-panel .parallel-lubu-phase-row{display:flex;align-items:center;gap:4px;margin-top:3px;font-size:9px;line-height:1.25;color:#e9d9f4;text-shadow:0 1px 2px #000}
+  #monster-hp-panel .parallel-lubu-phase-name{width:42px;flex:0 0 42px;white-space:nowrap}
+  #monster-hp-panel .parallel-lubu-phase-track{height:4px;flex:1;min-width:20px;overflow:hidden;border:0;border-radius:3px;background:#241b2d;box-shadow:none}
+  #monster-hp-panel .parallel-lubu-phase-fill{display:block;height:100%;border-radius:3px;transition:width .18s ease}
+  #monster-hp-panel .parallel-lubu-phase-value{width:48px;flex:0 0 48px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+</style>
+<script id="parallel-lubu-phase-hp-v1">
+(() => {
+  if (window.__parallelLuBuPhaseHpV1) return;
+  window.__parallelLuBuPhaseHpV1 = true;
+  window.updateParallelLuBuBossBars = function(panel, monster) {
+    if (!panel) return;
+    let box = panel.querySelector('.parallel-lubu-phase-bars');
+    if (!monster || monster.name !== '呂布') { box?.remove(); return; }
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'parallel-lubu-phase-bars';
+      panel.appendChild(box);
+    }
+    const phases = [
+      {name:'赤紫鬼神', max:Number(monster.phase1Hp)||2480000, color:'linear-gradient(90deg,#8f234f,#ff647f)'},
+      {name:'轅門弓將', max:Number(monster.phase2Hp)||2480000, color:'linear-gradient(90deg,#a66a16,#ffd66b)'}
+    ];
+    const active = Number(monster._parallelLuBuPhase) === 2 ? 1 : 0;
+    box.innerHTML = phases.map((phase,i) => {
+      const hp = i < active ? 0 : i > active ? phase.max : Math.max(0,Math.min(phase.max,Number(monster.hp)||0));
+      const pct = i < active ? 100 : Math.max(0,Math.min(100,hp/phase.max*100));
+      const state = i < active ? '✓' : i === active ? '▶' : '○';
+      const compactHp = n => (n / 10000).toLocaleString('zh-TW',{maximumFractionDigits:1})+'萬';
+      const status = i < active ? '已擊破' : i === active ? compactHp(hp)+'/'+compactHp(phase.max) : '待命';
+      return '<div class="parallel-lubu-phase-row"><span class="parallel-lubu-phase-name">'+state+' '+phase.name+'</span><span class="parallel-lubu-phase-track"><i class="parallel-lubu-phase-fill" style="width:'+pct+'%;background:'+phase.color+'"></i></span><span class="parallel-lubu-phase-value">'+status+'</span></div>';
+    }).join('');
+  };
+})();
+</script>
+
 </body>
 </html>
 
