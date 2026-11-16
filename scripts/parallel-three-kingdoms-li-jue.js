@@ -9,9 +9,9 @@
 
   const monster = {
     name: '李傕將軍',
-    icon: '👹',
-    image: ROOT + 'li-jue-general.svg',
-    battleImage: ROOT + 'li-jue-general.svg',
+    icon: '',
+    image: ROOT + 'li_jue_dark_chibi_left.svg',
+    battleImage: ROOT + 'li_jue_dark_chibi_left.svg',
     level: 80, levelRange: '80', attackSpeed: 1.18,
     hp: 428000, maxHp: 428000, atk: 7620, def: 2580, magicDefense: 2060,
     attackType: '鬼神斷月斬', basicAttackName: '鬼神斷月斬',
@@ -19,7 +19,7 @@
     exp: 92500, gold: 31200, type: 'special', specialMonster: true,
     specialTier: '平行三國特殊怪', encounterChance: 8,
     facing: 'left-full-body', orientation: 'strict-left-profile',
-    visualNote: '可愛黑暗 Q 版李傕將軍，黑紅金紫重甲、紅披風、額冠與李傕軍旗；完整站立全身圖。',
+    visualNote: '原創可愛黑暗 Q 版李傕將軍，黑紅金紫鬼將重甲、紅披風與紫色鬼火；完整全身左側身，面朝左。',
     baseStats: { str: 1580, dex: 690, con: 1460, wis: 520, int: 390, cha: 210 },
     bonusStats: { attack: 188, defense: 126, magicDefense: 82, critical: 0.25, evasion: 0.09 },
     skills: [
@@ -27,7 +27,7 @@
       { name: '赤焰裂陣', phase: 'normal', chance: 0.24, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.84 },
       { name: '紫魘鬼神爆', phase: 'lowHp', chance: 0.36, damageType: 'magic', attackRange: 'melee', powerMultiplier: 2.08 }
     ],
-    description: '平行三國的李傕將軍，身披黑紅金紫鬼將重甲，揮舞鬼刃巨斧。戰旗獵獵、紫色鬼火纏身，外表兇悍卻保留圓臉短腿的可愛黑暗 Q 版比例。',
+    description: '平行三國的李傕將軍，身披黑紅金紫鬼將重甲，側身朝左揮舞鬼刃巨斧。紫色鬼火纏身，保留圓臉短腿的可愛黑暗 Q 版比例。',
     dropTable: ['李傕鬼王盔（戰士專屬一般頭盔，可強化｜需求等級 80｜獨立掉落率 5%）', '李傕破軍戰甲（戰士專屬一般胸甲，可強化｜需求等級 80｜獨立掉落率 5%）', '鬼神斬月斧（戰士專屬一般雙手斧，可強化｜需求等級 80｜獨立掉落率 5%）', '暗紅兵符', '鬼將殘頁'],
     uniqueDrops: [
       '李傕鬼王盔｜一般頭盔｜戰士專屬、可強化｜需求等級 80｜獨立掉落率 5%｜物理防禦 +142｜魔法防禦 +96｜力量 +28、體質 +24、精神 +18｜生命 +900｜物理減傷 +3%',
