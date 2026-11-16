@@ -27,13 +27,7 @@
       waveStops: [0.01, 0.05, 0.34, 0.70, 0.94, 1],
       waveAlpha: [.22, .50, .95, 1, .88, .24]
     },
-    {
-      names: ['呂布'], bodyDir: 'lu_bu_attack', waveDir: 'lu_bu_attack_wave',
-      waveScale: .42, waveCurve: .02, waveLift: -.035, spriteScale: 1.2,
-      frameMs: [150, 130, 110, 95, 145, 195],
-      waveStops: [0.01, 0.06, 0.28, 0.60, 0.88, 1],
-      waveAlpha: [.30, .62, .98, 1, .96, .38]
-    },
+    // 呂布第一、第二階段由 lu-bu-phase-attack-animation.js 使用全新原創 SVG；不再載入舊版 Emoji／PNG 攻擊影格。
     {
       names: ['高順將軍', '高順'], bodySource: `${root}/gao_shun_dark_chibi_left.svg`, waveDir: 'gao_shun_dark_attack_wave', waveExtension: 'svg',
       // 原創黑暗 Q 版高順全身左向立繪；六段姿勢配合赤紅陷陣刀氣斬擊。
