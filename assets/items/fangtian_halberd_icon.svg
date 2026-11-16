@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+<title>方天畫戟</title>
+<defs>
+ <linearGradient id="shaft" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#241326"/><stop offset=".45" stop-color="#76502d"/><stop offset=".7" stop-color="#e5bd6b"/><stop offset="1" stop-color="#38203d"/></linearGradient>
+ <linearGradient id="steel" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#44214f"/><stop offset=".32" stop-color="#a6a4bd"/><stop offset=".58" stop-color="#fff2d0"/><stop offset=".78" stop-color="#8d7caa"/><stop offset="1" stop-color="#32233f"/></linearGradient>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0a8"/><stop offset=".45" stop-color="#d99a35"/><stop offset="1" stop-color="#70401e"/></linearGradient>
+ <linearGradient id="tassel" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff6b4d"/><stop offset=".5" stop-color="#b31325"/><stop offset="1" stop-color="#510c26"/></linearGradient>
+ <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.2"/></filter>
+</defs>
+<g opacity=".32" filter="url(#shadow)" fill="#9b50d8"><path d="M15 113L93 35 112 12 100 48 24 122Z"/></g>
+<!-- long shaft -->
+<path d="M12 117L94 35" stroke="#211627" stroke-width="9" stroke-linecap="round"/>
+<path d="M12 117L94 35" stroke="url(#shaft)" stroke-width="5.5" stroke-linecap="round"/>
+<path d="M16 113L91 38" stroke="#f5d58a" stroke-width="1.1" opacity=".8"/>
+<!-- butt spike -->
+<path d="M8 120L15 104 23 112Z" fill="url(#steel)" stroke="#39223f" stroke-width="1.5"/>
+<path d="M9 119L15 108" stroke="#fff4d6" stroke-width="1"/>
+<!-- crescent blade and central spear head -->
+<path d="M74 54Q82 29 111 5Q108 33 91 57L78 69Z" fill="url(#steel)" stroke="#34213c" stroke-width="2.2" stroke-linejoin="round"/>
+<path d="M88 52L108 12Q105 35 91 54Z" fill="#fff4d7" opacity=".9"/>
+<path d="M78 58Q57 36 46 42Q51 60 70 69L82 72Z" fill="url(#steel)" stroke="#34213c" stroke-width="2"/>
+<path d="M52 45Q64 48 76 62" fill="none" stroke="#fff0ce" stroke-width="2"/>
+<path d="M83 62Q97 66 104 82Q85 77 76 69Z" fill="url(#steel)" stroke="#34213c" stroke-width="2"/>
+<path d="M85 67L99 77" stroke="#fff0d4" stroke-width="1.5"/>
+<!-- gold socket -->
+<path d="M72 57L89 40 98 48 82 66Z" fill="url(#gold)" stroke="#5a351e" stroke-width="2"/>
+<path d="M75 59L89 45M80 64L94 50" stroke="#fff0b1" stroke-width="2"/>
+<circle cx="85" cy="54" r="4.5" fill="#9c1732" stroke="#ffe19a" stroke-width="2"/>
+<!-- red tassel -->
+<path d="M77 62Q65 64 54 76Q43 88 35 104Q51 96 62 87Q73 77 81 67Z" fill="url(#tassel)" stroke="#5b1228" stroke-width="1.6"/>
+<path d="M75 66Q61 78 48 97M78 67Q69 83 60 91M71 68Q57 77 43 100" fill="none" stroke="#ff9b73" stroke-width="1.4" stroke-linecap="round"/>
+<!-- bindings -->
+<path d="M66 65L74 73M70 61L78 69" stroke="url(#gold)" stroke-width="3.5" stroke-linecap="round"/>
+<path d="M69 66L75 72" stroke="#fff0b4" stroke-width="1"/>
+</svg>
