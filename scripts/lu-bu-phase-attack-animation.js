@@ -40,7 +40,7 @@
     const phase = Number(monster._parallelLuBuPhase || 1);
     if (phase !== 1) return;
     const sprite = document.querySelector('#monster-icon .monster-sprite');
-    if (sprite && !sprite.src.endsWith('/lu_bu_dark_chibi_cavalry.svg')) {
+    if (sprite && sprite.getAttribute('src') !== asset(PHASE1_IDLE)) {
       sprite.setAttribute('src', asset(PHASE1_IDLE));
     }
   }
