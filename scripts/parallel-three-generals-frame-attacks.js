@@ -268,18 +268,23 @@
   window.playParallelThreeKingdomsBossAttackStoryboard = (name, skillName) => {
     const cleanName = String(name || '').trim();
     const skill = String(skillName || '').trim();
+    const luBuMonster = (() => {
+      try {
+        return typeof currentMonster !== 'undefined' && currentMonster?.name === '呂布'
+          ? currentMonster : null;
+      } catch (_) { return null; }
+    })();
+    const hasExplicitLuBuPhase = !!luBuMonster
+      && luBuMonster._parallelLuBuPhase !== undefined
+      && luBuMonster._parallelLuBuPhase !== null;
+    // 第一階段的明確狀態必須優先，避免第二階段全域旗標或弓系技能資料殘留。
     const isLuBuPhase2 = cleanName === '呂布' && (
-      window.__parallelLuBuPhase2Active === true ||
-      (() => {
-        try {
-          return typeof currentMonster !== 'undefined'
-            && currentMonster?.name === '呂布'
-            && (Number(currentMonster?._parallelLuBuPhase) === 2
-              || currentMonster?.attackType === '轅門射戟'
-              || currentMonster?.basicAttackName === '轅門射戟');
-        } catch (_) { return false; }
-      })() ||
-      skill.includes('轅門射戟')
+      hasExplicitLuBuPhase
+        ? Number(luBuMonster._parallelLuBuPhase) === 2
+        : (window.__parallelLuBuPhase2Active === true
+          || luBuMonster?.attackType === '轅門射戟'
+          || luBuMonster?.basicAttackName === '轅門射戟'
+          || skill.includes('轅門射戟'))
     );
     // 第二階段交由前置載入的呂布專用動畫處理器播放；不可只回報 true，否則畫面不會有動畫。
     if (isLuBuPhase2) return typeof previous === 'function' ? previous(name, skillName) : false;
