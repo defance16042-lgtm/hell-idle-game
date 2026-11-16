@@ -155,7 +155,10 @@
   }
   const originalStoryboard=window.playParallelThreeKingdomsBossAttackStoryboard;
   window.playParallelThreeKingdomsBossAttackStoryboard=function(name,attackName) {
-    if (name==='李傕將軍') return playLiJueAttack();
+    if (name==='李傕將軍' || name==='李傕') {
+      const played = typeof originalStoryboard==='function' ? originalStoryboard.apply(this,arguments) : false;
+      return played || playLiJueAttack();
+    }
     return typeof originalStoryboard==='function' ? originalStoryboard.apply(this,arguments) : false;
   };
   window.playLiJueAttackStoryboard=playLiJueAttack;
