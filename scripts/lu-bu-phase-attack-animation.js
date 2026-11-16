@@ -68,6 +68,7 @@
     activeRoot = root;
     activeSprite = sprite;
     originalVisibility = sprite.style.visibility;
+    if (!phase2) sprite.setAttribute('src', asset(PHASE1_IDLE));
     sprite.style.visibility = 'hidden';
 
     const stageRect = stage.getBoundingClientRect();
