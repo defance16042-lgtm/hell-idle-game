@@ -52,7 +52,7 @@
       waveAlpha: [.24, .55, .94, 1, .90, .30]
     },
     {
-      names: ['李傕將軍', '李傕'], bodySource: `${root}/li-jue-general.svg`, waveDir: 'li_jue_attack_wave',
+      names: ['李傕將軍', '李傕'], bodySource: `${root}/li_jue_dark_chibi_left.svg`, waveDir: 'li_jue_attack_wave', waveExtension: 'svg',
       // 以人物完整輪廓立繪為底，六段連續位移與紅紫鬼刃斬擊波組成連續攻擊。
       fullBodyMotion: [
         { translate: '0 0', rotate: '0deg', filter: 'drop-shadow(0 0 2px rgba(160,55,255,.25))' },
@@ -81,7 +81,7 @@
     definition.bodyFrames = Array.from({ length: 6 }, (_, index) =>
       imageFor(definition.bodySource || `${root}/${definition.bodyDir}/frame_${String(index + 1).padStart(2, '0')}.png`));
     definition.waveFrames = Array.from({ length: 6 }, (_, index) =>
-      imageFor(`${root}/${definition.waveDir}/frame_${String(index + 1).padStart(2, '0')}.png`));
+      imageFor(`${root}/${definition.waveDir}/frame_${String(index + 1).padStart(2, '0')}.${definition.waveExtension || 'png'}`));
     const images = [...definition.bodyFrames, ...definition.waveFrames].map(entry => entry.image);
     definition.ready = Promise.all(images.map(image => {
       if (image.complete) return Promise.resolve(image.naturalWidth > 0);
