@@ -6,7 +6,8 @@
   const BASE = 'assets/monsters/parallel_three_kingdoms/';
   const PHASE1_IDLE = `${BASE}lu_bu_dark_chibi_cavalry.svg`;
   const PHASE1_ATTACK = `${BASE}lu_bu_dark_chibi_cavalry_attack.svg`;
-  const PHASE2_SHEET = `${BASE}lu_bu_phase2_bow_sheet.png`;
+  const PHASE2_IDLE = `${BASE}lu_bu_dark_chibi_mounted_archer.svg`;
+  const PHASE2_ATTACK = `${BASE}lu_bu_dark_chibi_mounted_archer_attack.svg`;
   const PHASE2_POSITIONS = ['0% 0%', '50% 0%', '100% 0%', '0% 100%', '50% 100%', '100% 100%'];
   const DURATIONS = [105, 90, 85, 85, 95, 115];
   const PHASE2_DURATIONS = [140, 120, 130, 120, 130, 180];
@@ -29,7 +30,7 @@
     if (activeSprite?.isConnected) {
       activeSprite.style.visibility = originalVisibility;
       const monster = typeof currentMonster !== 'undefined' ? currentMonster : window.currentMonster;
-      if (monster?.name === '呂布' && Number(monster._parallelLuBuPhase || 1) === 1) activeSprite.setAttribute('src', asset(PHASE1_IDLE));
+      if (monster?.name === '呂布') activeSprite.setAttribute('src', asset(Number(monster._parallelLuBuPhase || 1) === 2 ? PHASE2_IDLE : PHASE1_IDLE));
     }
     activeSprite = null;
   }
@@ -38,11 +39,10 @@
     const monster = typeof currentMonster !== 'undefined' ? currentMonster : window.currentMonster;
     if (!monster || monster.name !== '呂布') return;
     const phase = Number(monster._parallelLuBuPhase || 1);
-    if (phase !== 1) return;
+    if (phase !== 1 && phase !== 2) return;
     const sprite = document.querySelector('#monster-icon .monster-sprite');
-    if (sprite && sprite.getAttribute('src') !== asset(PHASE1_IDLE)) {
-      sprite.setAttribute('src', asset(PHASE1_IDLE));
-    }
+    const wanted = phase === 2 ? PHASE2_IDLE : PHASE1_IDLE;
+    if (sprite && sprite.getAttribute('src') !== asset(wanted)) sprite.setAttribute('src', asset(wanted));
   }
 
   const luBuArtworkObserver = new MutationObserver(syncLuBuIdleArtwork);
@@ -83,7 +83,7 @@
     activeRoot = root;
     activeSprite = sprite;
     originalVisibility = sprite.style.visibility;
-    if (!phase2) sprite.setAttribute('src', asset(PHASE1_IDLE));
+    sprite.setAttribute('src', asset(phase2 ? PHASE2_IDLE : PHASE1_IDLE));
     sprite.style.visibility = 'hidden';
 
     const stageRect = stage.getBoundingClientRect();
@@ -93,11 +93,8 @@
 
     const spriteImg = document.createElement('div');
     spriteImg.setAttribute('aria-hidden', 'true');
-    spriteImg.style.cssText = `position:absolute;left:${centerX}px;top:${centerY}px;width:min(30vw,230px);height:min(39vh,260px);min-width:150px;min-height:180px;max-width:230px;max-height:260px;transform:translate(-50%,-50%);background-repeat:no-repeat;background-position:center;background-size:contain;background-image:url("${asset(phase2 ? PHASE2_SHEET : PHASE1_ATTACK)}");filter:drop-shadow(0 0 8px rgba(255,65,45,.82));`;
-    if (phase2) {
-      spriteImg.style.backgroundSize = '300% 200%';
-      spriteImg.style.backgroundPosition = PHASE2_POSITIONS[0];
-    }
+    spriteImg.style.cssText = `position:absolute;left:${centerX}px;top:${centerY}px;width:min(30vw,230px);height:min(39vh,260px);min-width:150px;min-height:180px;max-width:230px;max-height:260px;transform:translate(-50%,-50%);background-repeat:no-repeat;background-position:center;background-size:contain;background-image:url("${asset(phase2 ? PHASE2_ATTACK : PHASE1_ATTACK)}");filter:drop-shadow(0 0 8px rgba(255,65,45,.82));`;
+    if (phase2) spriteImg.style.backgroundSize = 'contain';
     root.appendChild(spriteImg);
 
     let lastSpriteFrame = -1;
@@ -116,10 +113,9 @@
       while (frame < frameDurations.length - 1 && elapsed >= sum + frameDurations[frame]) sum += frameDurations[frame++];
       if (frame !== lastSpriteFrame) {
         if (phase2) {
-          spriteImg.style.backgroundPosition = PHASE2_POSITIONS[frame];
-          spriteImg.style.filter = frame === 3 || frame === 4
-            ? 'drop-shadow(0 0 13px rgba(255,215,105,1)) drop-shadow(0 0 24px rgba(255,95,25,.9))'
-            : 'drop-shadow(0 0 8px rgba(255,65,45,.82))';
+          spriteImg.style.backgroundImage = 'url(' + asset(PHASE2_ATTACK) + ')';
+          spriteImg.style.backgroundSize = 'contain';
+          spriteImg.style.filter = 'drop-shadow(0 0 13px rgba(255,45,65,1)) drop-shadow(0 0 24px rgba(125,0,30,.9))';
         } else {
           spriteImg.style.backgroundImage = `url("${asset(PHASE1_ATTACK)}")`;
           spriteImg.style.backgroundSize = "contain";
