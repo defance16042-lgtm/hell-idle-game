@@ -4,7 +4,8 @@
   window.__luBuPhaseAttackAnimationV1 = true;
 
   const BASE = 'assets/monsters/parallel_three_kingdoms/';
-  const PHASE1 = Array.from({ length: 6 }, (_, i) => `${BASE}lu_bu_attack/frame_${String(i + 1).padStart(2, '0')}.png`);
+  const PHASE1_IDLE = `${BASE}lu_bu_dark_chibi_cavalry.svg`;
+  const PHASE1_ATTACK = `${BASE}lu_bu_dark_chibi_cavalry_attack.svg`;
   const PHASE2_SHEET = `${BASE}lu_bu_phase2_bow_sheet.png`;
   const PHASE2_POSITIONS = ['0% 0%', '50% 0%', '100% 0%', '0% 100%', '50% 100%', '100% 100%'];
   const DURATIONS = [105, 90, 85, 85, 95, 115];
@@ -25,7 +26,11 @@
     activeFrameRequest = 0;
     activeRoot?.remove();
     activeRoot = null;
-    if (activeSprite?.isConnected) activeSprite.style.visibility = originalVisibility;
+    if (activeSprite?.isConnected) {
+      activeSprite.style.visibility = originalVisibility;
+      const monster = typeof currentMonster !== 'undefined' ? currentMonster : window.currentMonster;
+      if (monster?.name === '呂布' && Number(monster._parallelLuBuPhase || 1) === 1) activeSprite.setAttribute('src', asset(PHASE1_IDLE));
+    }
     activeSprite = null;
   }
 
@@ -72,7 +77,7 @@
 
     const spriteImg = document.createElement('div');
     spriteImg.setAttribute('aria-hidden', 'true');
-    spriteImg.style.cssText = `position:absolute;left:${centerX}px;top:${centerY}px;width:min(30vw,230px);height:min(39vh,260px);min-width:150px;min-height:180px;max-width:230px;max-height:260px;transform:translate(-50%,-50%);background-repeat:no-repeat;background-position:center;background-size:contain;background-image:url("${asset(phase2 ? PHASE2_SHEET : PHASE1[0])}");filter:drop-shadow(0 0 8px rgba(255,65,45,.82));`;
+    spriteImg.style.cssText = `position:absolute;left:${centerX}px;top:${centerY}px;width:min(30vw,230px);height:min(39vh,260px);min-width:150px;min-height:180px;max-width:230px;max-height:260px;transform:translate(-50%,-50%);background-repeat:no-repeat;background-position:center;background-size:contain;background-image:url("${asset(phase2 ? PHASE2_SHEET : PHASE1_ATTACK)}");filter:drop-shadow(0 0 8px rgba(255,65,45,.82));`;
     if (phase2) {
       spriteImg.style.backgroundSize = '300% 200%';
       spriteImg.style.backgroundPosition = PHASE2_POSITIONS[0];
@@ -82,7 +87,7 @@
     let lastSpriteFrame = -1;
     let startedAt = 0;
     const phase2FinishAt = 1250;
-    const phase1FinishAt = DURATIONS.reduce((a, b) => a + b, 0) + 120;
+    const phase1FinishAt = 900;
 
     function tick(now) {
       if (id !== runId || !root.isConnected) return;
@@ -100,7 +105,9 @@
             ? 'drop-shadow(0 0 13px rgba(255,215,105,1)) drop-shadow(0 0 24px rgba(255,95,25,.9))'
             : 'drop-shadow(0 0 8px rgba(255,65,45,.82))';
         } else {
-          spriteImg.style.backgroundImage = `url("${asset(PHASE1[frame])}")`;
+          spriteImg.style.backgroundImage = `url("${asset(PHASE1_ATTACK)}")`;
+          spriteImg.style.backgroundSize = "contain";
+          spriteImg.style.filter = "drop-shadow(0 0 14px rgba(255,35,65,.95)) drop-shadow(0 0 26px rgba(125,0,30,.85))";
         }
         lastSpriteFrame = frame;
       }
@@ -112,6 +119,8 @@
     activeFrameRequest = requestAnimationFrame(tick);
     return true;
   }
+
+  window.playLuBuDarkChibiAttack = function() { return playLuBuAttack('呂布', '赤焰騎戰'); };
 
   window.playParallelThreeKingdomsBossAttackStoryboard = function(name, attackName) {
     if (name === '呂布') return playLuBuAttack(name, attackName);
