@@ -99,16 +99,7 @@
     return count;
   };
 
-  const originalChestDrop = window.awardParallelThreeKingdomsChestArmorDrop;
-  if (typeof originalChestDrop==='function' && !originalChestDrop.__liJueWrapped) {
-    const wrapped = function(target) {
-      const result = originalChestDrop.apply(this, arguments);
-      window.awardParallelThreeKingdomsLiJueDrops?.(target);
-      return result;
-    };
-    wrapped.__liJueWrapped = true;
-    window.awardParallelThreeKingdomsChestArmorDrop = wrapped;
-  }
+
 
   function playLiJueAttack() {
     const target = typeof currentMonster!=='undefined' ? currentMonster : window.currentMonster;
