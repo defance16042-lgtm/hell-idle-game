@@ -6,6 +6,7 @@ const path = require('node:path');
 const DEFAULT_STORE = { version: 1, characters: {}, sharedWarehouse: null, storage: {} };
 let mainWindow;
 let updateCheckInProgress = false;
+let updateInstallScheduled = false;
 
 function sendUpdateStatus(event, extra = {}) {
   if (mainWindow && !mainWindow.isDestroyed()) mainWindow.webContents.send('update-status', { event, ...extra });
@@ -133,15 +134,29 @@ function createWindow() {
 
 function checkForUpdates() {
   if (!app.isPackaged) return;
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
   autoUpdater.on('checking-for-update', () => sendUpdateStatus('checking'));
   autoUpdater.on('update-available', info => sendUpdateStatus('available', { version: info.version }));
   autoUpdater.on('update-not-available', info => sendUpdateStatus('not-available', { version: info.version }));
   autoUpdater.on('download-progress', progress => sendUpdateStatus('download-progress', { percent: progress.percent }));
-  autoUpdater.on('error', error => sendUpdateStatus('error', { message: error.message }));
-  autoUpdater.on('update-downloaded', info => {
-    // 不在 Windows 系統層跳出重新啟動對話框；由遊戲開始畫面提供安裝按鈕。
-    sendUpdateStatus('downloaded', { version: info?.version || null });
+  autoUpdater.on('error', error => {
+    sendUpdateStatus('error', { message: error.message });
+    console.warn('下載遊戲更新失敗:', error.message);
   });
+  autoUpdater.on('update-downloaded', info => {
+    sendUpdateStatus('downloaded', { version: info?.version || null });
+    if (updateInstallScheduled) return;
+    updateInstallScheduled = true;
+    setTimeout(() => {
+      if (!app.isQuitting) {
+        autoUpdater.quitAndInstall(false, true);
+      }
+    }, 1500);
+  });
+
   autoUpdater.checkForUpdates().catch(error => {
     sendUpdateStatus('error', { message: error.message });
     console.warn('檢查遊戲更新失敗:', error.message);
