@@ -10680,7 +10680,7 @@ function getCombatVisualCycleDuration(actionPath) {
         function updateMonsterHealthUI() {
             const panel = document.getElementById('monster-hp-panel');
             if (!panel) return;
-            if (!currentMonster) { panel.style.display = 'none'; panel.querySelector('.fallen-heaven-phase-bars')?.remove(); return; }
+            if (!currentMonster) { panel.style.display = 'none'; panel.querySelector('.fallen-heaven-phase-bars')?.remove(); window.updateLuBuBossBars?.(panel, null); return; }
             panel.style.display = 'block';
             const name = document.getElementById('monster-hp-name');
             const value = document.getElementById('monster-hp-value');
@@ -10690,6 +10690,7 @@ function getCombatVisualCycleDuration(actionPath) {
                 if (name) name.textContent = '生命';
                 if (value) value.textContent = '???（不會死亡）';
                 window.updateFallenHeavenBossBars?.(panel, null);
+                window.updateLuBuBossBars?.(panel, null);
                 panel.classList.remove('is-low');
                 if (bar) bar.style.display = 'none';
                 return;
@@ -10703,6 +10704,7 @@ function getCombatVisualCycleDuration(actionPath) {
             if (fill) fill.style.width = `${percent}%`;
             panel.classList.toggle('is-low', percent <= 30);
             window.updateFallenHeavenBossBars?.(panel, currentMonster);
+            window.updateLuBuBossBars?.(panel, currentMonster);
             if (bar) {
                 bar.setAttribute('aria-valuemin', '0');
                 bar.setAttribute('aria-valuemax', String(Math.floor(maxHp)));

@@ -255,4 +255,43 @@
   const style = document.createElement('style');
   style.textContent = '@keyframes luBuPhaseTwoEnter{0%{filter:brightness(1);transform:translateY(0) scale(1)}35%{filter:brightness(2.4) drop-shadow(0 0 26px #ff42d7);transform:translateY(-18px) scale(1.08)}100%{filter:brightness(1.2) drop-shadow(0 0 12px #a800ff);transform:translateY(0) scale(1)}}#monster-icon.lu-bu-phase-two-enter{animation:luBuPhaseTwoEnter .9s ease-out}';
   document.head.appendChild(style);
+
+  const hpBarStyle = document.createElement('style');
+  hpBarStyle.id = 'lu-bu-dual-hp-bars-style';
+  hpBarStyle.textContent = `
+    .parallel-lubu-phase-bars{display:grid;gap:2px;margin-top:3px;padding-top:3px;border-top:1px solid rgba(215,116,123,.38)}
+    .parallel-lubu-phase-bars .parallel-lubu-phase-row{display:flex;align-items:center;gap:3px;margin-top:2px;font-size:9px;line-height:1.1;color:#eadde7;white-space:nowrap}
+    .parallel-lubu-phase-bars .parallel-lubu-phase-name{width:48px;flex:0 0 48px;overflow:hidden;text-overflow:ellipsis}
+    .parallel-lubu-phase-bars .parallel-lubu-phase-track{height:5px;flex:1;min-width:24px;overflow:hidden;border-radius:3px;background:#241019}
+    .parallel-lubu-phase-bars .parallel-lubu-phase-fill{display:block;height:100%;border-radius:3px;transition:width .2s ease}
+    .parallel-lubu-phase-bars .parallel-lubu-phase-value{width:60px;flex:0 0 60px;text-align:right;font-size:8px;font-variant-numeric:tabular-nums}
+  `;
+  document.head.appendChild(hpBarStyle);
+
+  window.updateLuBuBossBars = function(panel, monster) {
+    let box = panel?.querySelector('.parallel-lubu-phase-bars');
+    if (!monster || (monster.name !== '呂布' && monster.name !== '吕布')) { box?.remove(); return; }
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'parallel-lubu-phase-bars';
+      box.setAttribute('aria-label', '呂布雙階段生命進度');
+      panel.appendChild(box);
+    }
+
+    const active = Number(monster._luBuPhaseIndex) === 1 ? 1 : 0;
+    const firstMax = Math.max(1, Number(monster._luBuPhase1MaxHp) || (active === 0 ? Number(monster.maxHp) : 2480000) || 2480000);
+    if (active === 0 && !Number(monster._luBuPhase1MaxHp)) monster._luBuPhase1MaxHp = firstMax;
+    const phases = [
+      { name: '赤紫鬼神', max: firstMax, color: 'linear-gradient(90deg,#8f234f,#ff647f)' },
+      { name: '轅門弓將', max: Math.max(1, Number(monster.maxHp) && active === 1 ? Number(monster.maxHp) : 3200000), color: 'linear-gradient(90deg,#a66a16,#ffd66b)' }
+    ];
+    const compactHp = value => (value / 10000).toLocaleString('zh-TW', { maximumFractionDigits: 1 }) + '萬';
+    box.innerHTML = phases.map((phase, index) => {
+      const hp = index < active ? 0 : index > active ? 0 : Math.max(0, Math.min(phase.max, Number(monster.hp) || 0));
+      const pct = index < active ? 100 : index > active ? 0 : Math.max(0, Math.min(100, hp / phase.max * 100));
+      const state = index < active ? '✓' : index === active ? '▶' : '○';
+      const status = index < active ? '已擊破' : index === active ? `${compactHp(hp)} / ${compactHp(phase.max)}` : '待命';
+      return `<div class="parallel-lubu-phase-row"><span class="parallel-lubu-phase-name">${state} ${phase.name}</span><span class="parallel-lubu-phase-track"><i class="parallel-lubu-phase-fill" style="width:${pct}%;background:${phase.color}"></i></span><span class="parallel-lubu-phase-value">${status}</span></div>`;
+    }).join('');
+  };
 })();
