@@ -257,6 +257,96 @@
     return true;
   }
 
+
+  // 呂布第二形態：PNG 六格弓將攻擊動畫。
+  // 使用 3x2 PNG 精靈圖，不使用 SVG／Emoji；每格 32x32，實際戰鬥時放大顯示。
+  const luBuPhase2AttackSheet = 'assets/monsters/parallel_three_kingdoms/lu_bu_phase2_attack_spritesheet.png';
+  let luBuPhase2AttackRun = 0;
+
+  function playLuBuPhase2PngAttack() {
+    const stage = document.getElementById('battle-stage');
+    const sprite = document.querySelector('#monster-icon .monster-sprite');
+    const player = document.getElementById('player-icon');
+    if (!stage || !sprite || !player || !sprite.isConnected) return false;
+
+    const run = ++luBuPhase2AttackRun;
+    const idleSource = sprite.getAttribute('src') || sprite.src;
+    const oldTransform = sprite.style.getPropertyValue('transform');
+    const oldOrigin = sprite.style.getPropertyValue('transform-origin');
+
+    const frame = document.createElement('div');
+    frame.className = 'lu-bu-phase2-png-attack';
+    frame.setAttribute('aria-hidden', 'true');
+    frame.style.cssText = [
+      'position:absolute',
+      'pointer-events:none',
+      'z-index:95',
+      'width:128px',
+      'height:128px',
+      'background-image:url("' + (typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(luBuPhase2AttackSheet) : luBuPhase2AttackSheet) + '")',
+      'background-repeat:no-repeat',
+      'background-size:384px 256px',
+      'background-position:0 0',
+      'image-rendering:auto',
+      'transform:translate(-50%,-50%)',
+      'will-change:left,top,background-position,transform'
+    ].join(';');
+
+    const stageRect = stage.getBoundingClientRect();
+    const monsterRect = sprite.getBoundingClientRect();
+    const playerRect = player.getBoundingClientRect();
+    frame.style.left = `${monsterRect.left - stageRect.left + monsterRect.width * .50}px`;
+    frame.style.top = `${monsterRect.top - stageRect.top + monsterRect.height * .48}px`;
+    stage.appendChild(frame);
+
+    // 攻擊時先隱藏原本的站立圖，六格 PNG 完整跑完再恢復。
+    sprite.style.setProperty('opacity', '0', 'important');
+
+    const frames = [
+      { x: 0,   y: 0,   ms: 120, dx: 0,   dy: 0,   r: 0 },
+      { x: -128, y: 0,   ms: 105, dx: 5,   dy: -2,  r: -2 },
+      { x: -256, y: 0,   ms: 100, dx: 10,  dy: -4,  r: -3 },
+      { x: 0,   y: -128,ms: 80,  dx: 18,  dy: -1,  r: 2 },
+      { x: -128,y: -128,ms: 150, dx: 24,  dy: 0,   r: 1 },
+      { x: -256,y: -128,ms: 180, dx: 6,   dy: 1,   r: 0 }
+    ];
+
+    let i = 0;
+    const show = () => {
+      if (run !== luBuPhase2AttackRun || !frame.isConnected || !sprite.isConnected) {
+        frame.remove();
+        sprite.style.removeProperty('opacity');
+        if (oldTransform) sprite.style.setProperty('transform', oldTransform);
+        else sprite.style.removeProperty('transform');
+        if (oldOrigin) sprite.style.setProperty('transform-origin', oldOrigin);
+        else sprite.style.removeProperty('transform-origin');
+        if (sprite.isConnected) sprite.setAttribute('src', idleSource);
+        return;
+      }
+      const f = frames[i];
+      frame.style.backgroundPosition = `${f.x}px ${f.y}px`;
+      frame.style.transform = `translate(calc(-50% + ${f.dx}px), calc(-50% + ${f.dy}px)) rotate(${f.r}deg) scale(1.15)`;
+      i++;
+      if (i < frames.length) {
+        setTimeout(show, f.ms);
+      } else {
+        setTimeout(() => {
+          if (run === luBuPhase2AttackRun) {
+            frame.remove();
+            sprite.style.removeProperty('opacity');
+            if (oldTransform) sprite.style.setProperty('transform', oldTransform);
+            else sprite.style.removeProperty('transform');
+            if (oldOrigin) sprite.style.setProperty('transform-origin', oldOrigin);
+            else sprite.style.removeProperty('transform-origin');
+            sprite.setAttribute('src', idleSource);
+          }
+        }, 60);
+      }
+    };
+    show();
+    return true;
+  }
+
   const previous = window.playParallelThreeKingdomsBossAttackStoryboard;
   window.playParallelThreeKingdomsBossAttackStoryboard = (name, skillName) => {
     const cleanName = String(name || '').trim();
@@ -282,7 +372,7 @@
     // 呂布第一階段改用原創黑暗 Q 版騎戰 SVG 動畫，不再讀取舊人物影格。
     if (cleanName === '呂布' && !isLuBuPhase2) return typeof window.playLuBuDarkChibiAttack === 'function' ? window.playLuBuDarkChibiAttack() : false;
     // 第二階段仍沿用既有弓形態動畫。
-    if (isLuBuPhase2) return typeof previous === 'function' ? previous(name, skillName) : false;
+    if (isLuBuPhase2) return playLuBuPhase2PngAttack() || (typeof previous === 'function' ? previous(name, skillName) : false);
     const definition = definitionByName.get(cleanName);
     if (definition) return playFrameSequence(definition);
     return previous?.(name, skillName) || false;
