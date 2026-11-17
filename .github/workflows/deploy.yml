@@ -31,6 +31,10 @@ jobs:
         run: |
           python -m pip install pillow
           python scripts/trim_parallel_general_body_frames.py
+      - name: Write game version
+        run: |
+          printf '{"version":"%s","commit":"%s"}\n' "$GITHUB_SHA" "$GITHUB_SHA" > version.json
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
