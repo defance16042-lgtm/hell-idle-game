@@ -114,3 +114,134 @@
 
   window.playLuBuRedHareAttackStoryboard = playLuBuRedHareAttack;
 })();
+
+
+// 第二階段：赤兔鬼神・騎射形態（第一階段 HP 歸零後才切換）
+(() => {
+  'use strict';
+  if (window.__parallelLuBuMountedArcherPhaseV1) return;
+  window.__parallelLuBuMountedArcherPhaseV1 = true;
+
+  const ROOT = 'assets/monsters/parallel_three_kingdoms/lu_bu_phase2/';
+  const IDLE = ROOT + 'frame_01.png';
+  const PATHS = Array.from({ length: 6 }, (_, i) => ROOT + 'frame_' + String(i + 1).padStart(2, '0') + '.png');
+  const IMAGES = PATHS.map(path => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(path) : path;
+    return image;
+  });
+  const waitImages = Promise.all(IMAGES.map(img => img.complete
+    ? Promise.resolve(img.naturalWidth > 0)
+    : new Promise(resolve => {
+        img.addEventListener('load', () => resolve(true), { once: true });
+        img.addEventListener('error', () => resolve(false), { once: true });
+      })));
+  const ATTACKS = {
+    '赤焰穿雲箭': { frames: [1, 2, 3, 6], times: [120, 150, 115, 180] },
+    '鬼神連珠射': { frames: [1, 2, 4, 5, 4, 5, 6], times: [90, 110, 85, 85, 85, 85, 160] },
+    '赤兔迴旋斬射': { frames: [1, 2, 3, 4, 5, 6], times: [80, 100, 100, 100, 100, 170] },
+    '赤兔滅世箭': { frames: [1, 2, 4, 5, 3, 6], times: [180, 240, 180, 160, 260, 220] }
+  };
+  let playbackToken = 0;
+  let playbackTimers = [];
+
+  function getSprite() {
+    return document.querySelector('#monster-icon .monster-sprite');
+  }
+  function stopPlayback() {
+    playbackToken++;
+    playbackTimers.forEach(clearTimeout);
+    playbackTimers = [];
+  }
+  function playFrames(indices, durations) {
+    const sprite = getSprite();
+    if (!sprite) return false;
+    stopPlayback();
+    const token = playbackToken;
+    let cursor = 0;
+    const step = () => {
+      if (token !== playbackToken || !sprite.isConnected) return;
+      if (cursor >= indices.length) {
+        sprite.src = typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(IDLE) : IDLE;
+        return;
+      }
+      const imageIndex = indices[cursor];
+      sprite.src = IMAGES[imageIndex]?.src || sprite.src;
+      const delay = durations[cursor] || 120;
+      cursor++;
+      playbackTimers.push(setTimeout(step, delay));
+    };
+    waitImages.then(results => {
+      if (token !== playbackToken) return;
+      if (results.every(Boolean)) step();
+      else addBattleLog?.('⚠️ 呂布第二階段動畫素材尚未完整載入。');
+    });
+    return true;
+  }
+
+  window.advanceParallelLuBuBossPhase = function(monster) {
+    if (!monster || monster.name !== '呂布' || Number(monster._luBuPhaseIndex || 0) !== 0 || Number(monster.hp) > 0) return false;
+    monster._luBuPhaseIndex = 1;
+    monster.maxHp = 3200000;
+    monster.hp = monster.maxHp;
+    monster.atk = Math.floor((Number(monster.atk) || 12800) * 1.28);
+    monster.attackSpeed = 0.76;
+    monster.attackType = '赤兔鬼神騎射';
+    monster.basicAttackName = '赤焰穿雲箭';
+    monster.attackRange = 'ranged';
+    monster.damageType = 'physical';
+    monster.image = IDLE;
+    monster.battleImage = IDLE;
+    monster.skills = [
+      { name: '赤焰穿雲箭', phase: 'normal', chance: 0.34, damageType: 'physical', attackRange: 'ranged', powerMultiplier: 2.05, effect: 'heavy' },
+      { name: '鬼神連珠射', phase: 'normal', chance: 0.30, damageType: 'physical', attackRange: 'ranged', powerMultiplier: 1.72, effect: 'shock', hits: 4 },
+      { name: '赤兔迴旋斬射', phase: 'lowHp', chance: 0.22, damageType: 'physical', attackRange: 'ranged', powerMultiplier: 2.25, effect: 'heavy', hits: 3 },
+      { name: '赤兔滅世箭', phase: 'lowHp', chance: 0.14, damageType: 'physical', attackRange: 'ranged', powerMultiplier: 3.4, effect: 'shock' }
+    ];
+    monster.bossPhases = [
+      { name: '赤紫鬼神・方天畫戟', trigger: '第一條生命', description: '騎乘赤兔馬，以方天畫戟進行近戰攻擊。' },
+      { name: '赤兔鬼神・騎射形態', trigger: '第一階段 HP 歸零後', description: '赤兔馬進入鬼焰奔馳，呂布改用寶雕弓發動連射與終極箭技。' }
+    ];
+    stopPlayback();
+    const sprite = getSprite();
+    if (sprite) sprite.src = typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(IDLE) : IDLE;
+    const stage = document.getElementById('monster-icon');
+    if (stage) {
+      stage.classList.remove('monster-hit-recoil');
+      stage.classList.add('lu-bu-phase-two-enter');
+      setTimeout(() => stage.classList.remove('lu-bu-phase-two-enter'), 900);
+    }
+    if (typeof updateMonsterHealthUI === 'function') updateMonsterHealthUI();
+    if (typeof updateGameUI === 'function') updateGameUI();
+    if (typeof addBattleLog === 'function') addBattleLog('🐎 <strong style="color:#ff70dc">呂布第一階段戰敗！赤兔馬嘶鳴躍起，呂布拔出寶雕弓——第二階段【赤兔鬼神・騎射形態】降臨！</strong>');
+    if (typeof saveGame === 'function') saveGame();
+    if (typeof window.showFloatingDmg === 'function') window.showFloatingDmg('monster-icon', '第二形態', '#ff70dc', '', '赤兔鬼神');
+    if (typeof window.updateMonsterHealthUI === 'function') window.updateMonsterHealthUI();
+    if (typeof window.updateGameUI === 'function') window.updateGameUI();
+    if (typeof window.nextPlayerAttackAt !== 'undefined') window.nextPlayerAttackAt = Date.now() + 1200;
+    if (typeof window.nextMonsterAttackAt !== 'undefined') window.nextMonsterAttackAt = Date.now() + 1500;
+    if (typeof window.monsterDefeatInProgress !== 'undefined') window.monsterDefeatInProgress = false;
+    if (typeof window.monsterZeroHpSince !== 'undefined') window.monsterZeroHpSince = 0;
+    return true;
+  };
+
+  const previousStoryboard = window.playParallelThreeKingdomsBossAttackStoryboard;
+  window.playParallelThreeKingdomsBossAttackStoryboard = function(name, attackName, ...rest) {
+    if ((name === '呂布' || name === '吕布') && Number(window.currentMonster?._luBuPhaseIndex) === 1) {
+      const key = Object.keys(ATTACKS).find(label => String(attackName || '').includes(label)) || '赤焰穿雲箭';
+      const attack = ATTACKS[key];
+      return playFrames(attack.frames, attack.times);
+    }
+    return typeof previousStoryboard === 'function'
+      ? previousStoryboard.call(this, name, attackName, ...rest)
+      : false;
+  };
+  window.playLuBuMountedArcherStoryboard = attackName => {
+    const key = Object.keys(ATTACKS).find(label => String(attackName || '').includes(label)) || '赤焰穿雲箭';
+    return playFrames(ATTACKS[key].frames, ATTACKS[key].times);
+  };
+  const style = document.createElement('style');
+  style.textContent = '@keyframes luBuPhaseTwoEnter{0%{filter:brightness(1);transform:translateY(0) scale(1)}35%{filter:brightness(2.4) drop-shadow(0 0 26px #ff42d7);transform:translateY(-18px) scale(1.08)}100%{filter:brightness(1.2) drop-shadow(0 0 12px #a800ff);transform:translateY(0) scale(1)}}#monster-icon.lu-bu-phase-two-enter{animation:luBuPhaseTwoEnter .9s ease-out}';
+  document.head.appendChild(style);
+})();
