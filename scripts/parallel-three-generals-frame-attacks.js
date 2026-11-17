@@ -29,7 +29,7 @@
     },
     // 呂布第一、第二階段由 lu-bu-phase-attack-animation.js 使用全新原創 SVG；不再載入舊版 Emoji／PNG 攻擊影格。
     {
-      names: ['高順將軍', '高順'], bodySource: `${root}/gao_shun_dark_chibi_left.svg`, waveDir: 'gao_shun_dark_attack_wave', waveExtension: 'svg',
+      names: ['高順將軍', '高順'], bodySource: `${root}/gao_shun_dark_chibi_left.png`, waveDir: 'gao_shun_dark_attack_wave', waveExtension: 'svg',
       // 原創黑暗 Q 版高順全身左向立繪；六段姿勢配合赤紅陷陣刀氣斬擊。
       fullBodyMotion: [
         { translate: '0 0', rotate: '0deg', filter: 'drop-shadow(0 0 2px rgba(255,65,45,.2))' },
