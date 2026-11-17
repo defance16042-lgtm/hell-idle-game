@@ -175,7 +175,7 @@
     waitImages.then(results => {
       if (token !== playbackToken) return;
       if (results.every(Boolean)) step();
-      else addBattleLog?.('⚠️ 呂布第二階段動畫素材尚未完整載入。');
+      else if (typeof addBattleLog === 'function') addBattleLog('⚠️ 呂布第二階段動畫素材尚未完整載入。');
     });
     return true;
   }
@@ -219,16 +219,16 @@
     if (typeof window.showFloatingDmg === 'function') window.showFloatingDmg('monster-icon', '第二形態', '#ff70dc', '', '赤兔鬼神');
     if (typeof window.updateMonsterHealthUI === 'function') window.updateMonsterHealthUI();
     if (typeof window.updateGameUI === 'function') window.updateGameUI();
-    if (typeof window.nextPlayerAttackAt !== 'undefined') window.nextPlayerAttackAt = Date.now() + 1200;
-    if (typeof window.nextMonsterAttackAt !== 'undefined') window.nextMonsterAttackAt = Date.now() + 1500;
-    if (typeof window.monsterDefeatInProgress !== 'undefined') window.monsterDefeatInProgress = false;
-    if (typeof window.monsterZeroHpSince !== 'undefined') window.monsterZeroHpSince = 0;
+    try { if (typeof nextPlayerAttackAt !== 'undefined') nextPlayerAttackAt = Date.now() + 1200; } catch (_) {}
+    try { if (typeof nextMonsterAttackAt !== 'undefined') nextMonsterAttackAt = Date.now() + 1500; } catch (_) {}
+    try { if (typeof monsterDefeatInProgress !== 'undefined') monsterDefeatInProgress = false; } catch (_) {}
+    try { if (typeof monsterZeroHpSince !== 'undefined') monsterZeroHpSince = 0; } catch (_) {}
     return true;
   };
 
   const previousStoryboard = window.playParallelThreeKingdomsBossAttackStoryboard;
   window.playParallelThreeKingdomsBossAttackStoryboard = function(name, attackName, ...rest) {
-    if ((name === '呂布' || name === '吕布') && Number(window.currentMonster?._luBuPhaseIndex) === 1) {
+    if ((name === '呂布' || name === '吕布') && Number((typeof currentMonster !== 'undefined' ? currentMonster : window.currentMonster)?._luBuPhaseIndex) === 1) {
       const key = Object.keys(ATTACKS).find(label => String(attackName || '').includes(label)) || '赤焰穿雲箭';
       const attack = ATTACKS[key];
       return playFrames(attack.frames, attack.times);
