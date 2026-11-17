@@ -29,18 +29,18 @@
     },
     // 呂布第一、第二階段由 lu-bu-phase-attack-animation.js 使用全新原創 SVG；不再載入舊版 Emoji／PNG 攻擊影格。
     {
-      names: ['高順將軍', '高順'], bodySource: `${root}/gao_shun_dark_chibi_left.png`, waveDir: 'gao_shun_dark_attack_wave', waveExtension: 'svg',
-      // 原創黑暗 Q 版高順全身左向立繪；六段姿勢配合赤紅陷陣刀氣斬擊。
+      names: ['高順將軍', '高順'], bodySource: `${root}/gao_shun_dark_chibi_left.png`, cssSlash: true,
+      // 高順：使用現有 PNG 立繪做六段原創戰鬥動作，不使用 SVG／Emoji。
       fullBodyMotion: [
         { translate: '0 0', rotate: '0deg', filter: 'drop-shadow(0 0 2px rgba(255,65,45,.2))' },
-        { translate: '-2% 0', rotate: '-7deg', filter: 'drop-shadow(0 0 8px rgba(220,35,35,.55))' },
-        { translate: '2% -1%', rotate: '-12deg', filter: 'drop-shadow(0 0 14px rgba(255,45,35,.8))' },
-        { translate: '5% 0', rotate: '9deg', filter: 'drop-shadow(0 0 22px rgba(255,30,20,1))' },
-        { translate: '-1% -2%', rotate: '5deg', filter: 'drop-shadow(0 0 13px rgba(255,55,35,.75))' },
+        { translate: '-3% 1%', rotate: '-8deg', filter: 'drop-shadow(0 0 10px rgba(220,35,35,.55))' },
+        { translate: '5% -2%', rotate: '-15deg', filter: 'drop-shadow(0 0 18px rgba(255,45,35,.85))' },
+        { translate: '11% 0', rotate: '8deg', filter: 'drop-shadow(0 0 30px rgba(255,30,20,1))' },
+        { translate: '3% -1%', rotate: '4deg', filter: 'drop-shadow(0 0 20px rgba(255,55,35,.78))' },
         { translate: '0 0', rotate: '0deg', filter: 'drop-shadow(0 0 3px rgba(255,65,45,.25))' }
       ],
-      waveScale: .56, waveCurve: -.025, waveLift: -.025, spriteScale: 1.08,
-      frameMs: [140, 120, 105, 92, 125, 185],
+      waveScale: .62, waveCurve: -.025, waveLift: -.025, spriteScale: 1.08,
+      frameMs: [135, 115, 95, 85, 120, 175],
       waveStops: [0.01, 0.06, 0.30, 0.64, 0.90, 1],
       waveAlpha: [.24, .55, .94, 1, .90, .30]
     },
@@ -73,7 +73,7 @@
   for (const definition of definitions) {
     definition.bodyFrames = Array.from({ length: 6 }, (_, index) =>
       imageFor(definition.bodySource || `${root}/${definition.bodyDir}/frame_${String(index + 1).padStart(2, '0')}.png`));
-    definition.waveFrames = Array.from({ length: 6 }, (_, index) =>
+    definition.waveFrames = definition.cssSlash ? [] : Array.from({ length: 6 }, (_, index) =>
       imageFor(`${root}/${definition.waveDir}/frame_${String(index + 1).padStart(2, '0')}.${definition.waveExtension || 'png'}`));
     const images = [...definition.bodyFrames, ...definition.waveFrames].map(entry => entry.image);
     definition.ready = Promise.all(images.map(image => {
@@ -187,12 +187,12 @@
       if (definition.fullBodyMotion) sprite.style.setProperty('transition', 'translate 90ms ease, rotate 90ms ease, filter 90ms ease', 'important');
     }
 
-    const waveImage = document.createElement('img');
-    waveImage.className = 'parallel-generals-slash-frames';
-    waveImage.alt = '';
+    const waveImage = document.createElement(definition.cssSlash ? 'div' : 'img');
+    waveImage.className = definition.cssSlash ? 'parallel-generals-css-slash' : 'parallel-generals-slash-frames';
+    if (!definition.cssSlash) waveImage.alt = '';
     waveImage.setAttribute('aria-hidden', 'true');
-    waveImage.draggable = false;
-    waveImage.src = definition.waveFrames[0].source;
+    if (!definition.cssSlash) waveImage.draggable = false;
+    if (!definition.cssSlash) waveImage.src = definition.waveFrames[0].source;
     waveImage.style.cssText = 'position:absolute;display:block;width:0;height:0;opacity:0;object-fit:contain;pointer-events:none;user-select:none;z-index:90;will-change:left,top,opacity';
     stage.appendChild(waveImage);
 
@@ -240,7 +240,7 @@
         sprite.style.setProperty('rotate', pose.rotate, 'important');
         sprite.style.setProperty('filter', pose.filter, 'important');
       }
-      waveImage.src = definition.waveFrames[index].source;
+      if (!definition.cssSlash) waveImage.src = definition.waveFrames[index].source;
       placeWave(record, index);
       const timer = setTimeout(() => showFrame(index + 1), frameDurations[index]);
       record.timers.push(timer);
