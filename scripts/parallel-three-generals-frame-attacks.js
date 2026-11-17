@@ -27,7 +27,7 @@
       waveStops: [0.01, 0.05, 0.34, 0.70, 0.94, 1],
       waveAlpha: [.22, .50, .95, 1, .88, .24]
     },
-    // 呂布第一、第二階段由 lu-bu-phase-attack-animation.js 使用全新原創 SVG；不再載入舊版 Emoji／PNG 攻擊影格。
+    // 呂布騎乘赤兔的逐格攻擊分鏡由 parallel-three-kingdoms-lu-bu-red-hare.js 專用處理。
     {
       names: ['高順將軍', '高順'], bodySource: `${root}/gao_shun_dark_chibi_left.png`, cssSlash: true,
       // 高順：使用現有 PNG 立繪做六段原創戰鬥動作，不使用 SVG／Emoji。
@@ -257,7 +257,9 @@
     return true;
   }
 
-
+  const previous = window.playParallelThreeKingdomsBossAttackStoryboard;
+  window.playParallelThreeKingdomsBossAttackStoryboard = (name, skillName) => {
+    const cleanName = String(name || '').trim();
     const definition = definitionByName.get(cleanName);
     if (definition) return playFrameSequence(definition);
     return previous?.(name, skillName) || false;
