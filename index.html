@@ -18756,14 +18756,6 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
 /* 角色能力與圖鑑每頁固定在視窗內，不把整個 modal 撐成長頁。 */
 #modal-body.character-stats-modal{max-height:calc(100vh - 42px)!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}.character-stats-modal .character-stats-tabs{flex:0 0 auto}.character-stats-modal .character-stats-page{flex:1 1 auto;min-height:0;height:calc(100vh - 180px);overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;}.character-stats-modal .character-stats-page>*{max-width:100%}.character-stats-modal .character-stats-close-button{flex:0 0 auto;margin-top:7px}.bestiary-grid{max-height:none!important;overflow:visible!important}
 
-/* 平行三國圖鑑清晰度修正：呂布使用原始 PNG，不以 82×64 小框縮放。 */
-.bestiary-monster-portrait img[src*="lu_bu_fullbody_left.png"],
-.bestiary-monster-portrait img[src*="lu_bu_mounted_archer_chibi.png"] {
-  image-rendering:auto!important;
-  object-fit:contain!important;
-  object-position:center center!important;
-  filter:none!important;
-}
 
 /* 消耗品圖示採用立體漸層 SVG，維持小尺寸。 */
 .item-icon.item-potion,.item-icon.item-mpPotion,.item-icon.item-gold,.item-icon.item-returnScroll{filter:drop-shadow(0 2px 3px #0009)}.consumable-svg{width:88%;height:88%;display:block}
