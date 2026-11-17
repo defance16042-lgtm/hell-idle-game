@@ -122,21 +122,35 @@
   if (window.__parallelLuBuMountedArcherPhaseV1) return;
   window.__parallelLuBuMountedArcherPhaseV1 = true;
 
-  const ROOT = 'assets/monsters/parallel_three_kingdoms/lu_bu_phase2/';
-  const IDLE = ROOT + 'frame_01.png';
-  const PATHS = Array.from({ length: 6 }, (_, i) => ROOT + 'frame_' + String(i + 1).padStart(2, '0') + '.png');
-  const IMAGES = PATHS.map(path => {
-    const image = new Image();
-    image.decoding = 'async';
-    image.src = typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(path) : path;
-    return image;
+  const ROOT = 'assets/monsters/parallel_three_kingdoms/';
+  const SHEET_PATH = ROOT + 'lu_bu_phase2_sheet.webp';
+  const sheet = new Image();
+  sheet.decoding = 'async';
+  sheet.src = typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(SHEET_PATH) : SHEET_PATH;
+  const FRAME_SOURCES = [];
+  let IDLE_FRAME = '';
+  const waitImages = new Promise(resolve => {
+    const ready = () => {
+      try {
+        for (let i = 0; i < 6; i++) {
+          const canvas = document.createElement('canvas');
+          canvas.width = 512; canvas.height = 512;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(sheet, (i % 3) * sheet.naturalWidth / 3, Math.floor(i / 3) * sheet.naturalHeight / 2,
+            sheet.naturalWidth / 3, sheet.naturalHeight / 2, 0, 0, 512, 512);
+          FRAME_SOURCES.push(canvas.toDataURL('image/png'));
+        }
+        IDLE_FRAME = FRAME_SOURCES[0];
+        resolve(true);
+      } catch (_) { resolve(false); }
+    };
+    if (sheet.complete && sheet.naturalWidth) ready();
+    else {
+      sheet.addEventListener('load', ready, { once: true });
+      sheet.addEventListener('error', () => resolve(false), { once: true });
+    }
   });
-  const waitImages = Promise.all(IMAGES.map(img => img.complete
-    ? Promise.resolve(img.naturalWidth > 0)
-    : new Promise(resolve => {
-        img.addEventListener('load', () => resolve(true), { once: true });
-        img.addEventListener('error', () => resolve(false), { once: true });
-      })));
+  const idleFrameSource = () => IDLE_FRAME || (typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(SHEET_PATH) : SHEET_PATH);
   const ATTACKS = {
     '赤焰穿雲箭': { frames: [1, 2, 3, 6], times: [120, 150, 115, 180] },
     '鬼神連珠射': { frames: [1, 2, 4, 5, 4, 5, 6], times: [90, 110, 85, 85, 85, 85, 160] },
@@ -163,11 +177,11 @@
     const step = () => {
       if (token !== playbackToken || !sprite.isConnected) return;
       if (cursor >= indices.length) {
-        sprite.src = typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(IDLE) : IDLE;
+        sprite.src = idleFrameSource();
         return;
       }
       const imageIndex = indices[cursor];
-      sprite.src = IMAGES[imageIndex]?.src || sprite.src;
+      sprite.src = FRAME_SOURCES[imageIndex] || sprite.src;
       const delay = durations[cursor] || 120;
       cursor++;
       playbackTimers.push(setTimeout(step, delay));
@@ -191,8 +205,8 @@
     monster.basicAttackName = '赤焰穿雲箭';
     monster.attackRange = 'ranged';
     monster.damageType = 'physical';
-    monster.image = IDLE;
-    monster.battleImage = IDLE;
+    monster.image = idleFrameSource();
+    monster.battleImage = idleFrameSource();
     monster.skills = [
       { name: '赤焰穿雲箭', phase: 'normal', chance: 0.34, damageType: 'physical', attackRange: 'ranged', powerMultiplier: 2.05, effect: 'heavy' },
       { name: '鬼神連珠射', phase: 'normal', chance: 0.30, damageType: 'physical', attackRange: 'ranged', powerMultiplier: 1.72, effect: 'shock', hits: 4 },
@@ -205,7 +219,8 @@
     ];
     stopPlayback();
     const sprite = getSprite();
-    if (sprite) sprite.src = typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(IDLE) : IDLE;
+    waitImages.then(ok => { if (ok && Number(monster._luBuPhaseIndex) === 1) { monster.image = IDLE_FRAME; monster.battleImage = IDLE_FRAME; if (sprite) sprite.src = IDLE_FRAME; } });
+    if (sprite) sprite.src = idleFrameSource();
     const stage = document.getElementById('monster-icon');
     if (stage) {
       stage.classList.remove('monster-hit-recoil');
