@@ -10680,7 +10680,7 @@ function getCombatVisualCycleDuration(actionPath) {
         function updateMonsterHealthUI() {
             const panel = document.getElementById('monster-hp-panel');
             if (!panel) return;
-            if (!currentMonster) { panel.style.display = 'none'; panel.querySelector('.fallen-heaven-phase-bars')?.remove(); panel.querySelector('.parallel-lubu-phase-bars')?.remove(); return; }
+            if (!currentMonster) { panel.style.display = 'none'; panel.querySelector('.fallen-heaven-phase-bars')?.remove(); return; }
             panel.style.display = 'block';
             const name = document.getElementById('monster-hp-name');
             const value = document.getElementById('monster-hp-value');
@@ -10690,7 +10690,6 @@ function getCombatVisualCycleDuration(actionPath) {
                 if (name) name.textContent = '生命';
                 if (value) value.textContent = '???（不會死亡）';
                 window.updateFallenHeavenBossBars?.(panel, null);
-                window.updateParallelLuBuBossBars?.(panel, null);
                 panel.classList.remove('is-low');
                 if (bar) bar.style.display = 'none';
                 return;
@@ -10704,7 +10703,6 @@ function getCombatVisualCycleDuration(actionPath) {
             if (fill) fill.style.width = `${percent}%`;
             panel.classList.toggle('is-low', percent <= 30);
             window.updateFallenHeavenBossBars?.(panel, currentMonster);
-            window.updateParallelLuBuBossBars?.(panel, currentMonster);
             if (bar) {
                 bar.setAttribute('aria-valuemin', '0');
                 bar.setAttribute('aria-valuemax', String(Math.floor(maxHp)));
@@ -12360,7 +12358,6 @@ function getCombatVisualCycleDuration(actionPath) {
                 damage = window.applyAbyssWingOutgoingDamage?.(damage, { attackType, skillTriggered, activeSkill, target: currentMonster, trainingSimulation }) ?? damage;
                 if (currentMonster.type !== 'training') { const abyssHpDamage = window.applyAbyssDragonIncomingDamage?.(currentMonster, damage, attackType === 'magic' ? 'magic' : 'physical') ?? damage; currentMonster.hp = Math.max(0, currentMonster.hp - abyssHpDamage); }
                 window.syncFallenHeavenBossPhase?.(currentMonster, true);
-                window.syncParallelLuBuPhase?.(currentMonster, true);
                 if (typeof updateMonsterHealthUI === 'function') updateMonsterHealthUI();
                 try { if (typeof window.__hellClassAttackHitV2 === 'function') window.__hellClassAttackHitV2(); } catch (_) {}
                 playBattleSound('hit');
@@ -12419,7 +12416,6 @@ function getCombatVisualCycleDuration(actionPath) {
         function performMonsterAttack() {
             if (!currentMonster || monsterDefeatInProgress || currentMonster.hp <= 0) return;
             window.syncFallenHeavenBossPhase?.(currentMonster, true);
-            window.syncParallelLuBuPhase?.(currentMonster, true);
             applyShadowMageRecovery(currentMonster);
             const monsterName = currentMonster.name;
             const icon = document.getElementById('monster-icon');
@@ -27857,261 +27853,15 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   };
 })();
 </script>
-<script id="parallel-three-kingdoms-lu-bu-v1">
-(() => {
-  'use strict';
-  if (window.__parallelThreeKingdomsLuBuV1) return;
-  window.__parallelThreeKingdomsLuBuV1 = true;
-  const ZONE = '平行三國';
-  if (typeof zoneMonsters === 'undefined' || !zoneMonsters) return;
-  const monster = {
-    name: '呂布', icon: null,
-    image: null,
-    phase1Image: null,
-    battleImage: null,
-    phase2Image: null,
-    level: 100, levelRange: '100', attackSpeed: 0.88,
-    // 呂布是兩段獨立血條：第一階段與第二階段各 2,480,000 HP。
-    // 第一階段血量歸零時攔截死亡，立即重置第二條血並切換弓將。
-    phase1Hp: 2480000, phase2Hp: 2480000, phase2TriggerHp: 0,
-    hp: 2480000, maxHp: 2480000, atk: 12800, def: 4380, magicDefense: 3960,
-    attackType: '赤紫方天裂空斬', basicAttackName: '赤紫方天裂空斬',
-    attackRange: 'melee', damageType: 'physical',
-    phase2AttackType: '轅門射戟', phase2BasicAttackName: '轅門射戟',
-    phase2AttackRange: 'ranged', phase2DamageType: 'physical',
-    phase1Title: '赤紫鬼神', phase1Weapon: '方天畫戟', phase1HpLabel: '2,480,000 HP',
-    phase1AttackLabel: '赤紫方天裂空斬／鬼神踏陣',
-    phase2Title: '轅門弓將', phase2Weapon: '寶雕弓', phase2HpLabel: '2,480,000 HP',
-    phase2AttackLabel: '遠距離攻擊／轅門射戟',
-    exp: 280000, gold: 128000, type: 'boss', encounterChance: 0.5,
-    facing: 'left-full-body', orientation: 'strict-left-profile',
-    visualNote: '可愛黑暗Q版紅紫呂布騎乘赤兔馬，全身與馬匹完整入鏡；呂布、赤兔馬、馬尾、四蹄、披風與方天畫戟全部嚴格朝左，禁止正面、右朝與鏡像。',
-    baseStats: { str: 2680, dex: 1180, con: 2460, wis: 1040, int: 980, cha: 320 },
-    bonusStats: { attack: 326, defense: 284, magicDefense: 246, critical: 0.38, evasion: 0.16 },
-    element: 'shadow',
-    skills: [
-      { name: '赤紫方天裂空斬', phase: 'normal', chance: 0.42, damageType: 'physical', attackRange: 'melee', powerMultiplier: 2.12, effect: 'heavy' },
-      { name: '鬼神踏陣', phase: 'normal', chance: 0.24, damageType: 'physical', attackRange: 'melee', powerMultiplier: 1.88, effect: 'shock' },
-      { name: '轅門射戟', phase: 'lowHp', chance: 0.46, damageType: 'physical', attackRange: 'ranged', powerMultiplier: 2.35, effect: 'blast' }
-    ],
-    description: '平行三國的鬼神呂布騎乘赤兔馬，第一階段完整擁有 248 萬 HP；第一條血打完歸零後裂鎧變身為弓將，並重新展開第二條 248 萬 HP 血條，取出寶雕弓施放唯一大招「轅門射戟」。紅紫鬼火與金色箭光交織，整體維持可愛黑暗 Q 版的左向戰鬥風格。',
-    dropTable: ['魂幣 128,000', '經驗 280,000', '補血藥水（12%）'],
-    uniqueDrops: [],
-    bossPhases: [
-      { name: '赤紫鬼神', trigger: '第一階段 248 萬 HP 尚未歸零', description: '呂布壓低身形，揮動方天畫戟施展赤紫方天裂空斬，紅紫刃光朝左側爆發。' },
-      { name: '轅門弓將', trigger: '第一階段 248 萬 HP 歸零後', description: '呂布卸下方天畫戟並取出寶雕弓，重新展開第二條 248 萬 HP 血條，嚴格朝左張弓；以唯一大招「轅門射戟」射出金色箭矢與紅紫戟影。' }
-    ],
-    zone: ZONE, threatTier: 'parallel-three-kingdoms-boss'
-  };
-  const roster = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
-  const previous = roster.find(entry => entry && entry.name === monster.name);
-  if (previous) Object.assign(previous, monster); else roster.push(monster);
-  window.parallelThreeKingdomsLuBu = previous || monster;
 
-})();
-</script>
 
-<script id="parallel-lu-bu-phase-sync-v1">
-(() => {
-  if (window.__parallelLuBuPhaseSyncV1) return;
-  window.__parallelLuBuPhaseSyncV1 = true;
-  window.advanceParallelLuBuBossPhase = function(monster) {
-    if (!monster || monster.name !== '呂布' || monster._parallelLuBuPhase === 2 || Number(monster.hp) > 0) return false;
-    monster._parallelLuBuPhase = 2;
-    monster.maxHp = Math.max(1, Number(monster.phase2Hp) || Number(monster.maxHp) || 2480000);
-    monster.hp = monster.maxHp;
-    monster.attackRange = monster.phase2AttackRange || 'ranged';
-    monster.attackType = monster.phase2AttackType || '轅門射戟';
-    monster.basicAttackName = monster.phase2BasicAttackName || '轅門射戟';
-    monster.damageType = monster.phase2DamageType || 'physical';
-    monster.battleImage = monster.phase2Image || monster.battleImage;
-    monster.image = monster.phase2Image || monster.image;
-    window.__parallelLuBuPhase2Active = true;
-    if (typeof addBattleLog === 'function') addBattleLog('🏹 <strong>呂布第一條 248 萬 HP 已擊破，裂鎧變身為轅門弓將！</strong> 第二條 248 萬 HP 開始，唯一大招「轅門射戟」已解鎖。');
-    const icon = document.querySelector('#monster-icon .monster-sprite');
-    if (icon) {
-      icon.src = typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(monster.battleImage) : monster.battleImage;
-      icon.alt = `${monster.name}｜轅門弓將`;
-    }
-    if (typeof updateMonsterHealthUI === 'function') updateMonsterHealthUI();
-    if (typeof updateGameUI === 'function') updateGameUI();
-    if (typeof nextPlayerAttackAt !== 'undefined') nextPlayerAttackAt = Date.now() + 650;
-    if (typeof nextMonsterAttackAt !== 'undefined') nextMonsterAttackAt = Date.now() + 900;
-    monsterDefeatInProgress = false;
-    monsterZeroHpSince = 0;
-    return true;
-  };
-  window.syncParallelLuBuPhase = function(monster, announce = true) {
-    if (!monster || monster.name !== '呂布') return monster;
-    // 與熾天墮龍相同：sync 只套用目前階段，轉階只由 advance 函式在 HP 歸零時觸發。
-    const phase2 = monster._parallelLuBuPhase === 2;
-    if (!phase2 && !Number.isFinite(Number(monster._parallelLuBuPhase))) monster._parallelLuBuPhase = 1;
-    window.__parallelLuBuPhase2Active = phase2;
-    if (phase2) {
-      monster.attackRange = monster.phase2AttackRange || 'ranged';
-      monster.attackType = monster.phase2AttackType || '轅門射戟';
-      monster.basicAttackName = monster.phase2BasicAttackName || '轅門射戟';
-      monster.damageType = monster.phase2DamageType || 'physical';
-      monster.battleImage = monster.phase2Image || monster.battleImage;
-      monster.image = monster.phase2Image || monster.image;
-    } else {
-      monster.attackRange = monster.phase1AttackRange || 'melee';
-      monster.attackType = monster.phase1AttackType || '赤紫方天裂空斬';
-      monster.basicAttackName = monster.phase1BasicAttackName || '赤紫方天裂空斬';
-      monster.damageType = monster.phase1DamageType || 'physical';
-      monster.battleImage = monster.phase1Image || monster.battleImage;
-      monster.image = monster.phase1Image || monster.image;
-    }
-    const icon = document.querySelector('#monster-icon .monster-sprite');
-    if (icon) {
-      const image = monster.battleImage || monster.image;
-      if (image) icon.src = image;
-      icon.alt = `${monster.name}${phase2 ? '｜轅門弓將' : '｜赤紫鬼神'}`;
-    }
-    if (typeof updateMonsterHealthUI === 'function') updateMonsterHealthUI();
-    if (typeof updateGameUI === 'function') updateGameUI();
-    return monster;
-  };
-})();
-</script>
+
 
 
 
 
 <script src="scripts/parallel-three-generals-frame-attacks.js"></script>
-<script id="lu-bu-divine-treasures-config-v1">
-(() => {
-  'use strict';
-  if (window.__luBuDivineTreasuresConfigV1) return;
-  window.__luBuDivineTreasuresConfigV1 = true;
 
-  const ALL_CLASSES = ['knight', 'warrior', 'elf', 'mage', 'monk'];
-  const TREASURES = Object.freeze({
-    redhare_mount_v1: {
-      id: 'redhare_mount_v1', name: '赤兔馬', kind: 'armor', slot: 'mount', slotLabel: '座騎',
-      icon: '🐎', armorType: 'mount',
-      level: 100, requiredLevel: 100, rarity: '神話', quality: '神話', qualityColor: '#ff526d',
-      classKeys: ALL_CLASSES, classKey: 'shared', dropChance: 0.03, sourceMonster: '呂布',
-      physicalDefenseBonus: 220, magicDefenseBonus: 220,
-      statBonuses: { attack: 280, maxHp: 24000, maxMp: 3000, str: 50, dex: 50, con: 50, wis: 50, int: 50, cha: 30, attackSpeedBonus: 0.10, hitRate: 0.03, evasion: 0.03, allResistance: 0.03 },
-      passiveSkills: [
-        { id: 'redhare_thunder', name: '赤兔奔雷', trigger: 'attack', chance: 0.08, damageMultiplier: 1.25 },
-        { id: 'battle_gallop', name: '戰場疾馳', trigger: 'lowHp', threshold: 0.35, damageReductionPct: 8, attackSpeedBonus: 0.05 }
-      ],
-      properties: ['座騎部位｜全職業可用｜需求等級 100', '攻擊力 +280', '生命上限 +24,000', '魔力上限 +3,000', '物理防禦 +220', '魔法防禦 +220', '力量 +50｜敏捷 +50｜體質 +50｜精神 +50｜智力 +50｜魅力 +30', '攻擊速度 +0.10｜命中率 +3%｜閃避率 +3%｜全屬性抗性 +3%', '赤兔奔雷：攻擊時 8% 機率使本次傷害提高 25%。', '戰場疾馳：生命低於 35% 時，受到傷害降低 8%，攻擊速度額外提高 0.05。', '呂布專屬掉落｜獨立掉落率 3%', '不可強化｜強化等級固定 +0']
-    },
-    fangtian_halberd_v1: {
-      id: 'fangtian_halberd_v1', name: '方天畫戟', kind: 'weapon', slot: 'weapon', slotLabel: '武器',
-      icon: '🔱', weaponType: 'melee',
-      level: 100, requiredLevel: 100, rarity: '神話', quality: '神話', qualityColor: '#c879ff',
-      classKeys: ['knight'], classKey: 'knight', dropChance: 0.02, sourceMonster: '呂布',
-      attackBonus: 520, baseAttackBonus: 520, attackSpeedBonus: 0, baseAttackSpeedBonus: 0,
-      statBonuses: { str: 85, con: 45, physicalDefense: 120, meleeHitBonus: 0.05, meleeCritRate: 0.06, meleeCritDamage: 0.12 },
-      passiveSkills: [{ id: 'ghost_god_breaker', name: '鬼神破陣', trigger: 'meleeHit', chance: 0.10, damageMultiplier: 1.35, bossDamageMultiplier: 1.10 }],
-      properties: ['武器部位｜騎士專用｜需求等級 100', '攻擊力 +520', '力量 +85｜體質 +45｜物理防禦 +120', '近戰命中率 +5%｜近戰暴擊率 +6%｜近戰暴擊傷害 +12%', '鬼神破陣：近戰攻擊命中時 10% 機率觸發，本次傷害提高 35%，對 BOSS 額外提高 10%。', '呂布專屬掉落｜獨立掉落率 2%', '強化規則：每次成功強化攻擊力 +4、攻速 +0.03（攻速加成上限 +0.60）']
-    },
-    baodiao_bow_v1: {
-      id: 'baodiao_bow_v1', name: '寶雕弓', kind: 'weapon', slot: 'weapon', slotLabel: '武器',
-      icon: '🏹', iconAsset: 'assets/items/parallel_lu_bu_baodiao_bow.png', weaponType: 'ranged', damageType: 'physical',
-      level: 100, requiredLevel: 100, rarity: '神話', quality: '神話', qualityColor: '#f1bd58',
-      classKeys: ['elf'], classKey: 'elf', dropChance: 0.02, sourceMonster: '呂布',
-      attackBonus: 500, baseAttackBonus: 500, attackSpeedBonus: 0.01, baseAttackSpeedBonus: 0.01,
-      statBonuses: { dex: 78, con: 34, rangedHitBonus: 0.06, rangedCritRate: 0.05, rangedCritDamage: 0.10, rangedAttackBonus: 85 },
-      passiveSkills: [{ id: 'yuanmen_shooting_halberd', name: '轅門射戟', trigger: 'rangedHit', chance: 0.10, damageMultiplier: 1.30, bossDamageMultiplier: 1.08 }],
-      properties: ['武器部位｜獵手專用｜需求等級 100', '遠距離攻擊力 +500｜遠距離攻擊加成 +85', '敏捷 +78｜體質 +34', '遠距離命中率 +6%｜遠距離暴擊率 +5%｜遠距離暴擊傷害 +10%', '轅門射戟：遠距離命中時 10% 機率觸發，本次傷害提高 30%，對 BOSS 額外提高 8%。', '呂布專屬掉落｜獨立掉落率 2%', '強化規則：每次成功強化攻擊力 +4、攻速 +0.03（攻速加成上限 +0.60）']
-    },
-    golden_armor_v1: {
-      id: 'golden_armor_v1', name: '黃金鎧甲', kind: 'armor', slot: 'chest', slotLabel: '胸甲',
-      icon: '🛡️', armorType: 'heavy',
-      level: 100, requiredLevel: 100, rarity: '神話', quality: '神話', qualityColor: '#ffd34e',
-      classKeys: ALL_CLASSES, classKey: 'shared', dropChance: 0.02, sourceMonster: '呂布',
-      physicalDefenseBonus: 420, magicDefenseBonus: 320,
-      statBonuses: { maxHp: 28000, str: 30, dex: 30, con: 75, wis: 30, int: 30 },
-      passiveSkills: [
-        { id: 'golden_guard', name: '金甲護身', trigger: 'bossDamageTaken', chance: 0.08, damageReductionPct: 35, cooldownMs: 6000 },
-        { id: 'unyielding_gold', name: '不屈金身', trigger: 'lowHp', threshold: 0.30, damageReductionPct: 8, controlResistPct: 10, healthRegenPct: 2, intervalMs: 5000 }
-      ],
-      properties: ['胸甲部位｜全職業可用｜需求等級 100', '生命上限 +28,000', '物理防禦 +420｜魔法防禦 +320', '力量 +30｜敏捷 +30｜體質 +75｜精神 +30｜智力 +30', '金甲護身：受到 BOSS 傷害時 8% 機率觸發，該次傷害降低 35%，冷卻 6 秒。', '不屈金身：生命低於 30% 時，受到傷害降低 8%，控制抵抗提高 10%，每 5 秒恢復最大生命值 2%。', '呂布專屬掉落｜獨立掉落率 2%', '強化規則：每次成功強化物理防禦 +4、魔法防禦 +2']
-    }
-  });
-
-  const treasureList = Object.values(TREASURES);
-  const addMountSlot = () => {
-    if (Array.isArray(armorSlots) && !armorSlots.some(slot => slot.key === 'mount')) {
-      armorSlots.push({ key: 'mount', label: '座騎', equipmentKey: 'mountId', icon: '🐎', classKeys: ALL_CLASSES });
-    }
-  };
-  addMountSlot();
-
-  // 讓圖鑑與既有掉落顯示讀到完整三寶資料；實際戰鬥被動保留在 passiveSkills 供戰鬥模組消費。
-  const luBu = window.parallelThreeKingdomsLuBu;
-  if (luBu) {
-    luBu.uniqueDrops = treasureList.map(item => {
-      const enhancementText = ['fangtian_halberd_v1', 'baodiao_bow_v1'].includes(item.id)
-        ? '可強化：每次成功攻擊 +4、攻速 +0.03（攻速加成上限 +0.60）'
-        : item.id === 'golden_armor_v1'
-          ? '可強化：每次成功物理防禦 +4、魔法防禦 +2'
-          : '不可強化（固定 +0）';
-      return `${item.name}｜${item.slotLabel}｜神話｜需求等級 ${item.requiredLevel}｜獨立掉落率 ${(item.dropChance * 100).toFixed(0)}%｜${item.properties.slice(1, -2).join('；')}｜${enhancementText}`;
-    });
-  }
-
-  const statLabels = { attack: '攻擊力', maxHp: '生命上限', maxMp: '魔力上限', str: '力量', dex: '敏捷', con: '體質', wis: '精神', int: '智力', cha: '魅力', physicalDefense: '物理防禦', magicDefense: '魔法防禦', attackSpeedBonus: '攻擊速度', hitRate: '命中率', evasion: '閃避率', allResistance: '全屬性抗性', meleeHitBonus: '近戰命中率', meleeCritRate: '近戰暴擊率', meleeCritDamage: '近戰暴擊傷害' };
-  const createItem = (def, player) => {
-    const isWeapon = def.kind === 'weapon';
-    const properties = def.properties.slice();
-    const item = {
-      instanceId: `${def.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      templateId: def.id, id: def.id, name: def.name, kind: def.kind, slot: def.slot, slotLabel: def.slotLabel,
-      icon: def.icon, iconAsset: def.iconAsset, image: def.iconAsset, armorType: def.armorType, weaponType: def.weaponType,
-      level: def.level, requiredLevel: def.requiredLevel, requiredMonsterLevel: def.requiredLevel,
-      rarity: def.rarity, quality: def.quality, qualityColor: def.qualityColor,
-      classKey: isWeapon && def.classKeys.includes(player?.key) ? player.key : def.classKey,
-      classKeys: def.classKeys.slice(),
-      dropChance: def.dropChance, sourceMonster: def.sourceMonster, sourceDropChance: def.dropChance,
-      statBonuses: { ...def.statBonuses }, stats: { ...def.statBonuses }, passiveSkills: def.passiveSkills.map(skill => ({ ...skill })),
-      properties, enhancementLevel: 0, cannotEnhance: !(['fangtian_halberd_v1', 'baodiao_bow_v1', 'golden_armor_v1'].includes(def.id)), uniqueDropType: 'lu_bu_divine_treasure', isLuBuDivineTreasure: true, obtainedAt: Date.now()
-    };
-    if (isWeapon) { item.attackBonus = def.attackBonus; item.baseAttackBonus = def.baseAttackBonus; item.attackSpeedBonus = 0; item.baseAttackSpeedBonus = 0; }
-    if (def.physicalDefenseBonus) { item.physicalDefenseBonus = def.physicalDefenseBonus; item.basePhysicalDefenseBonus = def.physicalDefenseBonus; }
-    if (def.magicDefenseBonus) { item.magicDefenseBonus = def.magicDefenseBonus; item.baseMagicDefenseBonus = def.magicDefenseBonus; }
-    return item;
-  };
-
-  function awardLuBuDivineTreasures(target) {
-    if (!target || target.name !== '呂布' || target.__luBuDivineTreasuresResolved) return 0;
-    target.__luBuDivineTreasuresResolved = true;
-    const player = typeof currentPlayer !== 'undefined' ? currentPlayer : window.currentPlayer;
-    if (!player) return 0;
-    player.items ||= {}; player.items.weapons = Array.isArray(player.items.weapons) ? player.items.weapons : []; player.items.armors = Array.isArray(player.items.armors) ? player.items.armors : [];
-    let count = 0;
-    treasureList.forEach(def => {
-      if (Math.random() >= def.dropChance) return;
-      const item = createItem(def, player);
-      (def.kind === 'weapon' ? player.items.weapons : player.items.armors).push(item);
-      count++;
-      if (typeof addBattleLog === 'function') addBattleLog(`🔱 <strong style="color:${def.qualityColor}">呂布掉落【${def.rarity} ${def.name}】</strong>（${def.slotLabel}｜獨立掉落率 ${(def.dropChance * 100).toFixed(0)}%｜${['fangtian_halberd_v1', 'golden_armor_v1'].includes(def.id) ? '可強化' : '不可強化'}）！`);
-    });
-    if (count) { if (typeof saveGame === 'function') saveGame(); if (typeof renderInventory === 'function' && document.getElementById('inventory-float')?.style.display === 'flex') renderInventory(); }
-    return count;
-  }
-
-  window.LU_BU_DIVINE_TREASURES = TREASURES;
-  window.awardLuBuDivineTreasures = awardLuBuDivineTreasures;
-  if (typeof window.resolveMonsterDefeat === 'function' && !window.resolveMonsterDefeat.__luBuDivineTreasuresWrapped) {
-    const originalResolve = window.resolveMonsterDefeat;
-    const wrappedResolve = function(...args) {
-      const defeated = typeof currentMonster !== 'undefined' ? currentMonster : null;
-      const shouldRoll = defeated?.name === '呂布' && !defeated.__luBuDivineTreasuresResolved && !monsterDefeatInProgress && Number(defeated.hp) <= 0;
-      const result = originalResolve.apply(this, args);
-      if (shouldRoll) awardLuBuDivineTreasures(defeated);
-      return result;
-    };
-    wrappedResolve.__luBuDivineTreasuresWrapped = true;
-    window.resolveMonsterDefeat = wrappedResolve;
-  }
-})();
-</script>
 
 <style id="abyss-wing-effects-v2-style">
 .abyss-wing-burst{position:fixed;z-index:2147483001;left:50%;top:50%;width:92px;height:92px;transform:translate(-50%,-50%);pointer-events:none;border-radius:50%;opacity:0;animation:abyssWingBurstV2 .72s ease-out forwards;mix-blend-mode:screen}
@@ -28549,16 +28299,6 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     return `<div class="ptk-detail-card"><strong>${esc(label)}</strong><span class="ptk-detail-value">${parts}</span>${note ? `<small>${esc(note)}</small>` : ''}</div>`;
   };
   const cards = list => list.filter(Boolean).join('') || '<div class="ptk-detail-empty">這個分類目前沒有額外資料。</div>';
-  const luBuPhaseCard = (phase, image, title, weapon, hp, trigger, attacks, description, tone) => `<article class="ptk-lubu-phase-card ${tone}">
-    <div class="ptk-lubu-phase-art"><img src="${esc(image)}" alt="呂布｜${esc(title)}" loading="eager"><span class="ptk-lubu-phase-badge">${esc(phase)}</span></div>
-    <div class="ptk-lubu-phase-content"><h5>${esc(title)}</h5><p class="ptk-lubu-phase-trigger"><b>進入條件</b>${esc(trigger)}</p><div class="ptk-lubu-phase-facts"><span><b>獨立血條</b>${esc(hp)}</span><span><b>武器型態</b>${esc(weapon)}</span><span><b>攻擊方式</b>${esc(attacks)}</span></div><p class="ptk-lubu-phase-description">${esc(description)}</p></div>
-  </article>`;
-  const render = index => {
-    const entry = typeof getBestiaryEntries === 'function' ? getBestiaryEntries()[index] : null;
-    if (!entry) return typeof previousDetail === 'function' ? previousDetail.call(window, index) : undefined;
-    const m = entry.monster || {};
-    const zone = String(entry.zone || m.zone || '未知區域');
-    const isLuBu = m.name === '呂布' && zone === '平行三國';
     const body = document.getElementById('modal-body'), modal = document.getElementById('modal-window');
     if (!body || !modal) return;
     const image = m.image ? resolveEmbeddedAsset(m.image) : '';
@@ -28572,55 +28312,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     const categoryDrops = uniqueDrops.length ? uniqueDrops : customDropTable.filter(drop => categoryDropPattern.test(drop));
     const defenseSkills = asList(m.defenseSkills);
     const bossPhases = Array.isArray(m.bossPhases) ? m.bossPhases : [];
-    const luBuPhases = isLuBu ? `<div class="ptk-lubu-phase-intro"><strong>⚔️ 呂布雙階段戰鬥流程</strong><span>第一階段血條歸零後才會變身；第二階段重新開始一條完整血條，兩段不共用血量。</span></div><div class="ptk-lubu-phase-grid">
-      ${luBuPhaseCard('第一階段', m.phase1Image || '', m.phase1Title || '赤紫鬼神', m.phase1Weapon || '方天畫戟', m.phase1HpLabel || `${fmt(m.phase1Hp)} HP`, '戰鬥開始時進入；必須先將第一條血打到 0。', m.phase1AttackLabel || m.attackType || '近戰攻擊', '騎乘赤兔馬揮動方天畫戟，施放赤紫刃光與震地攻擊。', 'phase-one')}
-      ${luBuPhaseCard('第二階段', m.phase2Image, m.phase2Title || '轅門弓將', m.phase2Weapon || '寶雕弓', m.phase2HpLabel || `${fmt(m.phase2Hp)} HP`, '第一階段 2,480,000 HP 歸零後觸發變身，重新建立第二條血。', m.phase2AttackLabel || m.phase2AttackType || '遠距離攻擊', '卸下方天畫戟、取出寶雕弓，以唯一大招「轅門射戟」射出金色箭矢與紅紫戟影。', 'phase-two')}
-    </div><div class="ptk-lubu-phase-rule"><b>📌 重要規則</b><span>第一段打完才變身，不會在第一條血剩一半時變身；第二段是獨立的 2,480,000 HP 血條。</span></div>` : '';
-    const level = m.levelRange || m.level || '—';
-    const back = `openBestiaryZone(${esc(JSON.stringify(zone))})`;
-    const abilityValue = key => stats[key] == null ? '—' : fmt(stats[key]);
-    const ring = m.jadeSealRingDrop;
-    const jadeSealRingCards = ring ? [
-      card('董卓專屬戒指', esc(ring.name)),
-      card('裝備資訊', `${esc(ring.slotLabel || '戒指')}｜${esc(ring.rarity || '—')}｜需求等級 ${esc(ring.requiredLevel ?? '—')}｜${esc(ring.classKey === 'shared' ? '全職業可用' : (ring.classKeys || []).join('、'))}`),
-      card('掉落機率', `獨立掉落率 ${Math.round(Number(ring.chance || 0) * 100)}%｜${esc(ring.sourceLabel || '專屬掉落')}`),
-      card('基礎能力', `攻擊 +${fmt(ring.attackBonus)}｜物理防禦 +${fmt(ring.physicalDefenseBonus)}｜魔法防禦 +${fmt(ring.magicDefenseBonus)}｜生命上限 +${fmt(ring.maxHpBonus)}`),
-      card('能力屬性加成', Object.entries(ring.statBonuses || {}).map(([key, value]) => `${statLabels[key] || key} +${fmt(value)}`).join('｜') || '無額外能力加成'),
-      card('強化限制', ring.cannotEnhance ? '不可強化｜強化等級固定 +0' : `可強化｜目前強化 +${fmt(ring.enhancementLevel)}`)
-    ] : [];
-    const weaponDropPattern = /武器|刀|槍|弓|斧|杖|戟|刃/;
-    const armorDropPattern = /防具|胸甲|鎧|甲|盾|護腕|套裝|翅膀|背部|戒指|飾品|項鍊|项链/;
-    const weaponDrops = categoryDrops.filter(drop => weaponDropPattern.test(drop));
-    const armorDrops = categoryDrops.filter(drop => armorDropPattern.test(drop) && (!ring || !drop.includes(ring.name)));
-    const specialDrops = [...new Set([
-      ...categoryDrops.filter(drop => /座騎|坐騎/.test(drop)),
-      ...categoryDrops.filter(drop => !weaponDropPattern.test(drop) && !armorDropPattern.test(drop) && (!ring || !drop.includes(ring.name)))
-    ])];
-    const categorizedDropNames = [...weaponDrops, ...armorDrops, ...specialDrops, ...(ring ? [ring.name] : [])]
-      .map(drop => String(drop).split('｜')[0].trim()).filter(Boolean);
-    const uniqueDropEffectNames = uniqueDrops.flatMap(drop => [...drop.matchAll(/(?:^|[｜；;。])\s*([^｜；;。:：]{2,20})[:：]/g)].map(match => match[1].trim()));
-    const dropRulesTable = customDropTable.filter(drop => {
-      if (/^(魂幣|金幣|錢幣|經驗|EXP\b|補血藥水|補魔藥水)/i.test(drop)) return false;
-      if (categorizedDropNames.some(name => drop.includes(name))) return false;
-      if (uniqueDropEffectNames.some(name => name.length >= 4 && drop.includes(name))) return false;
-      return true;
-    });
-    // 專屬裝備已在分類頁整理；規則頁僅保留未分類的材料等資料，並避免重複顯示基本獎勵。
-    const dropRulesMonster = { ...m, uniqueDrops: [], dropTable: dropRulesTable };
-    const pages = {
-      overview: `<h4>📋 怪物概要</h4><div class="ptk-detail-grid">${cards([card('區域', esc(zone)), card('等級／類型', `${m.type === 'training' ? '修練目標' : `Lv. ${esc(level)}`}｜${typeName(m)}`), card('怪物說明', esc(m.description || `出沒於${zone}，使用${m.attackType || '一般攻擊'}作戰。`)), card('攻擊方式', esc(m.attackType || '一般攻擊'), `${esc(m.attackRange || 'melee')}｜${esc(m.damageType || 'physical')}`)])}</div>`,
-      battle: `<h4>⚔️ 戰鬥資料</h4><div class="ptk-detail-grid">${cards([card('生命值', `${fmt(m.hp || m.maxHp)} / ${fmt(m.maxHp || m.hp)}`), card('攻擊力／攻速', `${fmt(m.atk)}｜${esc(m.attackSpeed || '—')} 次／秒`), card('經驗／魂幣', `${fmt(m.exp)}｜${fmt(m.gold)}`), card('遭遇權重', `${esc(m.encounterChance ?? '—')}%`), card('戰鬥加成', `攻擊 +${fmt(bonuses.attack)}｜物防 +${fmt(bonuses.defense)}｜魔防 +${fmt(bonuses.magicDefense)}`), card('暴擊／迴避', `${Math.round(Number(bonuses.critical || 0) * 100)}%｜${Math.round(Number(bonuses.evasion || m.evasion || 0) * 100)}%`)])}</div>`,
-      ability: `<h4>📊 六大能力</h4><div class="ptk-detail-grid">${cards(Object.entries(statLabels).map(([key,label]) => card(label, abilityValue(key))))}</div>`,
-      defense: `<h4>🛡️ 防禦資料</h4><div class="ptk-detail-grid">${cards([card('物理防禦', m.def == null ? '—' : fmt(m.def)), card('魔法防禦', m.magicDefense == null ? '—' : fmt(m.magicDefense)), card('防禦原型', esc(typeof getMonsterDefenseArchetype === 'function' ? getMonsterDefenseArchetype(m).label : '依戰鬥規則判定')), card('防禦技能', defenseSkills.map(skill => esc(skill.name || skill)).join('、') || '沒有額外防禦技能')])}</div>`,
-      skills: `<h4>✨ 技能與招式</h4><div class="ptk-detail-grid">${cards(skills.map(skill => card(skill.name, `${esc(skill.phase || 'normal')}｜${esc(skill.damageType || 'physical')}｜發動 ${Math.round(Number(skill.chance || 0) * 100)}%`, skill.description || skill.effect || `倍率 ${skill.powerMultiplier || 1}`)))}</div>`,
-      rewards: `<h4>🎁 獎勵</h4><div class="ptk-detail-grid">${cards([card('擊敗獎勵', `經驗 ${fmt(m.exp)}｜魂幣 ${fmt(m.gold)}`), card('一般補給', '補血藥水｜8%'), card('品質規則', typeName(m) === 'BOSS' ? 'BOSS 裝備與套裝依獨立機率判定。' : typeName(m) === '特殊怪' ? '特殊怪裝備與套裝依獨立機率判定。' : '一般怪依一般掉落規則判定。')])}</div>`,
-      weapon: `<h4>⚔️ 武器</h4><div class="ptk-detail-grid">${cards(weaponDrops.map(drop => card('專屬／相關武器', esc(drop))))}</div>`,
-      armor: `<h4>🛡️ 防具與飾品</h4><div class="ptk-detail-grid">${cards([...armorDrops.map(drop => card('專屬防具／飾品', esc(drop))), ...jadeSealRingCards])}</div>`,
-      special: `<h4>🌟 特殊資料與坐騎</h4><div class="ptk-detail-grid">${cards([m.specialTier ? card('特殊階級', esc(m.specialTier)) : '', m.visualNote ? card('圖像備註', esc(m.visualNote)) : '', ...specialDrops.map(drop => card('專屬特殊裝備／坐騎', esc(drop))), bossPhases.map(phase => card(`BOSS 階段｜${esc(phase.name)}`, esc(phase.description), phase.trigger)).join('')])}</div>`,
-      phases: luBuPhases || '<div class="ptk-detail-empty">這個怪物沒有多階段戰鬥資料。</div>',
-      drops: `<h4>📜 掉落規則</h4>${typeof getMonsterDropDisplay === 'function' ? `<div class="ptk-detail-drop-panel">${getMonsterDropDisplay(dropRulesMonster, zone)}</div>` : `<div class="ptk-detail-empty">目前沒有掉落規則資料。</div>`}`
-    };
-    const tabs = [['overview','📋 概要'],['battle','⚔️ 戰鬥'],...(isLuBu ? [['phases','🏹 雙階段']] : []),['ability','📊 能力'],['defense','🛡️ 防禦'],['skills','✨ 技能'],['rewards','🎁 獎勵'],['weapon','⚔️ 武器'],['armor','🛡️ 防具／飾品'],['special','🌟 特殊／座騎'],['drops','📜 掉落規則']];
+    const tabs = [['overview','📋 概要'],['battle','⚔️ 戰鬥'],['ability','📊 能力'],['defense','🛡️ 防禦'],['skills','✨ 技能'],['rewards','🎁 獎勵'],['weapon','⚔️ 武器'],['armor','🛡️ 防具／飾品'],['special','🌟 特殊／座騎'],['drops','📜 掉落規則']];
     body.innerHTML = `<div class="ptk-detail-shell"><div class="ptk-detail-toolbar"><button class="modal-btn" onclick="${back}">← 返回 ${esc(zone)}</button><h3>⚔️ ${esc(m.name)}｜${typeName(m)}</h3><button class="modal-btn" onclick="closeModal()">關閉</button></div><div class="ptk-detail-hero"><div class="ptk-detail-art">${image ? `<img src="${esc(image)}" alt="${esc(m.name)}">` : esc(m.icon || '⚔️')}</div><div class="ptk-detail-summary"><div class="ptk-detail-badges"><span class="ptk-detail-badge">Lv. ${esc(level)}</span><span class="ptk-detail-badge ${kindClass}">${typeName(m)}</span><span class="ptk-detail-badge">${esc(m.attackType || '一般攻擊')}</span></div><p>${esc(m.description || '目前沒有額外說明。')}</p></div></div><div id="ptk-detail-tabs-root"><div class="ptk-detail-tabs" role="tablist">${tabs.map(([key,label], i) => `<button type="button" data-ptk-tab="${key}" aria-selected="${i === 0 ? 'true' : 'false'}" onclick="switchParallelBestiaryTab('${key}')">${label}</button>`).join('')}</div>${tabs.map(([key]) => `<section class="ptk-detail-page" data-ptk-page="${key}"${key === 'overview' ? '' : ' hidden'}>${pages[key]}</section>`).join('')}</div></div>`;
     body.className = 'parallel-three-kingdoms-bestiary-detail all-regions-bestiary-detail';
     body.dataset.modalType = 'all-regions-bestiary-detail';
@@ -28937,43 +28629,8 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 })();
 </script>
 
-<style id="parallel-lubu-phase-hp-style-v1">
-  #monster-hp-panel .parallel-lubu-phase-bars{margin-top:4px;padding-top:3px;border-top:1px solid rgba(255,205,125,.28)}
-  #monster-hp-panel .parallel-lubu-phase-row{display:flex;align-items:center;gap:4px;margin-top:3px;font-size:9px;line-height:1.25;color:#e9d9f4;text-shadow:0 1px 2px #000}
-  #monster-hp-panel .parallel-lubu-phase-name{width:42px;flex:0 0 42px;white-space:nowrap}
-  #monster-hp-panel .parallel-lubu-phase-track{height:4px;flex:1;min-width:20px;overflow:hidden;border:0;border-radius:3px;background:#241b2d;box-shadow:none}
-  #monster-hp-panel .parallel-lubu-phase-fill{display:block;height:100%;border-radius:3px;transition:width .18s ease}
-  #monster-hp-panel .parallel-lubu-phase-value{width:48px;flex:0 0 48px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
-</style>
-<script id="parallel-lubu-phase-hp-v1">
-(() => {
-  if (window.__parallelLuBuPhaseHpV1) return;
-  window.__parallelLuBuPhaseHpV1 = true;
-  window.updateParallelLuBuBossBars = function(panel, monster) {
-    if (!panel) return;
-    let box = panel.querySelector('.parallel-lubu-phase-bars');
-    if (!monster || monster.name !== '呂布') { box?.remove(); return; }
-    if (!box) {
-      box = document.createElement('div');
-      box.className = 'parallel-lubu-phase-bars';
-      panel.appendChild(box);
-    }
-    const phases = [
-      {name:'赤紫鬼神', max:Number(monster.phase1Hp)||2480000, color:'linear-gradient(90deg,#8f234f,#ff647f)'},
-      {name:'轅門弓將', max:Number(monster.phase2Hp)||2480000, color:'linear-gradient(90deg,#a66a16,#ffd66b)'}
-    ];
-    const active = Number(monster._parallelLuBuPhase) === 2 ? 1 : 0;
-    box.innerHTML = phases.map((phase,i) => {
-      const hp = i < active ? 0 : i > active ? phase.max : Math.max(0,Math.min(phase.max,Number(monster.hp)||0));
-      const pct = i < active ? 100 : Math.max(0,Math.min(100,hp/phase.max*100));
-      const state = i < active ? '✓' : i === active ? '▶' : '○';
-      const compactHp = n => (n / 10000).toLocaleString('zh-TW',{maximumFractionDigits:1})+'萬';
-      const status = i < active ? '已擊破' : i === active ? compactHp(hp)+'/'+compactHp(phase.max) : '待命';
-      return '<div class="parallel-lubu-phase-row"><span class="parallel-lubu-phase-name">'+state+' '+phase.name+'</span><span class="parallel-lubu-phase-track"><i class="parallel-lubu-phase-fill" style="width:'+pct+'%;background:'+phase.color+'"></i></span><span class="parallel-lubu-phase-value">'+status+'</span></div>';
-    }).join('');
-  };
-})();
-</script>
+
+
 
 <script src="scripts/parallel-three-kingdoms-li-jue.js"></script>
 </body>
