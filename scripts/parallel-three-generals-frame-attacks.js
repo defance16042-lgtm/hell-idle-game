@@ -369,9 +369,60 @@
           || luBuMonster?.basicAttackName === '轅門射戟'
           || skill.includes('轅門射戟'))
     );
-    // 呂布第一階段改用原創黑暗 Q 版騎戰 SVG 動畫，不再讀取舊人物影格。
-    if (cleanName === '呂布' && !isLuBuPhase2) return typeof window.playLuBuDarkChibiAttack === 'function' ? window.playLuBuDarkChibiAttack() : false;
-    // 第二階段仍沿用既有弓形態動畫。
+    // 呂布第一階段：直接使用 GitHub 內的 6 張 PNG 攻擊影格，確保戰鬥流程一定會實際播放 PNG。
+    if (cleanName === '呂布' && !isLuBuPhase2) {
+      const phase1Frames = Array.from({ length: 6 }, (_, index) =>
+        `assets/monsters/parallel_three_kingdoms/lu_bu_attack/frame_${String(index + 1).padStart(2, '0')}.png`
+      );
+      const stage = document.getElementById('battle-stage');
+      const sprite = document.querySelector('#monster-icon .monster-sprite');
+      const player = document.getElementById('player-icon');
+      if (!stage || !sprite || !player || !sprite.isConnected) return false;
+
+      const run = ++luBuPhase2AttackRun;
+      const idleSource = sprite.getAttribute('src') || sprite.src;
+      const overlay = document.createElement('img');
+      overlay.className = 'lu-bu-phase1-png-attack';
+      overlay.alt = '';
+      overlay.setAttribute('aria-hidden', 'true');
+      overlay.draggable = false;
+      overlay.style.cssText = 'position:absolute;pointer-events:none;z-index:95;width:230px;height:260px;object-fit:contain;transform:translate(-50%,-50%);image-rendering:auto;filter:drop-shadow(0 0 12px rgba(255,45,45,.95)) drop-shadow(0 0 24px rgba(120,0,20,.8));';
+
+      const stageRect = stage.getBoundingClientRect();
+      const monsterRect = sprite.getBoundingClientRect();
+      overlay.style.left = `${monsterRect.left - stageRect.left + monsterRect.width * .50}px`;
+      overlay.style.top = `${monsterRect.top - stageRect.top + monsterRect.height * .48}px`;
+      stage.appendChild(overlay);
+      sprite.style.setProperty('opacity', '0', 'important');
+
+      const durations = [120, 105, 100, 85, 150, 180];
+      let i = 0;
+      const show = () => {
+        if (run !== luBuPhase2AttackRun || !overlay.isConnected || !sprite.isConnected) {
+          overlay.remove();
+          sprite.style.removeProperty('opacity');
+          if (sprite.isConnected) sprite.setAttribute('src', idleSource);
+          return;
+        }
+        overlay.src = typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(phase1Frames[i]) : phase1Frames[i];
+        i++;
+        if (i < phase1Frames.length) {
+          setTimeout(show, durations[i - 1]);
+        } else {
+          setTimeout(() => {
+            if (run === luBuPhase2AttackRun) {
+              overlay.remove();
+              sprite.style.removeProperty('opacity');
+              sprite.setAttribute('src', idleSource);
+            }
+          }, durations[i - 1]);
+        }
+      };
+      show();
+      return true;
+    }
+
+    // 呂布第二階段：直接使用 3x2 PNG 弓形態攻擊精靈圖。
     if (isLuBuPhase2) return playLuBuPhase2PngAttack() || (typeof previous === 'function' ? previous(name, skillName) : false);
     const definition = definitionByName.get(cleanName);
     if (definition) return playFrameSequence(definition);
