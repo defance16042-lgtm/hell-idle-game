@@ -18752,9 +18752,18 @@ async function batchEnhanceEquipment(kind,instanceId,from='inventory',buttonElem
 /* 強化數值固定在裝備格底部，不遮住圖示。 */
 .inventory-grid .inventory-slot{position:relative!important}.inventory-grid .enhancement-badge{position:absolute;left:50%;bottom:2px;transform:translateX(-50%);z-index:8;padding:1px 5px;border:1px solid #ffd36a;border-radius:5px;background:#170d0dcc;color:#ffe08a;font:900 11px/1.15 system-ui,"Microsoft JhengHei",sans-serif;text-shadow:0 1px 2px #000;pointer-events:none;white-space:nowrap}.inventory-grid .item-count{z-index:7}
 /* 套裝與九神龍圖鑑圖示統一置中。 */
-.set-equipment-icon,.bestiary-monster-portrait img{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center center!important;margin:auto!important}.bestiary-monster-portrait{display:flex!important;align-items:center!important;justify-content:center!important;width:82px!important;height:64px!important;margin:0 auto!important;overflow:hidden!important}
+.set-equipment-icon,.bestiary-monster-portrait img{display:block!important;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center center!important;margin:auto!important;image-rendering:auto!important}.bestiary-monster-portrait{display:flex!important;align-items:center!important;justify-content:center!important;width:120px!important;height:92px!important;margin:0 auto!important;overflow:hidden!important}
 /* 角色能力與圖鑑每頁固定在視窗內，不把整個 modal 撐成長頁。 */
 #modal-body.character-stats-modal{max-height:calc(100vh - 42px)!important;overflow:hidden!important;display:flex!important;flex-direction:column!important}.character-stats-modal .character-stats-tabs{flex:0 0 auto}.character-stats-modal .character-stats-page{flex:1 1 auto;min-height:0;height:calc(100vh - 180px);overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain;}.character-stats-modal .character-stats-page>*{max-width:100%}.character-stats-modal .character-stats-close-button{flex:0 0 auto;margin-top:7px}.bestiary-grid{max-height:none!important;overflow:visible!important}
+
+/* 平行三國圖鑑清晰度修正：呂布使用原始 PNG，不以 82×64 小框縮放。 */
+.bestiary-monster-portrait img[src*="lu_bu_fullbody_left.png"],
+.bestiary-monster-portrait img[src*="lu_bu_mounted_archer_chibi.png"] {
+  image-rendering:auto!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  filter:none!important;
+}
 
 /* 消耗品圖示採用立體漸層 SVG，維持小尺寸。 */
 .item-icon.item-potion,.item-icon.item-mpPotion,.item-icon.item-gold,.item-icon.item-returnScroll{filter:drop-shadow(0 2px 3px #0009)}.consumable-svg{width:88%;height:88%;display:block}
