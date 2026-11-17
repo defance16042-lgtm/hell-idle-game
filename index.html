@@ -28635,6 +28635,52 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 <script src="scripts/parallel-three-kingdoms-li-jue.js"></script>
 <script src="scripts/parallel-three-kingdoms-lu-bu-bestiary.js"></script>
 <script src="scripts/parallel-three-kingdoms-lu-bu-red-hare.js"></script>
+
+<script id="game-auto-update-v1">
+(() => {
+  const VERSION_URL = "./version.json";
+  const CHECK_INTERVAL = 10000;
+  let currentVersion = null;
+  let checking = false;
+
+  async function checkGameVersion() {
+    if (checking || document.visibilityState === "hidden") return;
+    checking = true;
+    try {
+      const response = await fetch(VERSION_URL + "?t=" + Date.now(), {
+        cache: "no-store",
+        headers: { "Cache-Control": "no-cache" }
+      });
+      if (!response.ok) return;
+      const data = await response.json();
+      const version = String(data.version || data.commit || "");
+      if (!version) return;
+
+      if (currentVersion === null) {
+        currentVersion = version;
+        return;
+      }
+
+      if (version !== currentVersion) {
+        sessionStorage.setItem("hellIdleGameAutoUpdated", "1");
+        window.location.reload();
+      }
+    } catch (_) {
+      // Offline/local-file mode: do nothing.
+    } finally {
+      checking = false;
+    }
+  }
+
+  checkGameVersion();
+  setInterval(checkGameVersion, CHECK_INTERVAL);
+  window.addEventListener("focus", checkGameVersion);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") checkGameVersion();
+  });
+})();
+</script>
+
 </body>
 </html>
 
