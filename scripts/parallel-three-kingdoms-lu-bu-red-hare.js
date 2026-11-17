@@ -123,39 +123,35 @@
   window.__parallelLuBuMountedArcherPhaseV1 = true;
 
   const ROOT = 'assets/monsters/parallel_three_kingdoms/';
-  const SHEET_PATH = ROOT + 'lu_bu_phase2_sheet.webp';
-  const sheet = new Image();
-  sheet.decoding = 'async';
-  sheet.src = typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(SHEET_PATH) : SHEET_PATH;
-  const FRAME_SOURCES = [];
-  let IDLE_FRAME = '';
-  const waitImages = new Promise(resolve => {
-    const ready = () => {
-      try {
-        for (let i = 0; i < 6; i++) {
-          const canvas = document.createElement('canvas');
-          canvas.width = 512; canvas.height = 512;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(sheet, (i % 3) * sheet.naturalWidth / 3, Math.floor(i / 3) * sheet.naturalHeight / 2,
-            sheet.naturalWidth / 3, sheet.naturalHeight / 2, 0, 0, 512, 512);
-          FRAME_SOURCES.push(canvas.toDataURL('image/png'));
-        }
-        IDLE_FRAME = FRAME_SOURCES[0];
-        resolve(true);
-      } catch (_) { resolve(false); }
-    };
-    if (sheet.complete && sheet.naturalWidth) ready();
-    else {
-      sheet.addEventListener('load', ready, { once: true });
-      sheet.addEventListener('error', () => resolve(false), { once: true });
-    }
+  // 逐格使用真正全身透明素材；不依賴曾失效的佔位精靈表，也不把角色縮成小圖示。
+  const PHASE2_PATHS = [
+    ROOT + 'lu_bu_red_hare_phase2_idle.png',
+    ROOT + 'lu_bu_red_hare_phase2_attack/frame_03_aim.png',
+    ROOT + 'lu_bu_red_hare_phase2_attack/frame_04_release.png',
+    ROOT + 'lu_bu_red_hare_phase2_attack/frame_05_recover.png'
+  ];
+  const resolvePhase2Asset = path => typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(path) : path;
+  const FRAME_IMAGES = PHASE2_PATHS.map(path => {
+    const image = new Image();
+    image.decoding = 'async';
+    image.src = resolvePhase2Asset(path);
+    return image;
   });
-  const idleFrameSource = () => IDLE_FRAME || (typeof resolveEmbeddedAsset === 'function' ? resolveEmbeddedAsset(SHEET_PATH) : SHEET_PATH);
+  const FRAME_SOURCES = FRAME_IMAGES.map(image => image.src);
+  const IDLE_FRAME = FRAME_SOURCES[0];
+  const waitImages = Promise.all(FRAME_IMAGES.map(image => {
+    if (image.complete) return Promise.resolve(image.naturalWidth > 0);
+    return new Promise(resolve => {
+      image.addEventListener('load', () => resolve(true), { once: true });
+      image.addEventListener('error', () => resolve(false), { once: true });
+    });
+  }));
+  const idleFrameSource = () => IDLE_FRAME;
   const ATTACKS = {
-    '赤焰穿雲箭': { frames: [1, 2, 3, 6], times: [120, 150, 115, 180] },
-    '鬼神連珠射': { frames: [1, 2, 4, 5, 4, 5, 6], times: [90, 110, 85, 85, 85, 85, 160] },
-    '赤兔迴旋斬射': { frames: [1, 2, 3, 4, 5, 6], times: [80, 100, 100, 100, 100, 170] },
-    '赤兔滅世箭': { frames: [1, 2, 4, 5, 3, 6], times: [180, 240, 180, 160, 260, 220] }
+    '赤焰穿雲箭': { frames: [1, 2, 3], times: [230, 190, 220] },
+    '鬼神連珠射': { frames: [1, 2, 1, 2, 3], times: [110, 100, 100, 100, 220] },
+    '赤兔迴旋斬射': { frames: [1, 2, 3, 1, 2, 3], times: [100, 100, 160, 100, 100, 220] },
+    '赤兔滅世箭': { frames: [1, 1, 2, 3], times: [220, 250, 230, 260] }
   };
   let playbackToken = 0;
   let playbackTimers = [];
