@@ -27,7 +27,18 @@
     ],
     description: '平行三國區域首領。呂布騎乘赤兔馬揮動方天畫戟，以紅紫鬼火包裹的奔襲斬擊攻向玩家。',
     dropTable: ['魂幣 128,000', '經驗 280,000', '補血藥水（12%）'],
-    uniqueDrops: [],
+    uniqueDrops: [
+      '方天畫戟｜呂布專屬神話武器｜騎士、修羅戰士可用｜需求等級 100｜獨立掉落率 2%｜攻擊力 520｜可強化：每次成功攻擊力 +4、攻速 +0.03',
+      '寶雕弓｜呂布專屬神話武器｜獵手專用｜需求等級 100｜獨立掉落率 2%｜遠距離攻擊力 500｜可強化：每次成功攻擊力 +4、攻速 +0.03',
+      '黃金鎧甲｜呂布專屬神話胸甲｜需求等級 100｜獨立掉落率 2%｜物理防禦 420｜魔法防禦 320｜可強化：每次成功物理防禦 +4、魔法防禦 +2',
+      '赤兔馬｜呂布專屬坐騎｜需求等級 100｜獨立掉落率 2%｜獲得後解鎖赤兔馬坐騎／戰鬥騎乘外觀'
+    ],
+    exclusiveTreasures: [
+      { id: 'fangtian_halberd_v1', name: '方天畫戟', kind: 'weapon', rarity: '神話', classKeys: ['knight'], dropChance: 0.02 },
+      { id: 'baodiao_bow_v1', name: '寶雕弓', kind: 'weapon', rarity: '神話', classKeys: ['elf'], dropChance: 0.02 },
+      { id: 'golden_armor_v1', name: '黃金鎧甲', kind: 'armor', rarity: '神話', dropChance: 0.02 },
+      { id: 'chitu_horse_v1', name: '赤兔馬', kind: 'mount', rarity: '神話', dropChance: 0.02 }
+    ],
     bossPhases: [
       { name: '赤紫鬼神', trigger: '戰鬥開始', description: '呂布騎乘赤兔馬，以赤紫方天裂空斬與鬼神踏陣發動近戰攻擊。' }
     ],
