@@ -5969,6 +5969,7 @@ const SHOP_SCROLL_I體質_ASSETS = {"weaponScroll":"assets/embedded-0021-a35dec0
             { key: 'head', label: '頭部', equipmentKey: 'headArmorId', icon: '🪖' },
             { key: 'chest', label: '胸部', equipmentKey: 'chestArmorId', icon: '🦺' },
             { key: 'legs', label: '腿部', equipmentKey: 'legsArmorId', icon: '🥾' },
+            { key: 'mount', label: '座騎', equipmentKey: 'mountArmorId', icon: '🐎' },
             { key: 'wrist', label: '副武・護腕', equipmentKey: 'wristArmorId', icon: '🦾' },
             { key: 'bowArmor', label: '副武・弓之甲', equipmentKey: 'bowArmorId', icon: '🛡️' },
             { key: 'spellbook', label: '副武・魔法書', equipmentKey: 'spellbookArmorId', icon: '📕' },
@@ -6840,6 +6841,17 @@ function getEquipmentIconMarkup(item, kind = 'weapon', extraClass = '') {
             player.items ||= {};
             player.items.armors = Array.isArray(player.items.armors) ? player.items.armors : [];
             player.items.armors.forEach(armor => {
+                // 座騎正式納入一般防具裝備欄位；修復舊物品只有 ID、沒有 slot 時無法裝備的情況。
+                const isMountArmor = armor && (
+                    armor.slot === 'mount' || armor.equipmentSlot === 'mount' || armor.armorType === 'mount' ||
+                    armor.id === 'redhare_mount_v1' || armor.templateId === 'redhare_mount_v1'
+                );
+                if (isMountArmor) {
+                    armor.slot = 'mount';
+                    armor.slotLabel = '座騎';
+                    armor.icon = armor.icon || '🐎';
+                    if (!Array.isArray(armor.classKeys)) armor.classKeys = ['knight', 'warrior', 'elf', 'mage'];
+                }
                 if (armor && (armor.slot === 'bowArmor' || /^elf_bow_armor_/.test(String(armor.templateId || '')))) { armor.iconAsset = 'hell_elf_bow_vambrace'; armor.slot = 'bowArmor'; armor.slotLabel = '副武・弓之甲'; }
                 if (armor && (armor.slot === 'spellbook' || /^mage_spellbook_/.test(String(armor.templateId || '')))) { armor.iconAsset = 'hell_mage_spellbook'; armor.slot = 'spellbook'; armor.slotLabel = '副武・魔法書'; }
                 const isLuBuGoldenArmor = armor?.templateId === 'golden_armor_v1';
