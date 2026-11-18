@@ -9,9 +9,9 @@
 
   const monster = {
     name: '李傕將軍',
-    icon: null,
-    image: ROOT + 'li_jue_dark_chibi_left.svg',
-    battleImage: ROOT + 'li_jue_dark_chibi_left.svg',
+    icon: '🪓',
+    image: null,
+    battleImage: null,
     level: 80, levelRange: '80', attackSpeed: 1.18,
     hp: 428000, maxHp: 428000, atk: 7620, def: 2580, magicDefense: 2060,
     attackType: '鬼神斷月斬', basicAttackName: '鬼神斷月斬',
@@ -100,58 +100,4 @@
     return count;
   };
 
-
-
-  function playLiJueAttack() {
-    const target = typeof currentMonster!=='undefined' ? currentMonster : window.currentMonster;
-    if (!target || target.name!==monster.name) return false;
-    const stage = document.getElementById('battle-stage');
-    const sprite = document.querySelector('#monster-icon .monster-sprite');
-    if (!stage || !sprite) return false;
-    const oldTransform=sprite.style.transform, oldFilter=sprite.style.filter, oldTransition=sprite.style.transition;
-    let overlay=stage.querySelector('.li-jue-attack-fx');
-    overlay?.remove();
-    overlay=document.createElement('div');
-    overlay.className='li-jue-attack-fx';
-    overlay.setAttribute('aria-hidden','true');
-    overlay.style.cssText='position:absolute;inset:0;z-index:100;pointer-events:none;overflow:visible;';
-    const svg='<svg viewBox="0 0 600 360" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;overflow:visible"><defs><linearGradient id="ljg"><stop stop-color="#ff394f" stop-opacity="0"/><stop offset=".5" stop-color="#ff315f"/><stop offset="1" stop-color="#c45cff" stop-opacity="0"/></linearGradient><filter id="ljblur"><feGaussianBlur stdDeviation="7"/></filter></defs><path class="lj-slash" d="M520 80 Q320 15 80 245" fill="none" stroke="url(#ljg)" stroke-width="36" stroke-linecap="round" filter="url(#ljblur)"/><path class="lj-slash2" d="M520 120 Q300 60 115 280" fill="none" stroke="#ffcf75" stroke-width="7" stroke-linecap="round"/><path class="lj-burst" d="M300 40 325 140 420 105 350 185 440 245 325 220 280 330 270 220 155 260 245 180 175 95 275 140Z" fill="#a83dff" opacity="0"/></svg>';
-    overlay.innerHTML=svg;
-    if (getComputedStyle(stage).position==='static') stage.style.position='relative';
-    stage.appendChild(overlay);
-    const poses=[
-      ['translateX(0) rotate(0deg) scale(1)', 'drop-shadow(0 0 4px #8d35ff)', 150],
-      ['translateX(-9px) rotate(-7deg) scale(1.04)', 'drop-shadow(0 0 10px #ff405d)', 130],
-      ['translateX(15px) rotate(9deg) scale(1.08)', 'drop-shadow(0 0 18px #ff405d)', 120],
-      ['translateX(-7px) rotate(-5deg) scale(1.02)', 'drop-shadow(0 0 20px #b34cff)', 130],
-      ['translateY(-16px) rotate(4deg) scale(1.1)', 'drop-shadow(0 0 24px #b34cff)', 170],
-      ['translateY(0) rotate(0deg) scale(1)', 'drop-shadow(0 0 5px #8d35ff)', 180]
-    ];
-    let index=0;
-    const tick=()=>{
-      if (!sprite.isConnected || !overlay.isConnected) return;
-      if (index>=poses.length) {
-        sprite.style.transform=oldTransform; sprite.style.filter=oldFilter; sprite.style.transition=oldTransition; overlay.remove(); return;
-      }
-      const [transform,filter,duration]=poses[index++];
-      sprite.style.transition='transform '+duration+'ms ease,filter '+duration+'ms ease';
-      sprite.style.transform=transform; sprite.style.filter=filter;
-      const slashes=overlay.querySelectorAll('.lj-slash,.lj-slash2');
-      slashes.forEach((path,i)=>{path.style.transition='opacity '+duration+'ms ease';path.style.opacity=index>=2&&index<=5?'1':'0';});
-      const burst=overlay.querySelector('.lj-burst');
-      if (burst) { burst.style.opacity=index===5?'.8':'0'; burst.style.transition='opacity 160ms ease'; }
-      setTimeout(tick,duration);
-    };
-    tick();
-    return true;
-  }
-  const originalStoryboard=window.playParallelThreeKingdomsBossAttackStoryboard;
-  window.playParallelThreeKingdomsBossAttackStoryboard=function(name,attackName) {
-    if (name==='李傕將軍' || name==='李傕') {
-      const played = typeof originalStoryboard==='function' ? originalStoryboard.apply(this,arguments) : false;
-      return played || playLiJueAttack();
-    }
-    return typeof originalStoryboard==='function' ? originalStoryboard.apply(this,arguments) : false;
-  };
-  window.playLiJueAttackStoryboard=playLiJueAttack;
 })();
