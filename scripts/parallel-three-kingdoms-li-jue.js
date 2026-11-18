@@ -4,14 +4,15 @@
   window.__parallelThreeKingdomsLiJueV1 = true;
   const ZONE = '平行三國';
   const ROOT = 'assets/monsters/parallel_three_kingdoms/';
+  const IDLE = ROOT + 'li_jue_dark_chibi_idle.png';
   const ARMOR = 'assets/items/';
   if (typeof zoneMonsters === 'undefined' || !zoneMonsters) return;
 
   const monster = {
     name: '李傕將軍',
     icon: '🪓',
-    image: null,
-    battleImage: null,
+    image: IDLE,
+    battleImage: IDLE,
     level: 80, levelRange: '80', attackSpeed: 1.18,
     hp: 428000, maxHp: 428000, atk: 7620, def: 2580, magicDefense: 2060,
     attackType: '鬼神斷月斬', basicAttackName: '鬼神斷月斬',

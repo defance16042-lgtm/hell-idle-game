@@ -7,6 +7,14 @@
   const root = 'assets/monsters/parallel_three_kingdoms';
   const definitions = [
     {
+      names: ['李傕將軍', '李傕'], bodyDir: 'li_jue_attack', cssSlash: true,
+      // 李傕：全身左向黑暗 Q 版六格斬擊，使用獨立 PNG 逐格切換。
+      waveScale: .48, waveCurve: -.018, waveLift: -.02, spriteScale: 1.12,
+      frameMs: [135, 120, 105, 95, 125, 180],
+      waveStops: [0.02, 0.07, 0.30, 0.64, 0.90, 1],
+      waveAlpha: [.24, .54, .95, 1, .90, .30]
+    },
+    {
       names: ['李儒'], bodyDir: 'li_ru_attack', waveDir: 'li_ru_attack_wave',
       waveScale: .42, waveCurve: -.015, waveLift: -.025, spriteScale: 1.2,
       frameMs: [135, 120, 105, 95, 125, 180],
