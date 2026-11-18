@@ -26860,7 +26860,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     ],
     description: '平行三國的樊稠將軍，披著厚重暗鎧、拖著巨大的彎刃長柄武器。牠看似威風凜凜，卻有一張圓滾滾的 Q 版臉與不太嚇人的小小獠牙。',
     dropTable: [],
-    uniqueDrops: ['樊稠暗鎧｜特殊胸甲｜需求等級 80｜全職業可穿戴｜樊稠將軍獨立掉落率 5%｜物理防禦 +228｜魔法防禦 +145｜力量 +34、體質 +54、精神 +16'],
+    uniqueDrops: ['樊稠暗鎧｜樊稠將軍專屬裝備｜可強化｜特殊胸甲｜需求等級 80｜全職業可穿戴｜獨立掉落率 5%｜物理防禦 +228｜魔法防禦 +145｜近距離攻擊 +100｜力量 +46、敏捷 +20、體質 +62、精神 +26、智力 +14、魅力 +18｜生命 +1600｜近距離暴擊傷害 +8%｜物理減傷 +4%'],
     zone: ZONE, threatTier: 'parallel-three-kingdoms-special'
   };
   const monsters = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
@@ -26897,7 +26897,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     ],
     description: '平行三國的張濟將軍，身披暗黑玉甲、手持帶符鉤槍，冷冷的青玉鬼火在身邊飄動。牠的表情很嚴肅，但圓臉與短腿讓威嚴打了折扣。',
     dropTable: [],
-    uniqueDrops: ['張濟玉甲｜特殊胸甲｜需求等級 80｜全職業可穿戴｜張濟將軍獨立掉落率 5%｜物理防禦 +190｜魔法防禦 +175｜敏捷 +28、體質 +48、精神 +20'],
+    uniqueDrops: ['張濟玉甲｜張濟將軍專屬裝備｜可強化｜特殊胸甲｜需求等級 80｜全職業可穿戴｜獨立掉落率 5%｜物理防禦 +190｜魔法防禦 +175｜近距離攻擊 +90｜力量 +24、敏捷 +44、體質 +50、精神 +30、智力 +18、魅力 +20｜生命 +1200｜近距離暴擊率 +3%｜閃避 +4%'],
     zone: ZONE, threatTier: 'parallel-three-kingdoms-special'
   };
   const monsters = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
@@ -26934,7 +26934,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     defenseSkills: [{ name: '陷陣守勢', trigger: '受到攻擊時', effect: 'block', description: '以盾牌穩住陣腳，保持中等格擋壓力。' }],
     description: '平行三國的高順將軍，率領陷陣營披著黑紅重甲，左手舉著刻有鬼面紋的玄盾，右手握短刀。牠的眼神很認真，圓滾滾的 Q 版臉卻藏不住小獠牙。',
     dropTable: ['魂幣 28,600', '經驗 86,500', '暗紅兵符', '陷陣殘頁'],
-    uniqueDrops: ['陷陣玄盾｜副武・盾牌｜特殊｜需求等級 80｜騎士專屬｜高順將軍獨立掉落率 5%｜物理防禦 +210｜魔法防禦 +125｜力量 +18、體質 +42｜可強化：每次成功物理防禦 +4、魔法防禦 +2'],
+    uniqueDrops: ['陷陣玄盾｜高順將軍專屬裝備｜可強化｜副武・盾牌｜需求等級 80｜騎士專屬｜獨立掉落率 5%｜物理防禦 +210｜魔法防禦 +125｜近距離攻擊 +80｜力量 +32、敏捷 +14、體質 +60、精神 +24、智力 +10、魅力 +16｜生命 +1800｜格擋率 +8%｜傷害減免 +5%'],
     zone: ZONE, threatTier: 'parallel-three-kingdoms-special'
   };
   const monsters = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
@@ -26952,14 +26952,16 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     '張濟將軍': {
       id: 'parallel_zhang_ji_jade_armor_v1', name: '張濟玉甲', icon: '🛡️',
       physicalDefenseBonus: 190, magicDefenseBonus: 175,
-      statBonuses: { dex: 28, con: 48, wis: 20 },
-      property: '張濟將軍專屬特殊胸甲｜獨立掉落率 5%'
+      statBonuses: { str: 24, dex: 44, con: 50, wis: 30, int: 18, cha: 20, maxHp: 1200, meleeAttackBonus: 90, meleeCritRate: 0.03, evasion: 0.04 },
+      meleeAttackBonus: 90,
+      property: '張濟將軍專屬裝備｜可強化｜特殊胸甲｜獨立掉落率 5%'
     },
     '樊稠將軍': {
       id: 'parallel_fan_chou_dark_armor_v1', name: '樊稠暗鎧', icon: '🛡️',
       physicalDefenseBonus: 228, magicDefenseBonus: 145,
-      statBonuses: { str: 34, con: 54, wis: 16 },
-      property: '樊稠將軍專屬特殊胸甲｜獨立掉落率 5%'
+      statBonuses: { str: 46, dex: 20, con: 62, wis: 26, int: 14, cha: 18, maxHp: 1600, meleeAttackBonus: 100, meleeCritDamage: 0.08, damageReductionPct: 0.04 },
+      meleeAttackBonus: 100,
+      property: '樊稠將軍專屬裝備｜可強化｜特殊胸甲｜獨立掉落率 5%'
     }
   };
   window.awardParallelThreeKingdomsChestArmorDrop = function(monster) {
@@ -26978,9 +26980,10 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       qualityColor: '#ff4545', icon: def.icon,
       physicalDefenseBonus: def.physicalDefenseBonus,
       basePhysicalDefenseBonus: def.physicalDefenseBonus,
+      meleeAttackBonus: Number(def.meleeAttackBonus) || 0,
       magicDefenseBonus: def.magicDefenseBonus,
       baseMagicDefenseBonus: def.magicDefenseBonus,
-      statBonuses: { ...def.statBonuses }, properties: [def.property],
+      statBonuses: { ...def.statBonuses }, stats: { ...def.statBonuses }, properties: [def.property, '六項屬性與戰鬥加成固定，防具本體可強化'],
       enhancementLevel: 0, sourceMonster: monster.name,
       uniqueDropType: 'parallel_three_kingdoms_chest_armor', obtainedAt: Date.now()
     };
@@ -27012,7 +27015,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       rarity: '特殊', quality: '特殊', qualityColor: '#8fe8ff', icon: DEF.icon,
       iconAsset: 'assets/items/parallel_gao_shun_formation_shield.png', image: 'assets/items/parallel_gao_shun_formation_shield.png',
       physicalDefenseBonus: DEF.physicalDefenseBonus, basePhysicalDefenseBonus: DEF.physicalDefenseBonus, magicDefenseBonus: DEF.magicDefenseBonus, baseMagicDefenseBonus: DEF.magicDefenseBonus,
-      statBonuses: { ...DEF.statBonuses }, stats: { ...DEF.statBonuses }, properties: ['騎士專屬｜需求等級 80', '物理防禦 +210｜魔法防禦 +125', '力量 +18｜體質 +42', '高順將軍專屬掉落｜獨立掉落率 5%', '強化規則：每次成功物理防禦 +4、魔法防禦 +2'],
+      statBonuses: { ...DEF.statBonuses }, stats: { ...DEF.statBonuses }, meleeAttackBonus: 80, baseMeleeAttackBonus: 80, properties: ['高順將軍專屬裝備｜可強化｜騎士專屬｜需求等級 80', '物理防禦 +210｜魔法防禦 +125｜近距離攻擊 +80', '力量 +32｜敏捷 +14｜體質 +60｜精神 +24｜智力 +10｜魅力 +16', '生命 +1800｜格擋率 +8%｜傷害減免 +5%', '強化規則：每次成功物理防禦 +4、魔法防禦 +2'],
       enhancementLevel: 0, cannotEnhance: false, uniqueDropType: 'parallel_three_kingdoms_knight_shield', sourceMonster: monster.name, sourceDropChance: DEF.dropChance, obtainedAt: Date.now()
     };
     player.items.armors.push(item);
@@ -27579,8 +27582,8 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
       { name: '魘霧蝕心', phase: 'lowHp', chance: 0.34, damageType: 'magic', attackRange: 'ranged', powerMultiplier: 1.96 }
     ],
     description: '平行三國的李儒，身披暗紅策士長袍，手持毒瓶煉製紫燼魘霧。看似冷酷陰沉，卻以圓滾滾的 Q 版臉和小小獠牙散發詭異反差感。',
-    dropTable: ['李儒專屬法杖：鴆酒策士杖（Lv.80、僅魔導師可裝備、5%掉落）', '武器技能：鴆酒飲杯（命中時5%機率觸發；每秒造成魔法攻擊力20%的魔法傷害，持續5秒，共5次）'],
-    uniqueDrops: ['鴆酒策士杖｜魔導師專屬法杖｜需求等級 80｜李儒獨立掉落率 5%｜魔法攻擊 +250｜智力 +48、精神 +35、體質 +28｜魔法命中 +3%｜魔法暴擊 +3%｜鴆酒飲杯：魔法命中時 5% 機率觸發，每秒造成魔法攻擊力 20% 的魔法傷害，持續 5 秒（共 5 次）｜可強化：每次成功魔攻 +4、攻速 +0.03（上限 +0.60）'],
+    dropTable: ['李儒專屬裝備：鴆酒策士杖（可強化｜Lv.80、僅魔導師可裝備、5%掉落）', '武器技能：鴆酒飲杯（命中時5%機率觸發；每秒造成魔法攻擊力20%的魔法傷害，持續5秒，共5次）'],
+    uniqueDrops: ['鴆酒策士杖｜李儒專屬裝備｜可強化｜魔導師專屬法杖｜需求等級 80｜獨立掉落率 5%｜魔法攻擊 +330｜力量 +10、敏捷 +24、體質 +30、精神 +52、智力 +62、魅力 +22｜魔法暴擊率 +5%｜魔法暴擊傷害 +10%｜魔法命中 +4%｜最大魔力 +900｜技能傷害 +8%｜鴆酒飲杯：魔法命中時 5% 機率觸發，每秒造成魔法攻擊力 20% 的魔法傷害，持續 5 秒（共 5 次）｜可強化：每次成功魔攻 +4、攻速 +0.03（上限 +0.60）'],
     zone: ZONE, threatTier: 'parallel-three-kingdoms-special'
   };
   const monsters = Array.isArray(zoneMonsters[ZONE]) ? zoneMonsters[ZONE] : (zoneMonsters[ZONE] = []);
@@ -27591,6 +27594,63 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
 })();
 </script>
 
+<script id="parallel-three-kingdoms-exclusive-equipment-migration-v1">
+(() => {
+  'use strict';
+  const LABELS = { str: '力量', dex: '敏捷', con: '體質', wis: '精神', int: '智力', cha: '魅力' };
+  const DEFINITIONS = {
+    parallel_li_jue_ghost_helm_v1: { stats: { str:34,dex:18,con:38,wis:22,int:12,cha:16,maxHp:900,damageReductionPct:.03 } },
+    parallel_li_jue_broken_army_armor_v1: { stats: { str:42,dex:20,con:62,wis:24,int:14,cha:18,maxHp:1800,meleeAttackBonus:90,damageReductionPct:.05 } },
+    parallel_li_jue_ghost_moon_axe_v1: { stats: { str:48,dex:28,con:42,wis:20,int:12,cha:18,meleeAttackBonus:320,meleeCritRate:.05,meleeCritDamage:.10,attackSpeedBonus:.06,lifeStealPct:.03 } },
+    parallel_zhang_ji_jade_armor_v1: { stats: { str:24,dex:44,con:50,wis:30,int:18,cha:20,maxHp:1200,meleeAttackBonus:90,meleeCritRate:.03,evasion:.04 } },
+    parallel_fan_chou_dark_armor_v1: { stats: { str:46,dex:20,con:62,wis:26,int:14,cha:18,maxHp:1600,meleeAttackBonus:100,meleeCritDamage:.08,damageReductionPct:.04 } },
+    parallel_gao_shun_formation_shield_v1: { stats: { str:32,dex:14,con:60,wis:24,int:10,cha:16,maxHp:1800,meleeAttackBonus:80,blockChanceBonus:.08,damageReductionPct:.05 } },
+    li_ru_poison_wine_staff_v1: { stats: { str:10,dex:24,con:30,wis:52,int:62,cha:22,maxMp:900,magicCritRate:.05,magicCritDamage:.10,magicHitBonus:.04,skillDamagePct:8 } }
+  };
+  const ids = new Set(Object.keys(DEFINITIONS));
+  function normalize(item) {
+    const id = String(item?.templateId || item?.id || '');
+    const def = DEFINITIONS[id];
+    if (!def || !item) return false;
+    item.uniqueDropType = item.uniqueDropType || 'parallel_three_kingdoms_exclusive';
+    item.cannotEnhance = false;
+    item.statBonuses = { ...(item.statBonuses || {}), ...def.stats };
+    item.stats = { ...item.statBonuses };
+    if (id === 'li_ru_poison_wine_staff_v1') {
+      item.attackBonus = Math.max(330, Number(item.attackBonus) || 0);
+      item.baseAttackBonus = Math.max(330, Number(item.baseAttackBonus) || 0);
+      item.magicAttackBonus = Math.max(330, Number(item.magicAttackBonus) || 0);
+      item.baseMagicAttackBonus = Math.max(330, Number(item.baseMagicAttackBonus) || 0);
+    }
+    const props = Array.isArray(item.properties) ? item.properties.filter(x => !/一般裝備|特殊胸甲|不可強化|全職業可穿戴/.test(String(x))) : [];
+    if (!props.some(x => String(x).includes('專屬裝備'))) props.unshift(`${item.name || '平行三國裝備'}｜專屬裝備｜可強化`);
+    for (const [key, value] of Object.entries(def.stats)) if (LABELS[key] && !props.some(x => String(x).includes(LABELS[key]))) props.push(`${LABELS[key]} +${value}`);
+    item.properties = props;
+    item.enhancementLevel = Math.max(0, Number(item.enhancementLevel) || 0);
+    return true;
+  }
+  function migrate() {
+    const p = typeof currentPlayer !== 'undefined' ? currentPlayer : window.currentPlayer;
+    if (!p) return;
+    let changed = false;
+    for (const rows of [p.items?.weapons, p.items?.armors, p.storage]) {
+      if (!Array.isArray(rows)) continue;
+      for (const row of rows) {
+        const item = row?.item || row;
+        if (ids.has(String(item?.templateId || item?.id || ''))) { const before = JSON.stringify(item); normalize(item); if (JSON.stringify(item) !== before) changed = true; }
+      }
+    }
+    if (changed && typeof saveGame === 'function') saveGame();
+  }
+  migrate();
+  const oldUpdateGameUI = window.updateGameUI;
+  if (typeof oldUpdateGameUI === 'function' && !oldUpdateGameUI.__parallelExclusiveEquipmentMigration) {
+    const wrapped = function(...args) { migrate(); return oldUpdateGameUI.apply(this, args); };
+    wrapped.__parallelExclusiveEquipmentMigration = true;
+    window.updateGameUI = wrapped;
+  }
+})();
+</script>
 <script id="divine-dragon-unique-equipment-v1">
 (() => {
   'use strict';
@@ -27825,7 +27885,7 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
   'use strict';
   const STAFF_ID = 'li_ru_poison_wine_staff_v1';
   const SKILL = Object.freeze({ name: '鴆酒飲杯', chance: 0.05, dotTicks: 5, dotInterval: 1000, dotAtkRatio: 0.20, damageType: 'magic' });
-  const statLabels = { int: '智力', wis: '精神', con: '體質' };
+  const statLabels = { str: '力量', dex: '敏捷', con: '體質', wis: '精神', int: '智力', cha: '魅力' };
 
   window.awardLiRuStaffDrop = function(monster, zoneName = '') {
     if (!monster || monster.name !== '李儒' || (zoneName && zoneName !== '平行三國') || monster.__liRuStaffDropResolved) return 0;
@@ -27835,20 +27895,20 @@ setTimeout(()=>{try{window.renderInventory?.();window.renderCharacterStatus?.();
     if (!player || Math.random() >= 0.05) return 0;
     player.items ||= {};
     player.items.weapons = Array.isArray(player.items.weapons) ? player.items.weapons : [];
-    const statBonuses = { int: 48, wis: 35, con: 28, magicCritRate: 0.03 };
+    const statBonuses = { str: 10, dex: 24, con: 30, wis: 52, int: 62, cha: 22, maxMp: 900, magicCritRate: 0.05, magicCritDamage: 0.10, magicHitBonus: 0.04, skillDamagePct: 8 };
     const item = {
       instanceId: `${STAFF_ID}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       templateId: STAFF_ID, id: STAFF_ID, name: '鴆酒策士杖', classKey: 'mage', classKeys: ['mage'],
       type: '法杖', weaponType: 'magic', damageType: 'magic', icon: '🪄',
-      level: 80, requiredMonsterLevel: 80, attackBonus: 250, baseAttackBonus: 250,
+      level: 80, requiredMonsterLevel: 80, attackBonus: 330, baseAttackBonus: 330, magicAttackBonus: 330, baseMagicAttackBonus: 330,
       attackSpeedBonus: 0, baseAttackSpeedBonus: 0, magicHitBonus: 0.03,
       rarity: '神話', quality: '神話', qualityColor: '#bd7aff', statBonuses,
       weaponSkill: { ...SKILL }, sourceMonster: '李儒', sourceDropChance: 0.05,
       uniqueDropType: 'li_ru_exclusive', cannotEnhance: false, enhancementLevel: 0,
       properties: [
-        '李儒專屬掉落｜獨立掉落率 5%', '需求等級 80｜僅魔導師可裝備',
-        '魔法攻擊力 +250', ...Object.entries(statBonuses).filter(([key]) => statLabels[key]).map(([key, value]) => `${statLabels[key]} +${value}`),
-        '魔法命中率 +3%', '魔法暴擊率 +3%',
+        '李儒專屬裝備｜可強化｜獨立掉落率 5%', '需求等級 80｜僅魔導師可裝備',
+        '魔法攻擊力 +330', ...Object.entries(statBonuses).filter(([key]) => statLabels[key]).map(([key, value]) => `${statLabels[key]} +${value}`),
+        '魔法命中率 +4%', '魔法暴擊率 +5%', '魔法暴擊傷害 +10%', '最大魔力 +900', '技能傷害 +8%',
         '鴆酒飲杯：魔法命中時 5% 機率發動；每秒造成魔法攻擊力 20% 的魔法傷害，持續 5 秒（共 5 次）。',
         '強化規則：每次成功魔法攻擊 +4、攻速 +0.03（攻速加成上限 +0.60）'
       ], obtainedAt: Date.now()
