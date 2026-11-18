@@ -12469,7 +12469,8 @@ function getCombatVisualCycleDuration(actionPath) {
 
                 if (currentMonster?.name === '呂布' && storyboardPlayed) {
                     const attackMonster = currentMonster;
-                    const phaseTwo = Number(attackMonster._luBuPhaseIndex) === 1;
+                    const attackPhaseIndex = Number(attackMonster._luBuPhaseIndex) || 0;
+                    const phaseTwo = attackPhaseIndex === 1;
                     const attackName = String(magicSkill?.name || attackMonster.basicAttackName || '').trim();
                     const phaseTwoImpactOffsets = {
                         '赤焰穿雲箭': [230],
@@ -12484,7 +12485,10 @@ function getCombatVisualCycleDuration(actionPath) {
                     for (let hitIndex = 0; hitIndex < hitCount; hitIndex++) {
                         const impactDelay = impactOffsets[Math.min(hitIndex, impactOffsets.length - 1)];
                         setTimeout(() => {
-                            if (currentMonster !== attackMonster || attackMonster.hp <= 0 || monsterDefeatInProgress) return;
+                            if (currentMonster !== attackMonster
+                                || (Number(attackMonster._luBuPhaseIndex) || 0) !== attackPhaseIndex
+                                || attackMonster.hp <= 0
+                                || monsterDefeatInProgress) return;
                             // 每一箭各自重新判定命中、格擋、防禦與傷害，避免連射只扣一次或一次扣完。
                             performMonsterAttack({ monster: attackMonster, magicSkill, impactReady: true });
                         }, impactDelay);
