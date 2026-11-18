@@ -15777,11 +15777,11 @@ function getCombatVisualCycleDuration(actionPath) {
                 <h3>🛒 雜貨鋪</h3>
                 <p>現有魂幣: <span id="shop-g">${currentPlayer.gold}</span></p>
                 <nav class="shop-tabs" aria-label="雜貨鋪分類">
-                    <button type="button" class="shop-tab active" data-shop-tab="buy" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">🧺 購買物品</button>
-                    <button type="button" class="shop-tab" data-shop-tab="gear" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">⚔️ 裝備收購</button>
-                    <button type="button" class="shop-tab" data-shop-tab="books" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">📖 技能書</button>
-                    <button type="button" class="shop-tab" data-shop-tab="sets" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">💎 套裝</button>
-                    <button type="button" class="shop-tab" data-shop-tab="fish" onclick="(function(b){var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">🐟 魚獲</button>
+                    <button type="button" class="shop-tab active" data-shop-tab="buy" onclick="(function(b){window.shopActiveTab=b.dataset.shopTab;var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">🧺 購買物品</button>
+                    <button type="button" class="shop-tab" data-shop-tab="gear" onclick="(function(b){window.shopActiveTab=b.dataset.shopTab;var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">⚔️ 裝備收購</button>
+                    <button type="button" class="shop-tab" data-shop-tab="books" onclick="(function(b){window.shopActiveTab=b.dataset.shopTab;var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">📖 技能書</button>
+                    <button type="button" class="shop-tab" data-shop-tab="sets" onclick="(function(b){window.shopActiveTab=b.dataset.shopTab;var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">💎 套裝</button>
+                    <button type="button" class="shop-tab" data-shop-tab="fish" onclick="(function(b){window.shopActiveTab=b.dataset.shopTab;var r=b.closest('#modal-body');r.querySelectorAll('.shop-tab').forEach(function(x){x.classList.toggle('active',x===b)});r.querySelectorAll('.shop-tab-pane').forEach(function(x){x.hidden=x.dataset.shopPane!==b.dataset.shopTab})})(this)">🐟 魚獲</button>
                 </nav>
                 <section class="shop-tab-pane" data-shop-pane="buy"><h4 style="color:#ffaa66;margin:8px 0 4px;">🧺 購買物品</h4>
                 <div class="shop-buy-grid">${[
@@ -15814,6 +15814,14 @@ function getCombatVisualCycleDuration(actionPath) {
                 ${fishSellRows || '<p style="color:#a08080;">目前沒有可以出售的魚。到釣魚場試試手氣吧！</p>'}
                 </section><button class="modal-btn" onclick="closeModal()">離開</button>
             `;
+            // 重建雜貨鋪畫面後，保留玩家上次所在分類；出售裝備後不再跳回購買頁。
+            const activeShopTab = ['buy','gear','books','sets','fish'].includes(window.shopActiveTab) ? window.shopActiveTab : 'buy';
+            document.querySelectorAll('#modal-body .shop-tab').forEach(button => {
+                button.classList.toggle('active', button.dataset.shopTab === activeShopTab);
+            });
+            document.querySelectorAll('#modal-body .shop-tab-pane').forEach(pane => {
+                pane.hidden = pane.dataset.shopPane !== activeShopTab;
+            });
             modal.style.display = 'flex';
         }
 
