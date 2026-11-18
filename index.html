@@ -12415,15 +12415,18 @@ function getCombatVisualCycleDuration(actionPath) {
             }, hitResolveDelay);
         }
 
-        function performMonsterAttack() {
+        function performMonsterAttack(preparedLuBuAttack = null) {
+            if (preparedLuBuAttack?.monster && currentMonster !== preparedLuBuAttack.monster) return;
             if (!currentMonster || monsterDefeatInProgress || currentMonster.hp <= 0) return;
             window.syncFallenHeavenBossPhase?.(currentMonster, true);
             applyShadowMageRecovery(currentMonster);
             const monsterName = currentMonster.name;
             const icon = document.getElementById('monster-icon');
-            const magicSkill = currentMonster.type === 'training'
-                ? (Math.random() < 0.30 ? { name: '石像魔力脈衝', phase: 'normal', damageType: 'magic' } : null)
-                : getMonsterMagicSkill(currentMonster);
+            const magicSkill = preparedLuBuAttack
+                ? preparedLuBuAttack.magicSkill
+                : (currentMonster.type === 'training'
+                    ? (Math.random() < 0.30 ? { name: '石像魔力脈衝', phase: 'normal', damageType: 'magic' } : null)
+                    : getMonsterMagicSkill(currentMonster));
             // 治癒類技能是怪物自我治療，不應進入攻擊／扣玩家生命的流程。
             const isSelfHealSkill = Boolean(magicSkill && (magicSkill.effect === 'healSelf' || /治癒|治療|回復|回血|heal/i.test(String(magicSkill.name || ''))));
             if (isSelfHealSkill) {
@@ -12453,12 +12456,41 @@ function getCombatVisualCycleDuration(actionPath) {
                     ? `攻擊｜${rawMonsterAttackName}`
                     : (isMagicAttack ? '魔法攻擊' : isRangedAttack ? '遠距攻擊' : '普通攻擊'));
             const battleVisual = getMonsterAttackVisual(currentMonster, magicSkill, isMagicAttack, isRangedAttack);
-            // 副龍沿用命中／傷害結算，但動畫只播放在自己的圖示上，避免主龍圖示被共用流程搶播。
-            if (!window.__ABYSS_SECONDARY_ATTACK_IN_PROGRESS) {
-                const storyboardPlayed = typeof window.playParallelThreeKingdomsBossAttackStoryboard === 'function'
-                    ? window.playParallelThreeKingdomsBossAttackStoryboard(currentMonster?.name, magicSkill?.name)
-                    : false;
-                if (!storyboardPlayed) animateMonsterAttack(battleVisual);
+            // 呂布專用：先播放完整招式，再於命中影格結算；連射依箭矢命中時間逐發計算。
+            if (!preparedLuBuAttack?.impactReady) {
+                let storyboardPlayed = false;
+                // 副龍沿用命中／傷害結算，但動畫只播放在自己的圖示上，避免主龍圖示被共用流程搶播。
+                if (!window.__ABYSS_SECONDARY_ATTACK_IN_PROGRESS) {
+                    storyboardPlayed = typeof window.playParallelThreeKingdomsBossAttackStoryboard === 'function'
+                        ? window.playParallelThreeKingdomsBossAttackStoryboard(currentMonster?.name, magicSkill?.name)
+                        : false;
+                    if (!storyboardPlayed) animateMonsterAttack(battleVisual);
+                }
+
+                if (currentMonster?.name === '呂布' && storyboardPlayed) {
+                    const attackMonster = currentMonster;
+                    const phaseTwo = Number(attackMonster._luBuPhaseIndex) === 1;
+                    const attackName = String(magicSkill?.name || attackMonster.basicAttackName || '').trim();
+                    const phaseTwoImpactOffsets = {
+                        '赤焰穿雲箭': [230],
+                        '鬼神連珠射': [110, 290, 470, 650],
+                        '赤兔迴旋斬射': [100, 280, 460],
+                        '赤兔滅世箭': [470]
+                    };
+                    const impactOffsets = phaseTwo
+                        ? (phaseTwoImpactOffsets[attackName] || [230])
+                        : [365];
+                    const hitCount = Math.max(1, Math.min(6, Math.floor(Number(magicSkill?.hits) || 1)));
+                    for (let hitIndex = 0; hitIndex < hitCount; hitIndex++) {
+                        const impactDelay = impactOffsets[Math.min(hitIndex, impactOffsets.length - 1)];
+                        setTimeout(() => {
+                            if (currentMonster !== attackMonster || attackMonster.hp <= 0 || monsterDefeatInProgress) return;
+                            // 每一箭各自重新判定命中、格擋、防禦與傷害，避免連射只扣一次或一次扣完。
+                            performMonsterAttack({ monster: attackMonster, magicSkill, impactReady: true });
+                        }, impactDelay);
+                    }
+                    return;
+                }
             }
             const monsterAccuracyStat = getMonsterAccuracyStat(currentMonster, magicSkill);
             const monsterWeakeningMultiplier = currentMonster.levelWeakeningMultiplier || 1;
